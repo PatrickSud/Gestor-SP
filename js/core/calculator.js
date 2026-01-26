@@ -220,6 +220,31 @@ export const Calculator = {
             }
         }
 
+        // Advanced KPI Calculation
+        const totalMonths = Math.max(1, simulationDays / 30);
+        const avgMonthlyYield = ((currentInv + currentWallet + totalWithdrawnCents) - totalCentsInvested) / totalMonths;
+        
+        // Find Break-Even Day (Cumulative Withdrawn + Current Balance >= Initial Investment)
+        let breakEvenDate = 'N/A';
+        let paybackDays = '---';
+        
+        const sortedDailyKeys = Object.keys(dailyData).sort();
+        for (let i = 0; i < sortedDailyKeys.length; i++) {
+            const dayKey = sortedDailyKeys[i];
+            const dayData = dailyData[dayKey];
+            
+            // Current Worth = Total Pool + Cumulative Withdrawn up to that day
+            const cumulativeWithdrawn = withdrawalHistory
+                .filter(w => w.date <= dayKey)
+                .reduce((acc, curr) => acc + curr.val, 0);
+
+            if (dayData.endBal + cumulativeWithdrawn >= totalCentsInvested) {
+                breakEvenDate = dayKey;
+                paybackDays = i;
+                break;
+            }
+        }
+
         return {
             results: {
                 netProfit: (currentInv + currentWallet + totalWithdrawnCents) - totalCentsInvested,
@@ -229,9 +254,10 @@ export const Calculator = {
                 nextWithdrawDate: nextWithdrawDate,
                 roi: totalCentsInvested > 0 ? (((currentInv + currentWallet + totalWithdrawnCents) - totalCentsInvested) / totalCentsInvested) * 100 : 0,
                 graphData,
-                finalWallet: currentWallet,
-                finalActiveInv: currentInv,
-                withdrawalHistory
+                withdrawalHistory,
+                avgMonthlyYield,
+                paybackDays,
+                breakEvenDate
             },
             dailyData,
             cycleEnds

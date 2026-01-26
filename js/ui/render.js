@@ -86,6 +86,11 @@ export const Renderer = {
         this.els.navTotalBalance().innerText = Formatter.currency(results.finalBalance);
         this.els.resRoi().innerText = `ROI Total: ${results.roi.toFixed(1)}%`;
 
+        // Advanced KPIs
+        document.getElementById('resPayback').innerText = `${results.paybackDays} dias`;
+        document.getElementById('resMonthlyYield').innerText = Formatter.currency(results.avgMonthlyYield);
+        document.getElementById('resBreakEven').innerText = results.breakEvenDate !== 'N/A' ? Formatter.dateDisplay(results.breakEvenDate) : 'N/A';
+
         const profitEl = this.els.resLucroLiquido();
         if (results.netProfit < 0) {
             profitEl.classList.replace('text-white', 'text-red-400');
@@ -319,6 +324,119 @@ export const Renderer = {
         
         document.getElementById('timelineTotalEntries').innerText = Formatter.currency(totalIncome);
         document.getElementById('timelineTotalExits').innerText = Formatter.currency(totalExpense);
+    },
+
+    renderGoals(goals, dailyData, onRemove) {
+        const container = document.getElementById('goalsList');
+        if (!container) return;
+        
+        if (goals.length === 0) {
+            container.innerHTML = '<p class="text-center text-[10px] text-slate-500 italic">Nenhuma meta ativa</p>';
+            return;
+        }
+
+        let html = '';
+        const sortedDates = Object.keys(dailyData).sort();
+
+        goals.forEach((goal, idx) => {
+            const targetCents = Formatter.toCents(goal.value);
+            let reachedDate = '---';
+            let progress = 0;
+            
+            // Current progress: Final projected balance / Target
+            const finalBal = dailyData[sortedDates[sortedDates.length - 1]]?.endBal || 0;
+            progress = Math.min(100, Math.floor((finalBal / targetCents) * 100));
+
+            // Find reached date in dailyData
+            for (let date of sortedDates) {
+                if (dailyData[date].endBal >= targetCents) {
+                    reachedDate = Formatter.dateDisplay(date);
+                    break;
+                }
+            }
+
+            html += `
+                <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-700 relative group overflow-hidden">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="text-xs font-bold text-white block">${goal.name}</span>
+                            <span class="text-[9px] text-slate-500 uppercase">Alvo: ${Formatter.currency(targetCents)}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] text-indigo-400 font-bold block">${reachedDate}</span>
+                            <button onclick="app.removeGoal(${idx})" class="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <i class="fas fa-trash-alt text-[9px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                        <div class="h-full bg-indigo-500 transition-all duration-1000" style="width: ${progress}%"></div>
+                    </div>
+                    <div class="flex justify-between mt-1">
+                        <span class="text-[8px] text-slate-600 font-bold uppercase">Progresso</span>
+                        <span class="text-[8px] text-slate-400 font-bold">${progress}%</span>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    },
+
+    renderAlerts(portfolio) {
+        const badge = document.getElementById('alertsBadge');
+        const container = document.getElementById('alertsList');
+        const outerContainer = document.getElementById('alertsContainer');
+        if (!badge || !container) return;
+
+        const today = new Date();
+        const alerts = [];
+
+        portfolio.forEach(p => {
+            const endStr = Formatter.addDays(p.date, p.days);
+            const endDate = new Date(endStr);
+            const diffDays = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+
+            if (diffDays <= 2 && diffDays >= 0) {
+                alerts.push({
+                    type: 'warning',
+                    msg: `Contrato "${p.name}" vence em ${diffDays} dias!`,
+                    sub: `Data: ${Formatter.dateDisplay(endStr)}`,
+                    icon: 'fa-exclamation-triangle'
+                });
+            } else if (diffDays < 0 && diffDays > -5) {
+                alerts.push({
+                    type: 'danger',
+                    msg: `Contrato "${p.name}" VENCIDO!`,
+                    sub: `Venceu em: ${Formatter.dateDisplay(endStr)}`,
+                    icon: 'fa-clock'
+                });
+            }
+        });
+
+        if (alerts.length > 0) {
+            outerContainer.classList.remove('hidden');
+            badge.classList.remove('hidden');
+            badge.innerText = alerts.length;
+            
+            let html = '';
+            alerts.forEach(a => {
+                const color = a.type === 'warning' ? 'yellow' : 'red';
+                html += `
+                    <div class="p-3 bg-${color}-500/10 border border-${color}-500/20 rounded-lg flex gap-3 items-center">
+                        <i class="fas ${a.icon} text-${color}-500"></i>
+                        <div>
+                            <div class="text-xs font-bold text-white">${a.msg}</div>
+                            <div class="text-[9px] text-slate-500">${a.sub}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        } else {
+            outerContainer.classList.add('hidden');
+            badge.classList.add('hidden');
+            container.innerHTML = '<p class="text-xs text-slate-500 text-center italic">Nenhum alerta pendente</p>';
+        }
     },
 
     renderWithdrawButtons(onSelect, selectedValue) {

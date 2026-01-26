@@ -52,6 +52,13 @@
         </div>
 
         <div class="flex items-center gap-3">
+             <div id="alertsContainer" class="hidden md:flex items-center">
+                <button onclick="app.openAlertsModal()" class="relative p-2 text-yellow-500 hover:text-yellow-400 bg-yellow-500/10 rounded-lg border border-yellow-500/20 mr-2">
+                    <i class="fas fa-bell"></i>
+                    <span id="alertsBadge" class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[8px] flex items-center justify-center rounded-full border-2 border-[#0f172a] hidden">0</span>
+                </button>
+             </div>
+
              <button onclick="app.openProfileModal()" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 transition-colors text-xs font-bold" id="profileBtn">
                 <i class="fas fa-user-circle"></i>
                 <span id="currentProfileName">Padrão</span>
@@ -196,13 +203,23 @@
                 </div>
             </div>
 
-            <div class="pt-6 pb-2 px-1">
-                <button id="saveConfigsBtn" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white text-xs rounded-lg font-bold shadow-lg shadow-blue-900/30 transition-all transform active:scale-95">
-                    <i class="fas fa-save mr-2"></i> Salvar e Aplicar
-                </button>
+            <!-- Section: Utils & Backup -->
+            <div class="space-y-3 pt-2">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-1">Sistema & Dados</label>
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 grid grid-cols-2 gap-2">
+                    <button onclick="app.exportBackup()" class="flex flex-col items-center justify-center p-3 bg-slate-900/50 hover:bg-slate-700 rounded-lg border border-slate-700 transition-all group">
+                        <i class="fas fa-file-export text-blue-400 mb-2 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[10px] text-slate-300 font-bold uppercase">Exportar</span>
+                    </button>
+                    <label class="flex flex-col items-center justify-center p-3 bg-slate-900/50 hover:bg-slate-700 rounded-lg border border-slate-700 transition-all group cursor-pointer">
+                        <i class="fas fa-file-import text-emerald-400 mb-2 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[10px] text-slate-300 font-bold uppercase">Importar</span>
+                        <input type="file" id="importFile" class="hidden" accept=".json">
+                    </label>
+                </div>
             </div>
 
-            <div class="pb-10 text-center">
+            <div class="pb-10 text-center space-y-2">
                 <button onclick="app.toggleSidebar()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs rounded-lg font-bold border border-slate-700 transition-colors">
                     <i class="fas fa-chevron-left mr-2"></i> Fechar Menu
                 </button>
@@ -240,6 +257,31 @@
             </div>
         </div>
 
+        <!-- Advanced Performance Row -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+             <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex items-center justify-between group">
+                <div>
+                    <p class="text-[9px] font-bold text-slate-500 uppercase">Payback Médio</p>
+                    <h4 class="text-sm font-bold text-white" id="resPayback">--- dias</h4>
+                </div>
+                <div class="w-10 h-10 bg-slate-700 rounded-lg flex items-center justify-center"><i class="fas fa-hourglass-end text-blue-400"></i></div>
+             </div>
+             <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex items-center justify-between">
+                <div>
+                    <p class="text-[9px] font-bold text-slate-500 uppercase">Rendimento Mensal</p>
+                    <h4 class="text-sm font-bold text-emerald-400" id="resMonthlyYield">R$ 0,00</h4>
+                </div>
+                <div class="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center"><i class="fas fa-calendar-alt text-emerald-500"></i></div>
+             </div>
+             <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex items-center justify-between">
+                <div>
+                    <p class="text-[9px] font-bold text-slate-500 uppercase">Ponto de Equilíbrio</p>
+                    <h4 class="text-sm font-bold text-indigo-400" id="resBreakEven">---</h4>
+                </div>
+                <div class="w-10 h-10 bg-indigo-500/10 rounded-lg flex items-center justify-center"><i class="fas fa-balance-scale text-indigo-500"></i></div>
+             </div>
+        </div>
+
         <!-- Chart Section -->
         <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg">
             <div class="flex items-center justify-between mb-6">
@@ -266,12 +308,34 @@
                         <button onclick="app.switchTab('resources')" id="tab-resources" class="flex-1 py-3 text-xs font-bold uppercase tracking-wider text-white bg-slate-700/50 border-b-2 border-blue-500 transition-colors">
                             <i class="fas fa-list-ul mr-1"></i> Investimentos
                         </button>
+                        <button onclick="app.switchTab('goals')" id="tab-goals" class="flex-1 py-3 text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-white border-b-2 border-transparent transition-colors">
+                            <i class="fas fa-bullseye mr-1"></i> Metas
+                        </button>
                         <button onclick="app.switchTab('simulation')" id="tab-simulation" class="flex-1 py-3 text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-white border-b-2 border-transparent transition-colors">
                             <i class="fas fa-rocket mr-1"></i> Simulador
                         </button>
                     </div>
 
                     <div class="min-h-[300px]">
+                        <!-- Tab Content: Goals -->
+                        <div id="content-goals" class="hidden p-5 space-y-4 animate-fade-in">
+                            <div class="bg-indigo-900/20 p-4 rounded-xl border border-indigo-500/20">
+                                <p class="text-[10px] text-indigo-300 font-bold uppercase mb-3">Nova Meta Patrimonial</p>
+                                <div class="space-y-3">
+                                    <input type="text" id="goalName" placeholder="Ex: Comprar Carro" class="custom-input w-full rounded-lg py-2 px-3 text-xs">
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-2 text-xs text-slate-500">R$</span>
+                                        <input type="number" id="goalValue" placeholder="Valor Alvo" class="custom-input w-full rounded-lg py-2 pl-8 text-xs">
+                                    </div>
+                                    <button onclick="app.addGoal()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2 rounded-lg transition-colors">
+                                        Adicionar Meta
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="goalsList" class="space-y-3 max-h-[250px] overflow-y-auto custom-scrollbar">
+                                <p class="text-center text-[10px] text-slate-500 italic">Nenhuma meta ativa</p>
+                            </div>
+                        </div>
                         <!-- Tab Content: Resources -->
                         <div id="content-resources" class="">
                              <div onclick="app.togglePortfolioDetails()" class="p-4 bg-slate-900/50 cursor-pointer hover:bg-slate-800 transition-colors border-b border-slate-700 group">
@@ -481,6 +545,17 @@
                     <button onclick="app.closeModal('commitModal')" class="flex-1 bg-slate-700 text-white text-xs py-2 rounded-lg">Cancelar</button>
                     <button onclick="app.confirmCommit()" class="flex-1 bg-emerald-600 text-white text-xs py-2 rounded-lg">Confirmar</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts Modal -->
+    <div id="alertsModal" class="fixed inset-0 z-[70] hidden modal-overlay flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl max-w-sm w-full p-6 relative">
+            <button onclick="app.closeModal('alertsModal')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
+            <h3 class="text-lg font-bold text-white mb-2"><i class="fas fa-bell text-yellow-500 mr-2"></i>Alertas do Sistema</h3>
+            <div id="alertsList" class="space-y-3 mt-4 max-h-[300px] overflow-y-auto custom-scrollbar">
+                <p class="text-xs text-slate-500 text-center italic">Nenhum alerta pendente</p>
             </div>
         </div>
     </div>

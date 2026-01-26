@@ -62,6 +62,10 @@ class App {
             // Update Chart
             ChartManager.renderBalanceChart('balanceChart', results.results.graphData);
             
+            // Goals & Alerts
+            Renderer.renderGoals(store.state.goals, results.dailyData, (idx) => this.removeGoal(idx));
+            Renderer.renderAlerts(store.state.portfolio);
+            
             if (save) store.saveToStorage();
         }
     }
@@ -104,14 +108,14 @@ class App {
             });
         });
 
-        // Add handler for the new Save Button
-        const saveBtn = document.getElementById('saveConfigsBtn');
-        if (saveBtn) {
-            saveBtn.onclick = () => this.savePreferences();
-        }
-
         // Investment Add Handler
         document.getElementById('addInvBtn').onclick = () => this.addInvestment();
+
+        // Backup Import Handler
+        const importInp = document.getElementById('importFile');
+        if (importInp) {
+            importInp.onchange = (e) => this.importBackup(e.target.files[0]);
+        }
     }
 
     applyStoreToUI() {
@@ -204,7 +208,7 @@ class App {
     }
 
     switchTab(tabName) {
-        const tabs = ['resources', 'simulation'];
+        const tabs = ['resources', 'simulation', 'goals'];
         tabs.forEach(t => {
             const btn = document.getElementById('tab-' + t);
             const content = document.getElementById('content-' + t);
@@ -517,6 +521,58 @@ class App {
         this.runCalculation();
     }
 
+    // --- Goals Actions ---
+    addGoal() {
+        const name = document.getElementById('goalName').value;
+        const val = parseFloat(document.getElementById('goalValue').value);
+        if (!name || isNaN(val)) return Renderer.toast('Preencha os dados da meta', 'error');
+
+        const goals = [...(store.state.goals || []), { name, value: val }];
+        store.setState({ goals });
+        document.getElementById('goalName').value = '';
+        document.getElementById('goalValue').value = '';
+        Renderer.toast('Meta adicionada!');
+        this.runCalculation();
+    }
+
+    removeGoal(index) {
+        const goals = store.state.goals.filter((_, i) => i !== index);
+        store.setState({ goals });
+        this.runCalculation();
+    }
+
+    // --- Alerts Action ---
+    openAlertsModal() {
+        this.openModal('alertsModal');
+    }
+
+    // --- Backup Actions ---
+    exportBackup() {
+        const data = store.exportAllData();
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `backup_gestor_sp_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        Renderer.toast('Backup gerado com sucesso!', 'success');
+    }
+
+    importBackup(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            if (store.importAllData(e.target.result)) {
+                Renderer.toast('Backup restaurado com sucesso!', 'success');
+                this.applyStoreToUI();
+                this.runCalculation();
+            } else {
+                Renderer.toast('Erro ao importar backup. Formato inválido.', 'error');
+            }
+        };
+        reader.readAsText(file);
+    }
+
     // --- Utils ---
     openModal(id) { document.getElementById(id).classList.remove('hidden'); }
     closeModal(id) { document.getElementById(id).classList.add('hidden'); }
@@ -533,12 +589,6 @@ class App {
             this.runCalculation();
             Renderer.toast('Dados limpos');
         }
-    }
-
-    savePreferences() {
-        this.runCalculation(true);
-        Renderer.toast('Preferências aplicadas e salvas!', 'success');
-        if (window.innerWidth < 1024) this.toggleSidebar(); // Close sidebar on mobile
     }
 
     exportToCSV() {

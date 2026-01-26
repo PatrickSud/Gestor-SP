@@ -59,7 +59,8 @@ class Store {
                 commitBaseName: ""
             },
             portfolio: [],
-            selectedWeeks: []
+            selectedWeeks: [],
+            goals: []
         };
     }
 
@@ -105,7 +106,8 @@ class Store {
         this.state.profiles[this.state.currentProfileId].data = {
             inputs: { ...this.state.inputs },
             portfolio: [...this.state.portfolio],
-            selectedWeeks: [...this.state.selectedWeeks]
+            selectedWeeks: [...this.state.selectedWeeks],
+            goals: [...(this.state.goals || [])]
         };
 
         this.state.currentProfileId = id;
@@ -114,6 +116,7 @@ class Store {
         this.state.inputs = { ...profile.inputs };
         this.state.portfolio = [...profile.portfolio];
         this.state.selectedWeeks = [...profile.selectedWeeks];
+        this.state.goals = [...(profile.goals || [])];
 
         this.saveToStorage();
         this.notify();
@@ -143,20 +146,21 @@ class Store {
         return true;
     }
 
-    // --- Persistence ---
+    // --- Persistence & Backup ---
     saveToStorage() {
+        // Sync current state into profiles object
+        this.state.profiles[this.state.currentProfileId].data = {
+            inputs: this.state.inputs,
+            portfolio: this.state.portfolio,
+            selectedWeeks: this.state.selectedWeeks,
+            goals: this.state.goals || []
+        };
+
         const dataToSave = {
             currentProfileId: this.state.currentProfileId,
             profiles: this.state.profiles
         };
         localStorage.setItem('gestor_sp_profiles', JSON.stringify(dataToSave));
-        
-        // For current profile ease of access
-        this.state.profiles[this.state.currentProfileId].data = {
-            inputs: this.state.inputs,
-            portfolio: this.state.portfolio,
-            selectedWeeks: this.state.selectedWeeks
-        };
     }
 
     loadFromStorage() {
@@ -170,15 +174,44 @@ class Store {
             this.state.inputs = { ...current.inputs };
             this.state.portfolio = [...current.portfolio];
             this.state.selectedWeeks = [...current.selectedWeeks];
+            this.state.goals = [...(current.goals || [])];
         } else {
-            // Migration from old app
-            const oldState = localStorage.getItem('app_profiles');
-            if (oldState) {
-                const parsed = JSON.parse(oldState);
-                // Simple migration logic if needed
-            } else {
-                this.state.inputs = this.getInitialData().inputs;
-            }
+            this.state.inputs = this.getInitialData().inputs;
+            this.state.goals = [];
+        }
+    }
+
+    exportAllData() {
+        const data = {
+            currentProfileId: this.state.currentProfileId,
+            profiles: this.state.profiles,
+            exportDate: new Date().toISOString(),
+            version: '2.0'
+        };
+        return JSON.stringify(data, null, 2);
+    }
+
+    importAllData(jsonString) {
+        try {
+            const parsed = JSON.parse(jsonString);
+            if (!parsed.profiles || !parsed.currentProfileId) throw new Error('Formato inválido');
+            
+            this.state.profiles = parsed.profiles;
+            this.state.currentProfileId = parsed.currentProfileId;
+            
+            // Reload current profile
+            const current = this.state.profiles[this.state.currentProfileId].data;
+            this.state.inputs = { ...current.inputs };
+            this.state.portfolio = [...current.portfolio];
+            this.state.selectedWeeks = [...current.selectedWeeks];
+            this.state.goals = [...(current.goals || [])];
+
+            this.saveToStorage();
+            this.notify();
+            return true;
+        } catch (e) {
+            console.error('Import error:', e);
+            return false;
         }
     }
 }
