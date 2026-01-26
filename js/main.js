@@ -3,6 +3,7 @@ import { Formatter } from './utils/formatter.js';
 import { Calculator } from './core/calculator.js';
 import { Renderer } from './ui/render.js';
 import { ChartManager } from './ui/chart.js';
+import { authService } from './auth-service.js';
 
 /**
  * Main Application Controller
@@ -19,7 +20,7 @@ class App {
 
         // Initialize UI State from Store
         this.applyStoreToUI();
-        
+
         // Initial Calculation
         this.runCalculation();
 
@@ -31,7 +32,7 @@ class App {
 
         // Set up event listeners
         this.setupEventListeners();
-        
+
         Renderer.toast('Sistema inicializado com sucesso', 'success');
     }
 
@@ -47,26 +48,26 @@ class App {
         if (results) {
             store.setResults(results.results);
             store.setDailyData(results.dailyData);
-            
+
             // Update UI components
             Renderer.renderResults(results.results);
             Renderer.renderTable(results.dailyData, parseInt(store.state.inputs.viewPeriodSelect), store.state.inputs.dataInicio);
             Renderer.renderCalendar(store.state.inputs.dataInicio, results.dailyData, results.cycleEnds);
             Renderer.renderPortfolio(store.state.portfolio, (id) => this.removeInvestment(id));
-            
+
             // Sync strategy buttons
             Renderer.renderWithdrawButtons((val) => {
                 store.updateInput('withdrawTarget', val);
                 this.runCalculation();
             }, store.state.inputs.withdrawTarget);
-            
+
             // Update Chart
             ChartManager.renderBalanceChart('balanceChart', results.results.graphData);
-            
+
             // Goals & Alerts
             Renderer.renderGoals(store.state.goals, results.dailyData, (idx) => this.removeGoal(idx));
             Renderer.renderAlerts(store.state.portfolio);
-            
+
             if (save) store.saveToStorage();
         }
     }
@@ -76,7 +77,7 @@ class App {
         // Generic Input Handler
         document.querySelectorAll('input, select').forEach(el => {
             if (!el.id) return;
-            
+
             // Skip fields that shouldn't auto-calculate or are handled specifically
             const skip = ['newInv', 'newProfile', 'editCurrentProfile', 'commitBase', 'search'];
             if (skip.some(s => el.id.startsWith(s))) return;
@@ -84,7 +85,7 @@ class App {
             el.addEventListener('change', (e) => {
                 const val = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
                 store.updateInput(el.id, val);
-                
+
                 // Specific UI toggles
                 if (el.id === 'taskLevel') {
                     if (val === 'custom') {
@@ -95,16 +96,16 @@ class App {
                         store.updateInput('taskDailyValue', val);
                     }
                 }
-                
+
                 if (el.id === 'monthlyIncomeToggle') {
                     document.getElementById('monthlyIncomeContainer').classList.toggle('hidden', !val);
                 }
-                
+
                 if (el.id === 'withdrawStrategy') {
                     document.getElementById('withdrawFixedOptions').classList.toggle('hidden', val !== 'fixed');
                     document.getElementById('withdrawWeeklyOptions').classList.toggle('hidden', val !== 'weekly');
                 }
-                
+
                 this.runCalculation(); // Force immediate calculation on change
             });
         });
@@ -124,7 +125,7 @@ class App {
         for (const [id, value] of Object.entries(inputs)) {
             const el = document.getElementById(id);
             if (!el) continue;
-            
+
             if (el.type === 'checkbox') el.checked = value;
             else el.value = value;
         }
@@ -134,7 +135,7 @@ class App {
         document.getElementById('customTaskInput').classList.toggle('hidden', inputs.taskLevel !== 'custom');
         document.getElementById('withdrawFixedOptions').classList.toggle('hidden', inputs.withdrawStrategy !== 'fixed');
         document.getElementById('withdrawWeeklyOptions').classList.toggle('hidden', inputs.withdrawStrategy !== 'weekly');
-        
+
         // Restore Future Toggle Visuals
         const futureOn = inputs.futureToggle === 'true';
         document.getElementById('futureConfigPanel').classList.toggle('hidden', !futureOn);
@@ -146,13 +147,13 @@ class App {
             this.runCalculation();
             Renderer.renderWithdrawButtons(null, val); // Refresh selection
         }, inputs.withdrawTarget);
-        
+
         this.restoreWeeksUI();
     }
 
     updateUIPieces(state) {
-        Renderer.renderProfileList(state.profiles, state.currentProfileId, 
-            (id) => this.switchProfile(id), 
+        Renderer.renderProfileList(state.profiles, state.currentProfileId,
+            (id) => this.switchProfile(id),
             (id) => this.deleteProfile(id)
         );
 
@@ -178,11 +179,11 @@ class App {
 
         const newInv = { id: Date.now(), name, val, date, days, rate };
         store.setState({ portfolio: [...store.state.portfolio, newInv] });
-        
+
         // Clear inputs
         document.getElementById('newInvName').value = '';
         document.getElementById('newInvVal').value = '';
-        
+
         Renderer.toast('Investimento adicionado');
         this.runCalculation();
     }
@@ -196,7 +197,7 @@ class App {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
         const isOpen = !sidebar.classList.contains('-translate-x-full');
-        
+
         if (isOpen) {
             sidebar.classList.add('-translate-x-full');
             overlay.classList.add('opacity-0');
@@ -227,7 +228,7 @@ class App {
         const current = store.state.inputs.futureToggle === 'true';
         const newVal = !current;
         store.updateInput('futureToggle', String(newVal));
-        
+
         document.getElementById('futureConfigPanel').classList.toggle('hidden', !newVal);
         this.updateFutureToggleVisual(newVal);
         this.runCalculation();
@@ -263,11 +264,11 @@ class App {
         // Need to extract today's balance from dailyData
         const todayStr = new Date().toISOString().split('T')[0];
         const todayData = store.state.dailyData[todayStr];
-        
+
         if (!todayData) return Renderer.toast('Dados de hoje não disponíveis', 'error');
-        
+
         const val = Formatter.fromCents(todayData.endBal);
-        
+
         if (confirm(`Deseja atualizar o Saldo Inicial para R$ ${val.toFixed(2)}?\nIsso altera a base de cálculo.`)) {
             store.updateInput('currentWalletBalance', val.toFixed(2));
             document.getElementById('currentWalletBalance').value = val.toFixed(2);
@@ -283,7 +284,7 @@ class App {
         document.getElementById('modalDate').innerText = Formatter.dateDisplay(dateStr);
         document.getElementById('modalStartBal').innerText = Formatter.currency(data.startBal);
         document.getElementById('modalEndBal').innerText = Formatter.currency(data.endBal);
-        
+
         document.getElementById('modalFlowIncome').innerText = Formatter.currency(data.inIncome);
         document.getElementById('modalFlowReturns').innerText = Formatter.currency(data.inReturn);
         document.getElementById('modalFlowReinvest').innerText = `-${Formatter.currency(data.outReinvest)}`; // Simplified display
@@ -307,14 +308,14 @@ class App {
 
         const wSec = document.getElementById('modalWithdrawSection');
         const canWithdraw = data.tier > 0 || data.status !== 'none';
-        
+
         if (canWithdraw) {
             wSec.classList.remove('hidden');
-            
+
             // Value display logic
             const amountToDisplay = data.status === 'realized' ? data.outWithdraw : Math.floor(data.tier * 0.90);
             document.getElementById('modalWithdrawVal').innerText = Formatter.currency(amountToDisplay);
-            
+
             const status = document.getElementById('modalWithdrawStatus');
             if (data.status === 'realized') {
                 status.innerText = "SAQUE CONFIRMADO";
@@ -332,14 +333,14 @@ class App {
         } else {
             wSec.classList.add('hidden');
         }
-        
+
         this.openModal('dayModal');
     }
 
     openTimelineModal() {
         Renderer.renderTimeline(
-            store.state.dailyData, 
-            parseInt(store.state.inputs.viewPeriodSelect), 
+            store.state.dailyData,
+            parseInt(store.state.inputs.viewPeriodSelect),
             store.state.inputs.dataInicio
         );
         this.openModal('timelineModal');
@@ -371,7 +372,7 @@ class App {
                         <span class="text-blue-400 font-bold">${Formatter.currency(w.val)}</span>
                     </div>`;
             });
-            
+
             html = `
                 <h3 class="text-lg font-bold text-blue-400 mb-4"><i class="fas fa-hand-holding-usd mr-2"></i>Histórico de Saques</h3>
                 <div class="text-center mb-4">
@@ -385,8 +386,8 @@ class App {
             const cash = results.finalWallet || 0;
             const active = results.finalActiveInv || 0;
             const total = cash + active;
-            const cashPerc = total > 0 ? (cash/total)*100 : 0;
-            
+            const cashPerc = total > 0 ? (cash / total) * 100 : 0;
+
             html = `
                 <h3 class="text-lg font-bold text-white mb-4"><i class="fas fa-piggy-bank mr-2"></i>Composição do Saldo</h3>
                 <div class="text-center mb-4">
@@ -394,7 +395,7 @@ class App {
                     <p class="text-[10px] text-slate-500">Projeção Final</p>
                 </div>
                 <div class="h-4 bg-slate-700 rounded-full overflow-hidden flex mb-4">
-                    <div class="h-full bg-emerald-500" style="width: ${100-cashPerc}%"></div>
+                    <div class="h-full bg-emerald-500" style="width: ${100 - cashPerc}%"></div>
                     <div class="h-full bg-blue-500" style="width: ${cashPerc}%"></div>
                 </div>
                 <div class="grid grid-cols-2 gap-2 text-xs">
@@ -433,7 +434,7 @@ class App {
     saveProfileName() {
         const name = document.getElementById('editCurrentProfileName').value;
         if (!name) return Renderer.toast('Nome inválido', 'error');
-        
+
         const profiles = { ...store.state.profiles };
         profiles[store.state.currentProfileId].name = name;
         store.setState({ profiles });
@@ -591,7 +592,7 @@ class App {
 
         const realizedWithdrawals = [...(store.state.realizedWithdrawals || []), { date, amount }];
         store.setState({ realizedWithdrawals });
-        
+
         Renderer.toast('Saque realizado com sucesso!', 'success');
         this.runCalculation();
         this.openDayDetails(date); // Refresh modal
@@ -600,7 +601,7 @@ class App {
     // --- Utils ---
     openModal(id) { document.getElementById(id).classList.remove('hidden'); }
     closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-    
+
     resetData() {
         if (confirm("Deseja limpar todos os dados do perfil atual?")) {
             const initial = store.getInitialData();
@@ -624,7 +625,7 @@ class App {
     exportToCSV() {
         const dailyData = store.state.dailyData;
         let csv = "Data,Saldo Inicial,Retorno,Renda,Aporte,Saque,Saldo Final\n";
-        
+
         Object.keys(dailyData).sort().forEach(date => {
             const d = dailyData[date];
             csv += `${date},${Formatter.fromCents(d.startBal)},${Formatter.fromCents(d.inReturn)},${Formatter.fromCents(d.inIncome)},0,${Formatter.fromCents(d.outWithdraw)},${Formatter.fromCents(d.endBal)}\n`;

@@ -102,7 +102,7 @@ class Store {
     // --- Profile Management ---
     switchProfile(id) {
         if (!this.state.profiles[id]) return;
-        
+
         // Save current profile data before switching
         this.state.profiles[this.state.currentProfileId].data = {
             inputs: { ...this.state.inputs },
@@ -114,7 +114,7 @@ class Store {
 
         this.state.currentProfileId = id;
         const profile = this.state.profiles[id].data;
-        
+
         this.state.inputs = { ...profile.inputs };
         this.state.portfolio = [...profile.portfolio];
         this.state.selectedWeeks = [...profile.selectedWeeks];
@@ -136,10 +136,10 @@ class Store {
 
     deleteProfile(id) {
         if (Object.keys(this.state.profiles).length <= 1) return false;
-        
+
         const wasCurrent = this.state.currentProfileId === id;
         delete this.state.profiles[id];
-        
+
         if (wasCurrent) {
             this.switchProfile(Object.keys(this.state.profiles)[0]);
         } else {
@@ -165,6 +165,46 @@ class Store {
             profiles: this.state.profiles
         };
         localStorage.setItem('gestor_sp_profiles', JSON.stringify(dataToSave));
+
+        // Notify persistence listener if exists (for cloud sync)
+        if (this.onPersistenceUpdate) {
+            this.onPersistenceUpdate(dataToSave);
+        }
+    }
+
+    getDataForPersistence() {
+        this.state.profiles[this.state.currentProfileId].data = {
+            inputs: this.state.inputs,
+            portfolio: this.state.portfolio,
+            selectedWeeks: this.state.selectedWeeks,
+            goals: this.state.goals || [],
+            realizedWithdrawals: this.state.realizedWithdrawals || []
+        };
+        return {
+            currentProfileId: this.state.currentProfileId,
+            profiles: this.state.profiles
+        };
+    }
+
+    loadFromPersistence(data) {
+        if (!data || !data.profiles) return;
+
+        this.state.currentProfileId = data.currentProfileId;
+        this.state.profiles = data.profiles;
+
+        const current = this.state.profiles[this.state.currentProfileId].data;
+        this.state.inputs = { ...current.inputs };
+        this.state.portfolio = [...current.portfolio];
+        this.state.selectedWeeks = [...current.selectedWeeks];
+        this.state.goals = [...(current.goals || [])];
+        this.state.realizedWithdrawals = [...(current.realizedWithdrawals || [])];
+
+        this.saveToStorage(); // Update local storage too
+        this.notify();
+    }
+
+    setPersistenceCallback(callback) {
+        this.onPersistenceUpdate = callback;
     }
 
     loadFromStorage() {
@@ -173,7 +213,7 @@ class Store {
             const parsed = JSON.parse(saved);
             this.state.currentProfileId = parsed.currentProfileId;
             this.state.profiles = parsed.profiles;
-            
+
             const current = this.state.profiles[this.state.currentProfileId].data;
             this.state.inputs = { ...current.inputs };
             this.state.portfolio = [...current.portfolio];
@@ -201,10 +241,10 @@ class Store {
         try {
             const parsed = JSON.parse(jsonString);
             if (!parsed.profiles || !parsed.currentProfileId) throw new Error('Formato inválido');
-            
+
             this.state.profiles = parsed.profiles;
             this.state.currentProfileId = parsed.currentProfileId;
-            
+
             // Reload current profile
             const current = this.state.profiles[this.state.currentProfileId].data;
             this.state.inputs = { ...current.inputs };
