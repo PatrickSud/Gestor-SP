@@ -319,6 +319,15 @@ class App {
         this.openModal('dayModal');
     }
 
+    openTimelineModal() {
+        Renderer.renderTimeline(
+            store.state.dailyData, 
+            parseInt(store.state.inputs.viewPeriodSelect), 
+            store.state.inputs.dataInicio
+        );
+        this.openModal('timelineModal');
+    }
+
     openCardDetails(type) {
         const content = document.getElementById('cardModalContent');
         const results = store.state.results;

@@ -243,8 +243,13 @@
         <!-- Chart Section -->
         <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="font-bold text-white flex items-center gap-2"><i class="fas fa-chart-area text-blue-500"></i> Evolução Patrimonial</h3>
-                <span class="text-[10px] text-slate-500 uppercase font-bold">Projeção 365 dias</span>
+                <div class="flex items-center gap-2">
+                    <h3 class="font-bold text-white flex items-center gap-2"><i class="fas fa-chart-area text-blue-500"></i> Evolução Patrimonial</h3>
+                    <span class="text-[10px] text-slate-500 uppercase font-bold">Projeção 365 dias</span>
+                </div>
+                <button onclick="app.openTimelineModal()" class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-[10px] font-bold uppercase rounded-lg border border-blue-500/30 transition-all shadow-sm">
+                    <i class="fas fa-history"></i> + Detalhes
+                </button>
             </div>
             <div class="h-[300px] w-full">
                 <canvas id="balanceChart"></canvas>
@@ -475,6 +480,42 @@
                 <div class="flex gap-2">
                     <button onclick="app.closeModal('commitModal')" class="flex-1 bg-slate-700 text-white text-xs py-2 rounded-lg">Cancelar</button>
                     <button onclick="app.confirmCommit()" class="flex-1 bg-emerald-600 text-white text-xs py-2 rounded-lg">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline Modal (Extrato Style) -->
+    <div id="timelineModal" class="fixed inset-0 z-[70] hidden modal-overlay flex items-center justify-center p-4">
+        <div class="bg-[#121212] rounded-3xl border border-slate-800 shadow-2xl max-w-2xl w-full h-[85vh] flex flex-col overflow-hidden animate-fade-in relative">
+            <!-- Modal Header -->
+            <div class="p-6 bg-[#1a1a1a] border-b border-white/5 flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-white">Extrato Detalhado</h3>
+                    <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-1">Evolução Patrimonial Dia a Dia</p>
+                </div>
+                <button onclick="app.closeModal('timelineModal')" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Body (Custom Scrollbar) -->
+            <div id="timelineContent" class="flex-1 overflow-y-auto p-6 space-y-8 scroll-smooth custom-scrollbar bg-[#121212]">
+                <!-- Timeline items will be injected here -->
+            </div>
+
+            <!-- Modal Footer (Cumulative Summary) -->
+            <div class="p-4 bg-[#1a1a1a] border-t border-white/5 flex justify-between items-center text-xs">
+                <span class="text-slate-500 uppercase font-bold">Resumo do Período</span>
+                <div class="flex gap-4">
+                    <div class="flex flex-col items-end">
+                        <span class="text-[9px] text-slate-600 font-bold uppercase">Total Entradas</span>
+                        <span class="text-emerald-400 font-bold" id="timelineTotalEntries">R$ 0,00</span>
+                    </div>
+                    <div class="flex flex-col items-end">
+                        <span class="text-[9px] text-slate-600 font-bold uppercase">Total Saídas</span>
+                        <span class="text-red-400 font-bold" id="timelineTotalExits">R$ 0,00</span>
+                    </div>
                 </div>
             </div>
         </div>

@@ -181,6 +181,121 @@ export const Renderer = {
         }
     },
 
+    renderTimeline(dailyData, viewDays, startDateStr) {
+        const container = document.getElementById('timelineContent');
+        if (!container) return;
+
+        let html = '';
+        let totalIncome = 0;
+        let totalExpense = 0;
+        const limitDateStr = Formatter.addDays(startDateStr, viewDays);
+
+        const sortedDates = Object.keys(dailyData).sort();
+        
+        sortedDates.forEach(dateStr => {
+            if (dateStr > limitDateStr) return;
+            const d = dailyData[dateStr];
+            
+            // Check if day has any activity (Task income, Port returns, Cycle profit, or Withdraw)
+            const hasActivity = d.stepIncome > 0 || d.releasedPort > 0 || d.isCycleEnd || d.stepWithdraw > 0;
+            if (!hasActivity) return;
+
+            // Day Header
+            const dateObj = new Date(dateStr + 'T12:00:00Z');
+            const dayName = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
+            const dayNum = dateStr.split('-')[2];
+            html += `<div class="timeline-day-header">${dayNum} • ${dayName}</div>`;
+
+            // Collect items for this day
+            const subItems = [];
+
+            // 1. Task Income
+            if (d.stepIncome > 0) {
+                subItems.push({ 
+                    label: 'Renda de Tarefas', 
+                    sub: 'Ganho diário acumulado', 
+                    val: d.stepIncome, 
+                    type: 'income',
+                    dot: '#10b981'
+                });
+                totalIncome += d.stepIncome;
+            }
+
+            // 2. Portfolio Releases
+            if (d.releasedPort > 0) {
+                subItems.push({ 
+                    label: 'Lançamento de Carteira', 
+                    sub: 'Contrato finalizado', 
+                    val: d.releasedPort, 
+                    type: 'income',
+                    dot: '#10b981'
+                });
+                totalIncome += d.releasedPort;
+            }
+
+            // 3. Simulation Cycle Profit
+            if (d.isCycleEnd && d.currentInv > 0) {
+                // Approximate profit from store context if possible, otherwise label reinvestment
+                subItems.push({ 
+                    label: 'Ciclo de Reinvestimento', 
+                    sub: 'Lucro de simulação efetivado', 
+                    val: 0, // Visual only for the event
+                    type: 'balance',
+                    dot: '#3b82f6',
+                    customText: 'EFETIVADO' 
+                });
+            }
+
+            // 4. Withdrawal
+            if (d.stepWithdraw > 0) {
+                subItems.push({ 
+                    label: 'Saque Estratégico', 
+                    sub: 'Valor líquido transferido', 
+                    val: d.stepWithdraw, 
+                    type: 'expense',
+                    dot: '#ef4444'
+                });
+                totalExpense += d.stepWithdraw;
+            }
+
+            // 5. Daily Projected Balance
+            subItems.push({ 
+                label: 'Saldo Previsto', 
+                sub: 'Patrimônio ao fim do dia', 
+                val: d.endBal, 
+                type: 'balance',
+                dot: '#60a5fa'
+            });
+
+            // Render Sub Items
+            subItems.forEach((item, idx) => {
+                const isLast = idx === subItems.length - 1;
+                html += `
+                    <div class="timeline-item">
+                        <div class="timeline-marker">
+                            <div class="timeline-dot" style="background: ${item.dot}"></div>
+                            ${!isLast ? '<div class="timeline-line"></div>' : ''}
+                        </div>
+                        <div class="timeline-content">
+                            <div>
+                                <div class="timeline-label">${item.label}</div>
+                                <div class="timeline-sublabel">${item.sub}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="timeline-value ${item.type}">${item.customText || (item.type === 'expense' ? '-' : '+') + Formatter.currency(item.val)}</div>
+                                <div class="efetivar-badge">Confirmado</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+
+        container.innerHTML = html;
+        document.getElementById('timelineTotalEntries').innerText = Formatter.currency(totalIncome);
+        document.getElementById('timelineTotalExits').innerText = Formatter.currency(totalExpense);
+    },
+
     renderWithdrawButtons(onSelect, selectedValue) {
         const grid = this.els.tiersGrid();
         if (!grid) return;
