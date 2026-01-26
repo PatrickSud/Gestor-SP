@@ -57,7 +57,7 @@ export const Calculator = {
         // Portfolio Mapping
         const portReleases = {};
         const portMaturingDetails = {};
-        let totalCentsInvested = walletStart + initialSimCapital; // Initial "skin in the game"
+        let totalCentsInvested = walletStart + initialSimCapital;
 
         portfolio.forEach(p => {
             const endStr = Formatter.addDays(p.date, p.days);
@@ -82,119 +82,113 @@ export const Calculator = {
         let currentInv = initialSimCapital;
         let currentWallet = walletStart;
         let totalWithdrawnCents = 0;
-        let lastCycleEnd = startDateStr;
         let dailyData = {};
-        let exportData = []; // To be parsed by UI if needed
         let graphData = [];
 
-        let simulationDuration = (futureToggle === 'true') ? (totalReps * cycleDays) : viewDays;
-        const stepSize = (futureToggle === 'true' && cycleDays > 0) ? cycleDays : 1;
-        const totalSteps = Math.ceil(simulationDuration / stepSize);
-        const visualMaxDate = Formatter.addDays(startDateStr, Math.max(viewDays, simulationDuration));
-
-        let activeInvCycles = 0;
+        // Determine Simulation Length
+        const simulationDays = Math.max(viewDays, totalReps * cycleDays + 30); // At least 30 safety days
+        
         let cycleEnds = [];
         let nextWithdrawCents = 0;
         let nextWithdrawDate = '-';
         let withdrawalHistory = [];
-        let totalIncomeCents = 0;
-        let totalReturnsCents = 0;
+        
+        let simCycleTimer = cycleDays;
+        let completedReps = 0;
 
-        for (let i = 1; i <= totalSteps; i++) {
-            const cycleEndStr = Formatter.addDays(startDateStr, i * stepSize);
+        for (let d = 0; d <= simulationDays; d++) {
+            const currentDayStr = Formatter.addDays(startDateStr, d);
             
             let stepIncome = 0;
             let stepReturns = 0;
-            let stepReinvest = 0;
             let stepWithdraw = 0;
             let stepMaturingList = [];
+            let isCycleEnd = false;
+            let startBalCents = currentInv + currentWallet;
 
-            // Day-by-day sub-loop
-            let dIterator = Formatter.addDays(lastCycleEnd, 1);
-            while (dIterator <= cycleEndStr) {
-                // Task Income (Mon-Sat)
-                if (Formatter.getDayOfWeek(dIterator) !== 0) {
-                    stepIncome += taskValCents;
-                    totalIncomeCents += taskValCents;
-                }
-                
-                // Monthly Income (every 30 days or day 1 logic)
-                // Using 30 day simplicity from original code
-                const daysTotal = Formatter.daysBetween(startDateStr, dIterator);
-                if (daysTotal > 0 && daysTotal % 30 === 0) {
-                    stepIncome += monthlyIncomeCents;
-                    totalIncomeCents += monthlyIncomeCents;
-                }
+            // 1. Task Income (Mon-Sat, exclude Sun)
+            if (d > 0 && Formatter.getDayOfWeek(currentDayStr) !== 0) {
+                stepIncome += taskValCents;
+            }
+            
+            // 2. Monthly Income (every 30 days)
+            if (d > 0 && d % 30 === 0) {
+                stepIncome += monthlyIncomeCents;
+            }
 
-                // Portfolio Maturities
-                if (portReleases[dIterator]) {
-                    stepReturns += portReleases[dIterator];
-                    if (portMaturingDetails[dIterator]) {
-                        stepMaturingList.push(...portMaturingDetails[dIterator]);
-                    }
-                }
-                dIterator = Formatter.addDays(dIterator, 1);
+            // 3. Portfolio Maturities
+            if (portReleases[currentDayStr]) {
+                stepReturns += portReleases[currentDayStr];
+                stepMaturingList = portMaturingDetails[currentDayStr];
             }
 
             currentWallet += stepIncome;
 
-            if (mergeSimToggle && stepReturns > 0 && futureToggle === 'true') {
+            // 4. Simulated Cycle Logic
+            if (futureToggle === 'true' && completedReps < totalReps) {
+                simCycleTimer--;
+                if (simCycleTimer === 0) {
+                    let bonusPerc = 0;
+                    if (currentInv >= mT1 && currentInv <= lT1) bonusPerc = bT1;
+                    else if (currentInv > lT1) bonusPerc = bT2;
+
+                    const activeCap = Math.floor(currentInv * (1 + bonusPerc));
+                    const profit = Math.floor(activeCap * dailyRate * cycleDays);
+                    
+                    const totalFromCycle = activeCap + profit;
+                    
+                    if (mergeSimToggle) {
+                        currentInv = totalFromCycle;
+                    } else {
+                        currentWallet += profit;
+                        // currentInv stays same as principal for next rep
+                    }
+                    
+                    isCycleEnd = true;
+                    cycleEnds.push(currentDayStr);
+                    completedReps++;
+                    simCycleTimer = cycleDays; // Reset for next rep
+                }
+            }
+
+            // Add portfolio returns to balance
+            if (mergeSimToggle && futureToggle === 'true' && stepReturns > 0) {
                 currentInv += stepReturns;
             } else {
                 currentWallet += stepReturns;
             }
 
-            totalReturnsCents += stepReturns;
-
-            let startBalCents = currentInv + currentWallet;
-            let isCycleEnd = false;
-
-            if (futureToggle === 'true' && activeInvCycles < totalReps && currentInv > 0) {
-                let bonusPerc = 0;
-                if (currentInv >= mT1 && currentInv <= lT1) bonusPerc = bT1;
-                else if (currentInv > lT1) bonusPerc = bT2;
-
-                const activeCap = Math.floor(currentInv * (1 + bonusPerc));
-                const cycleProfit = Math.floor(activeCap * dailyRate * stepSize);
-                
-                stepReinvest = activeCap - currentInv;
-                currentInv = activeCap + cycleProfit;
-                isCycleEnd = true;
-                activeInvCycles++;
-                cycleEnds.push(cycleEndStr);
-            }
-
             let totalPool = currentInv + currentWallet;
 
-            // Withdrawal Logic
-            const isWithdrawalDay = Formatter.getDayOfWeek(cycleEndStr) === targetDay;
-            let availableTier = 0, netAvailable = 0, executedNet = 0, wasExecuted = false;
+            // 5. Withdrawal Logic (Only on designated day)
+            const isWithdrawalDay = Formatter.getDayOfWeek(currentDayStr) === targetDay;
+            let availableTier = 0, netAvailable = 0, wasExecuted = false;
 
-            if (isWithdrawalDay) {
+            if (isWithdrawalDay && d > 0) {
                 availableTier = this.WITHDRAWAL_TIERS.filter(t => t <= totalPool).pop() || 0;
                 netAvailable = Math.floor(availableTier * 0.90);
 
-                if (nextWithdrawCents === 0 && netAvailable > 0 && cycleEndStr >= todayStr) {
+                if (nextWithdrawCents === 0 && netAvailable > 0 && currentDayStr >= todayStr) {
                     nextWithdrawCents = netAvailable;
-                    nextWithdrawDate = cycleEndStr;
+                    nextWithdrawDate = currentDayStr;
                 }
 
                 let shouldWithdraw = false;
                 if (withdrawStrategy === 'max' && availableTier > 0) shouldWithdraw = true;
                 else if (withdrawStrategy === 'fixed' && availableTier >= withdrawTargetCents) shouldWithdraw = true;
                 else if (withdrawStrategy === 'weekly' && availableTier > 0) {
-                    const d = parseInt(cycleEndStr.split('-')[2]);
-                    const week = Math.ceil(d / 7);
-                    if (selectedWeeks.includes(week)) shouldWithdraw = true;
+                    const dayOfMonth = parseInt(currentDayStr.split('-')[2]);
+                    const weekNum = Math.ceil(dayOfMonth / 7);
+                    if (selectedWeeks.includes(weekNum)) shouldWithdraw = true;
                 }
 
                 if (shouldWithdraw) {
                     const amountToWithdraw = availableTier;
-                    executedNet = Math.floor(amountToWithdraw * 0.90);
-                    stepWithdraw = executedNet;
-                    totalWithdrawnCents += executedNet;
+                    const net = Math.floor(amountToWithdraw * 0.90);
+                    stepWithdraw = net;
+                    totalWithdrawnCents += net;
                     wasExecuted = true;
-                    withdrawalHistory.push({ date: cycleEndStr, val: executedNet });
+                    withdrawalHistory.push({ date: currentDayStr, val: net });
 
                     if (currentWallet >= amountToWithdraw) {
                         currentWallet -= amountToWithdraw;
@@ -208,12 +202,12 @@ export const Calculator = {
                 }
             }
 
-            dailyData[cycleEndStr] = {
+            dailyData[currentDayStr] = {
                 startBal: startBalCents,
                 endBal: totalPool,
                 inIncome: stepIncome,
                 inReturn: stepReturns,
-                outReinvest: currentInv, // Focus on current investment power
+                outReinvest: currentInv,
                 outWithdraw: stepWithdraw,
                 maturing: stepMaturingList,
                 tier: availableTier,
@@ -221,25 +215,19 @@ export const Calculator = {
                 executed: wasExecuted
             };
 
-            graphData.push({
-                x: cycleEndStr,
-                y: Formatter.fromCents(totalPool)
-            });
-
-            lastCycleEnd = cycleEndStr;
+            if (d <= viewDays || d % 5 === 0) { // Optimize graph points for performance
+                graphData.push({ x: currentDayStr, y: Formatter.fromCents(totalPool) });
+            }
         }
-
-        const netProfitCents = (currentInv + currentWallet + totalWithdrawnCents) - totalCentsInvested;
-        const roi = totalCentsInvested > 0 ? (netProfitCents / totalCentsInvested) * 100 : 0;
 
         return {
             results: {
-                netProfit: netProfitCents,
+                netProfit: (currentInv + currentWallet + totalWithdrawnCents) - totalCentsInvested,
                 totalWithdrawn: totalWithdrawnCents,
                 finalBalance: currentInv + currentWallet,
                 nextWithdraw: nextWithdrawCents,
                 nextWithdrawDate: nextWithdrawDate,
-                roi: roi,
+                roi: totalCentsInvested > 0 ? (((currentInv + currentWallet + totalWithdrawnCents) - totalCentsInvested) / totalCentsInvested) * 100 : 0,
                 graphData,
                 finalWallet: currentWallet,
                 finalActiveInv: currentInv,

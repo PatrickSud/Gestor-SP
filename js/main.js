@@ -53,6 +53,12 @@ class App {
             Renderer.renderCalendar(store.state.inputs.dataInicio, results.dailyData, results.cycleEnds);
             Renderer.renderPortfolio(store.state.portfolio, (id) => this.removeInvestment(id));
             
+            // Sync strategy buttons
+            Renderer.renderWithdrawButtons((val) => {
+                store.updateInput('withdrawTarget', val);
+                this.runCalculation();
+            }, store.state.inputs.withdrawTarget);
+            
             // Update Chart
             ChartManager.renderBalanceChart('balanceChart', results.results.graphData);
             
@@ -136,6 +142,13 @@ class App {
             (id) => this.switchProfile(id), 
             (id) => this.deleteProfile(id)
         );
+
+        // Refresh dynamic UI selectors
+        this.restoreWeeksUI();
+        Renderer.renderWithdrawButtons((val) => {
+            store.updateInput('withdrawTarget', val);
+            this.runCalculation();
+        }, state.inputs.withdrawTarget);
     }
 
     // --- Actions ---
