@@ -189,109 +189,134 @@ export const Renderer = {
         let totalIncome = 0;
         let totalExpense = 0;
         const limitDateStr = Formatter.addDays(startDateStr, viewDays);
-
         const sortedDates = Object.keys(dailyData).sort();
-        
-        sortedDates.forEach(dateStr => {
+
+        if (sortedDates.length === 0) {
+            container.innerHTML = '<div class="text-center py-20 text-slate-500 font-bold italic text-sm">Nenhum dado projetado para este período.</div>';
+            return;
+        }
+
+        let itemsRendered = 0;
+
+        sortedDates.forEach((dateStr, index) => {
             if (dateStr > limitDateStr) return;
             const d = dailyData[dateStr];
             
-            // Check if day has any activity (Task income, Port returns, Cycle profit, or Withdraw)
-            const hasActivity = d.stepIncome > 0 || d.releasedPort > 0 || d.isCycleEnd || d.stepWithdraw > 0;
-            if (!hasActivity) return;
-
-            // Day Header
-            const dateObj = new Date(dateStr + 'T12:00:00Z');
-            const dayName = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
-            const dayNum = dateStr.split('-')[2];
-            html += `<div class="timeline-day-header">${dayNum} • ${dayName}</div>`;
-
-            // Collect items for this day
+            // Atividades do dia
             const subItems = [];
 
-            // 1. Task Income
-            if (d.stepIncome > 0) {
+            // 0. Saldo de Abertura (Apenas no primeiro dia)
+            if (index === 0) {
                 subItems.push({ 
-                    label: 'Renda de Tarefas', 
-                    sub: 'Ganho diário acumulado', 
-                    val: d.stepIncome, 
-                    type: 'income',
-                    dot: '#10b981'
-                });
-                totalIncome += d.stepIncome;
-            }
-
-            // 2. Portfolio Releases
-            if (d.releasedPort > 0) {
-                subItems.push({ 
-                    label: 'Lançamento de Carteira', 
-                    sub: 'Contrato finalizado', 
-                    val: d.releasedPort, 
-                    type: 'income',
-                    dot: '#10b981'
-                });
-                totalIncome += d.releasedPort;
-            }
-
-            // 3. Simulation Cycle Profit
-            if (d.isCycleEnd && d.currentInv > 0) {
-                // Approximate profit from store context if possible, otherwise label reinvestment
-                subItems.push({ 
-                    label: 'Ciclo de Reinvestimento', 
-                    sub: 'Lucro de simulação efetivado', 
-                    val: 0, // Visual only for the event
+                    label: 'Saldo de Abertura', 
+                    sub: 'Base inicial configurada', 
+                    val: d.startBal, 
                     type: 'balance',
                     dot: '#3b82f6',
+                    customText: Formatter.currency(d.startBal)
+                });
+            }
+
+            // 1. Renda de Tarefas
+            if (d.inIncome > 0) {
+                subItems.push({ 
+                    label: 'Entradas (Tarefas)', 
+                    sub: 'Renda diária do nível selecionado', 
+                    val: d.inIncome, 
+                    type: 'income',
+                    dot: '#10b981'
+                });
+                totalIncome += d.inIncome;
+            }
+
+            // 2. Retornos de Contratos
+            if (d.inReturn > 0) {
+                subItems.push({ 
+                    label: 'Retorno de Contrato', 
+                    sub: 'Capital + Lucro desbloqueado', 
+                    val: d.inReturn, 
+                    type: 'income',
+                    dot: '#10b981'
+                });
+                totalIncome += d.inReturn;
+            }
+
+            // 3. Simulação
+            if (d.isCycleEnd) {
+                subItems.push({ 
+                    label: 'Reinvestimento Simulado', 
+                    sub: 'Ciclo de juros compostos', 
+                    val: 0,
+                    type: 'balance',
+                    dot: '#8b5cf6',
                     customText: 'EFETIVADO' 
                 });
             }
 
-            // 4. Withdrawal
-            if (d.stepWithdraw > 0) {
+            // 4. Saques
+            if (d.outWithdraw > 0) {
                 subItems.push({ 
                     label: 'Saque Estratégico', 
-                    sub: 'Valor líquido transferido', 
-                    val: d.stepWithdraw, 
+                    sub: 'Transferência realizada (líquida)', 
+                    val: d.outWithdraw, 
                     type: 'expense',
                     dot: '#ef4444'
                 });
-                totalExpense += d.stepWithdraw;
+                totalExpense += d.outWithdraw;
             }
 
-            // 5. Daily Projected Balance
-            subItems.push({ 
-                label: 'Saldo Previsto', 
-                sub: 'Patrimônio ao fim do dia', 
-                val: d.endBal, 
-                type: 'balance',
-                dot: '#60a5fa'
-            });
+            // Se for um dia importante ou o último dia, mostramos o Saldo Previsto
+            if (subItems.length > 0 || dateStr === limitDateStr) {
+                subItems.push({ 
+                    label: 'Saldo Previsto', 
+                    sub: 'Acumulado até o momento', 
+                    val: d.endBal, 
+                    type: 'balance',
+                    dot: '#64748b',
+                    customText: Formatter.currency(d.endBal)
+                });
+            }
 
-            // Render Sub Items
-            subItems.forEach((item, idx) => {
-                const isLast = idx === subItems.length - 1;
-                html += `
-                    <div class="timeline-item">
-                        <div class="timeline-marker">
-                            <div class="timeline-dot" style="background: ${item.dot}"></div>
-                            ${!isLast ? '<div class="timeline-line"></div>' : ''}
-                        </div>
-                        <div class="timeline-content">
-                            <div>
-                                <div class="timeline-label">${item.label}</div>
-                                <div class="timeline-sublabel">${item.sub}</div>
+            // Renderizar se houver itens no dia
+            if (subItems.length > 0) {
+                itemsRendered++;
+                const dateObj = new Date(dateStr + 'T12:00:00Z');
+                const dayName = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
+                const dayNum = dateStr.split('-')[2];
+                const monthName = dateObj.toLocaleDateString('pt-BR', { month: 'short' });
+
+                html += `<div class="timeline-day-header">${dayNum} de ${monthName} • ${dayName}</div>`;
+                
+                subItems.forEach((item, idx) => {
+                    const isLast = idx === subItems.length - 1;
+                    html += `
+                        <div class="timeline-item">
+                            <div class="timeline-marker">
+                                <div class="timeline-dot" style="background: ${item.dot}"></div>
+                                ${!isLast ? '<div class="timeline-line"></div>' : ''}
                             </div>
-                            <div class="text-right">
-                                <div class="timeline-value ${item.type}">${item.customText || (item.type === 'expense' ? '-' : '+') + Formatter.currency(item.val)}</div>
-                                <div class="efetivar-badge">Confirmado</div>
+                            <div class="timeline-content">
+                                <div>
+                                    <div class="timeline-label">${item.label}</div>
+                                    <div class="timeline-sublabel">${item.sub}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="timeline-value ${item.type}">${item.customText || (item.type === 'expense' ? '-' : '+') + Formatter.currency(item.val)}</div>
+                                    <div class="efetivar-badge">Padrão</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                `;
-            });
+                    `;
+                });
+            }
         });
 
-        container.innerHTML = html;
+        if (itemsRendered === 0) {
+            container.innerHTML = '<div class="text-center py-20 text-slate-500 font-bold italic text-sm">Nenhum evento financeiro neste período.</div>';
+        } else {
+            container.innerHTML = html;
+        }
+        
         document.getElementById('timelineTotalEntries').innerText = Formatter.currency(totalIncome);
         document.getElementById('timelineTotalExits').innerText = Formatter.currency(totalExpense);
     },
