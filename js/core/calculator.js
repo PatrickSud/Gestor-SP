@@ -153,16 +153,38 @@ export const Calculator = {
 
             // 5. Withdrawal Logic
             const isWithdrawalDay = Formatter.getDayOfWeek(currentDayStr) === targetDay;
-            let availableTier = 0, isRealized = false, isPlanned = false;
+            const availableTier = this.WITHDRAWAL_TIERS.filter(t => t <= totalPool).pop() || 0;
+            
+            let isRealized = false;
+            let isPlanned = false;
+            let amountToWithdrawCents = 0;
 
-            // Check if there's a realized withdrawal on this day
-            const realizedOnDay = realizedWithdrawals.find(w => w.date === currentDayStr);
+            // Strategy Planning
+            if (isWithdrawalDay && d > 0) {
+                if (withdrawStrategy === 'max' && availableTier > 0) isPlanned = true;
+                else if (withdrawStrategy === 'fixed' && availableTier >= withdrawTargetCents) isPlanned = true;
+                else if (withdrawStrategy === 'weekly' && availableTier > 0) {
+                    const dayOfMonth = parseInt(currentDayStr.split('-')[2]);
+                    const weekNum = Math.ceil(dayOfMonth / 7);
+                    if (selectedWeeks.includes(weekNum)) isPlanned = true;
+                }
+            }
+
+            // Check Manual Realized (Overrides planning)
+            const realizedOnDay = (realizedWithdrawals || []).find(w => w.date === currentDayStr);
             if (realizedOnDay) {
-                const amountToWithdrawCents = Formatter.toCents(realizedOnDay.amount);
+                isRealized = true;
+                amountToWithdrawCents = Formatter.toCents(realizedOnDay.amount);
+            } else if (isPlanned) {
+                // If not manual, use planned strategy
+                amountToWithdrawCents = availableTier;
+            }
+
+            // Subtract from balance
+            if (amountToWithdrawCents > 0) {
                 const net = Math.floor(amountToWithdrawCents * 0.90);
                 stepWithdraw = net;
                 totalWithdrawnCents += net;
-                isRealized = true;
 
                 if (currentWallet >= amountToWithdrawCents) currentWallet -= amountToWithdrawCents;
                 else {
@@ -171,44 +193,13 @@ export const Calculator = {
                     if (currentInv < 0) currentInv = 0;
                 }
                 totalPool -= amountToWithdrawCents;
-                withdrawalHistory.push({ date: currentDayStr, val: net, status: 'realized' });
-            } 
-            // If not realized, check if it's planned for FUTURE
-            else if (isWithdrawalDay && d > 0) {
-                availableTier = this.WITHDRAWAL_TIERS.filter(t => t <= totalPool).pop() || 0;
-                const netAvailable = Math.floor(availableTier * 0.90);
+                withdrawalHistory.push({ date: currentDayStr, val: net, status: isRealized ? 'realized' : 'planned' });
 
+                // Update Next Withdraw Info for dashboard
+                const netAvailable = Math.floor(availableTier * 0.90);
                 if (nextWithdrawCents === 0 && netAvailable > 0 && currentDayStr >= todayStr) {
                     nextWithdrawCents = netAvailable;
                     nextWithdrawDate = currentDayStr;
-                }
-
-                let shouldPlannedWithdraw = false;
-                if (withdrawStrategy === 'max' && availableTier > 0) shouldPlannedWithdraw = true;
-                else if (withdrawStrategy === 'fixed' && availableTier >= withdrawTargetCents) shouldPlannedWithdraw = true;
-                else if (withdrawStrategy === 'weekly' && availableTier > 0) {
-                    const dayOfMonth = parseInt(currentDayStr.split('-')[2]);
-                    const weekNum = Math.ceil(dayOfMonth / 7);
-                    if (selectedWeeks.includes(weekNum)) shouldPlannedWithdraw = true;
-                }
-
-                if (shouldPlannedWithdraw && currentDayStr >= todayStr) {
-                    isPlanned = true;
-                    const amountToWithdraw = availableTier;
-                    const net = Math.floor(amountToWithdraw * 0.90);
-                    stepWithdraw = net;
-                    totalWithdrawnCents += net;
-                    
-                    if (currentWallet >= amountToWithdraw) currentWallet -= amountToWithdraw;
-                    else {
-                        const remaining = amountToWithdraw - currentWallet;
-                        currentWallet = 0; currentInv -= remaining;
-                        if (currentInv < 0) currentInv = 0;
-                    }
-                    totalPool -= amountToWithdraw;
-                    withdrawalHistory.push({ date: currentDayStr, val: net, status: 'planned' });
-                } else if (shouldPlannedWithdraw) {
-                    isPlanned = true;
                 }
             }
 

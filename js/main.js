@@ -306,19 +306,23 @@ class App {
         }
 
         const wSec = document.getElementById('modalWithdrawSection');
-        if (data.status === 'realized' || data.status === 'planned') {
+        const canWithdraw = data.tier > 0 || data.status !== 'none';
+        
+        if (canWithdraw) {
             wSec.classList.remove('hidden');
             
-            const netVal = data.status === 'realized' ? data.outWithdraw : Math.floor(data.tier * 0.90);
-            document.getElementById('modalWithdrawVal').innerText = Formatter.currency(netVal);
+            // Value display logic
+            const amountToDisplay = data.status === 'realized' ? data.outWithdraw : Math.floor(data.tier * 0.90);
+            document.getElementById('modalWithdrawVal').innerText = Formatter.currency(amountToDisplay);
             
             const status = document.getElementById('modalWithdrawStatus');
             if (data.status === 'realized') {
-                status.innerText = "SAQUE REALIZADO";
-                status.className = "text-emerald-400 font-bold uppercase mt-1";
+                status.innerText = "SAQUE CONFIRMADO";
+                status.className = "text-blue-400 font-bold uppercase mt-1";
             } else {
+                const label = data.status === 'planned' ? 'SAQUE PLANEJADO' : 'DISPONÍVEL (FORA DA ESTRATÉGIA)';
                 status.innerHTML = `
-                    <div class="text-yellow-500 font-bold uppercase mt-1 mb-2">SAQUE PLANEJADO</div>
+                    <div class="text-emerald-500 font-bold uppercase mt-1 mb-2">${label}</div>
                     <button onclick="app.executeWithdrawal('${dateStr}', ${Formatter.fromCents(data.tier)})" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
                         <i class="fas fa-hand-holding-usd mr-1"></i> Realizar Saque Agora
                     </button>

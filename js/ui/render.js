@@ -132,7 +132,7 @@ export const Renderer = {
         if (!container) return;
 
         container.innerHTML = '';
-        const [y, m, d] = startDateStr.split('-').map(Number);
+        const [y, m, dayOfMonth] = startDateStr.split('-').map(Number);
         const curDate = new Date(Date.UTC(y, m - 1, 1));
         const todayStr = new Date().toISOString().split('T')[0];
 
@@ -153,7 +153,7 @@ export const Renderer = {
             for (let day = 1; day <= daysInMonth; day++) {
                 const dayStr = `${curDate.getUTCFullYear()}-${String(curDate.getUTCMonth()+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
                 const data = dailyData[dayStr];
-                const isCycle = cycleEnds.includes(dayStr);
+                const isCycle = (cycleEnds || []).includes(dayStr);
                 
                 let classes = "cal-day text-slate-400";
                 let dots = '';
@@ -208,12 +208,14 @@ export const Renderer = {
                 subItems.push({ label: 'Reinvestimento Simulado', sub: 'Juros Compostos', val: 0, type: 'balance', dot: '#8b5cf6', tag: 'EFETIVADO' });
             }
             if (d.status !== 'none') {
+                const label = d.status === 'realized' ? 'Saque Confirmado' : 'Saque Planejado';
+                const val = d.status === 'realized' ? d.outWithdraw : Math.floor(d.tier * 0.90);
                 subItems.push({ 
-                    label: d.status === 'realized' ? 'Saque Realizado' : 'Saque Planejado', 
+                    label,
                     sub: 'Transferência estratégica', 
-                    val: d.status === 'realized' ? d.outWithdraw : Math.floor(d.tier * 0.90), 
+                    val: val, 
                     type: d.status === 'realized' ? 'expense' : 'balance', 
-                    dot: d.status === 'realized' ? '#ef4444' : '#fbbf24', 
+                    dot: d.status === 'realized' ? '#3b82f6' : '#10b981', 
                     tag: d.status.toUpperCase() 
                 });
                 if (d.status === 'realized') totalExpense += d.outWithdraw;
@@ -254,7 +256,7 @@ export const Renderer = {
         const sortedDates = Object.keys(dailyData).sort();
         const finalBal = dailyData[sortedDates[sortedDates.length - 1]]?.endBal || 0;
 
-        container.innerHTML = goals.map((goal, idx) => {
+        container.innerHTML = (goals || []).map((goal, idx) => {
             const target = Formatter.toCents(goal.value);
             const progress = Math.min(100, Math.floor((finalBal / target) * 100));
             let date = '---';
@@ -275,10 +277,12 @@ export const Renderer = {
         const badge = document.getElementById('alertsBadge');
         const list = document.getElementById('alertsList');
         const container = document.getElementById('alertsContainer');
+        if (!badge || !list || !container) return;
+        
         const today = new Date();
         const alerts = [];
 
-        portfolio.forEach(p => {
+        (portfolio || []).forEach(p => {
             const end = new Date(Formatter.addDays(p.date, p.days));
             const diff = Math.ceil((end - today) / 86400000);
             if (diff <= 2 && diff >= 0) alerts.push({ type: 'warning', msg: `Vence em ${diff}d: ${p.name}`, icon: 'fa-exclamation-triangle' });
