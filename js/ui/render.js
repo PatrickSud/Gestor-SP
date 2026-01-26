@@ -86,7 +86,6 @@ export const Renderer = {
         this.els.navTotalBalance().innerText = Formatter.currency(results.finalBalance);
         this.els.resRoi().innerText = `ROI Total: ${results.roi.toFixed(1)}%`;
 
-        // Advanced KPIs
         document.getElementById('resPayback').innerText = `${results.paybackDays} dias`;
         document.getElementById('resMonthlyYield').innerText = Formatter.currency(results.avgMonthlyYield);
         document.getElementById('resBreakEven').innerText = results.breakEvenDate !== 'N/A' ? Formatter.dateDisplay(results.breakEvenDate) : 'N/A';
@@ -108,21 +107,19 @@ export const Renderer = {
         
         Object.keys(dailyData).sort().forEach(dateStr => {
             if (dateStr > limitDateStr) return;
-            
-            const data = dailyData[dateStr];
-            // Only show significant days
-            const isSignificant = data.executed || data.tier > 0 || data.inReturn > 0 || dateStr === limitDateStr;
+            const d = dailyData[dateStr];
+            const isSignificant = d.status !== 'none' || d.inReturn > 0 || dateStr === limitDateStr;
             
             if (isSignificant) {
                 html += `
                     <tr class="hover:bg-slate-700/50 border-b border-slate-700/50 transition-colors cursor-pointer" onclick="app.openDayDetails('${dateStr}')">
                         <td class="p-2 text-slate-300 border-r border-slate-700/50 whitespace-nowrap">${Formatter.dateDisplay(dateStr)}</td>
-                        <td class="p-2 text-right text-slate-500 hidden md:table-cell col-money">${Formatter.currency(data.startBal)}</td>
-                        <td class="p-2 text-right text-emerald-400 font-bold col-money">${data.inReturn > 0 ? '+' + Formatter.currency(data.inReturn) : '-'}</td>
-                        <td class="p-2 text-right text-indigo-400 col-money">${data.inIncome > 0 ? '+' + Formatter.currency(data.inIncome) : '-'}</td>
-                        <td class="p-2 text-right text-blue-400 col-money">${data.outReinvest > 0 ? '-' + Formatter.currency(data.outReinvest) : '-'}</td>
-                        <td class="p-2 text-right text-yellow-500 col-money">${data.executed ? '-' + Formatter.currency(data.outWithdraw) : '-'}</td>
-                        <td class="p-2 text-right text-white font-bold bg-slate-800/30 border-l border-slate-700/50 col-money">${Formatter.currency(data.endBal)}</td>
+                        <td class="p-2 text-right text-slate-500 hidden md:table-cell col-money">${Formatter.currency(d.startBal)}</td>
+                        <td class="p-2 text-right text-emerald-400 font-bold col-money">${d.inReturn > 0 ? '+' + Formatter.currency(d.inReturn) : '-'}</td>
+                        <td class="p-2 text-right text-indigo-400 col-money">${d.inIncome > 0 ? '+' + Formatter.currency(d.inIncome) : '-'}</td>
+                        <td class="p-2 text-right text-blue-400 col-money">${d.outReinvest > d.startBal ? '-' + Formatter.currency(d.outReinvest - d.startBal) : '-'}</td>
+                        <td class="p-2 text-right text-yellow-500 col-money">${d.outWithdraw > 0 ? '-' + Formatter.currency(d.outWithdraw) : '-'}</td>
+                        <td class="p-2 text-right text-white font-bold bg-slate-800/30 border-l border-slate-700/50 col-money">${Formatter.currency(d.endBal)}</td>
                     </tr>
                 `;
             }
@@ -137,13 +134,10 @@ export const Renderer = {
         container.innerHTML = '';
         const [y, m, d] = startDateStr.split('-').map(Number);
         const curDate = new Date(Date.UTC(y, m - 1, 1));
-        const limitDate = Formatter.addDays(startDateStr, 365);
         const todayStr = new Date().toISOString().split('T')[0];
 
-        let monthsRendered = 0;
-        while (monthsRendered < 12) {
+        for (let months = 0; months < 12; months++) {
             const monthName = curDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-            
             const monthDiv = document.createElement('div');
             monthDiv.className = "bg-slate-800 rounded-xl p-3 border border-slate-700/50 h-max";
             monthDiv.innerHTML = `<h4 class="text-center font-bold text-slate-400 capitalize mb-2 border-b border-slate-700/50 pb-1 text-xs">${monthName}</h4>`;
@@ -156,8 +150,8 @@ export const Renderer = {
             for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div></div>`;
             
             const daysInMonth = new Date(Date.UTC(curDate.getUTCFullYear(), curDate.getUTCMonth() + 1, 0)).getUTCDate();
-            for (let d = 1; d <= daysInMonth; d++) {
-                const dayStr = `${curDate.getUTCFullYear()}-${String(curDate.getUTCMonth()+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayStr = `${curDate.getUTCFullYear()}-${String(curDate.getUTCMonth()+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
                 const data = dailyData[dayStr];
                 const isCycle = cycleEnds.includes(dayStr);
                 
@@ -166,15 +160,14 @@ export const Renderer = {
 
                 if (dayStr === todayStr) classes += " today";
                 if (data) {
-                    if (data.executed) classes += " withdraw-executed";
-                    else if (data.tier > 0) classes += " withdraw-day";
+                    if (data.status === 'realized') classes += " withdraw-executed";
+                    else if (data.status === 'planned') classes += " withdraw-day";
                 }
-                
                 if (isCycle) dots += `<div class="w-1 h-1 bg-emerald-500 rounded-full"></div>`;
 
                 const cell = document.createElement('div');
                 cell.className = classes;
-                cell.innerHTML = `<span class="z-10">${d}</span>${dots ? `<div class="flex gap-0.5 mb-0.5 absolute bottom-1">${dots}</div>`: ''}`;
+                cell.innerHTML = `<span class="z-10">${day}</span>${dots ? `<div class="flex gap-0.5 mb-0.5 absolute bottom-1">${dots}</div>`: ''}`;
                 cell.onclick = () => app.openDayDetails(dayStr);
                 grid.appendChild(cell);
             }
@@ -182,7 +175,6 @@ export const Renderer = {
             monthDiv.appendChild(grid);
             container.appendChild(monthDiv);
             curDate.setUTCMonth(curDate.getUTCMonth() + 1);
-            monthsRendered++;
         }
     },
 
@@ -196,132 +188,62 @@ export const Renderer = {
         const limitDateStr = Formatter.addDays(startDateStr, viewDays);
         const sortedDates = Object.keys(dailyData).sort();
 
-        if (sortedDates.length === 0) {
-            container.innerHTML = '<div class="text-center py-20 text-slate-500 font-bold italic text-sm">Nenhum dado projetado para este período.</div>';
-            return;
-        }
-
-        let itemsRendered = 0;
-
         sortedDates.forEach((dateStr, index) => {
             if (dateStr > limitDateStr) return;
             const d = dailyData[dateStr];
-            
-            // Atividades do dia
             const subItems = [];
 
-            // 0. Saldo de Abertura (Apenas no primeiro dia)
             if (index === 0) {
-                subItems.push({ 
-                    label: 'Saldo de Abertura', 
-                    sub: 'Base inicial configurada', 
-                    val: d.startBal, 
-                    type: 'balance',
-                    dot: '#3b82f6',
-                    customText: Formatter.currency(d.startBal)
-                });
+                subItems.push({ label: 'Saldo de Abertura', sub: 'Base inicial', val: d.startBal, type: 'balance', dot: '#3b82f6', tag: 'INÍCIO' });
             }
-
-            // 1. Renda de Tarefas
             if (d.inIncome > 0) {
-                subItems.push({ 
-                    label: 'Entradas (Tarefas)', 
-                    sub: 'Renda diária do nível selecionado', 
-                    val: d.inIncome, 
-                    type: 'income',
-                    dot: '#10b981'
-                });
+                subItems.push({ label: 'Entradas (Tarefas)', sub: 'Renda diária', val: d.inIncome, type: 'income', dot: '#10b981', tag: 'RECEBIDO' });
                 totalIncome += d.inIncome;
             }
-
-            // 2. Retornos de Contratos
             if (d.inReturn > 0) {
-                subItems.push({ 
-                    label: 'Retorno de Contrato', 
-                    sub: 'Capital + Lucro desbloqueado', 
-                    val: d.inReturn, 
-                    type: 'income',
-                    dot: '#10b981'
-                });
+                subItems.push({ label: 'Retorno de Contrato', sub: 'Capital Reavido', val: d.inReturn, type: 'income', dot: '#10b981', tag: 'RECEBIDO' });
                 totalIncome += d.inReturn;
             }
-
-            // 3. Simulação
             if (d.isCycleEnd) {
+                subItems.push({ label: 'Reinvestimento Simulado', sub: 'Juros Compostos', val: 0, type: 'balance', dot: '#8b5cf6', tag: 'EFETIVADO' });
+            }
+            if (d.status !== 'none') {
                 subItems.push({ 
-                    label: 'Reinvestimento Simulado', 
-                    sub: 'Ciclo de juros compostos', 
-                    val: 0,
-                    type: 'balance',
-                    dot: '#8b5cf6',
-                    customText: 'EFETIVADO' 
+                    label: d.status === 'realized' ? 'Saque Realizado' : 'Saque Planejado', 
+                    sub: 'Transferência estratégica', 
+                    val: d.status === 'realized' ? d.outWithdraw : Math.floor(d.tier * 0.90), 
+                    type: d.status === 'realized' ? 'expense' : 'balance', 
+                    dot: d.status === 'realized' ? '#ef4444' : '#fbbf24', 
+                    tag: d.status.toUpperCase() 
                 });
+                if (d.status === 'realized') totalExpense += d.outWithdraw;
             }
 
-            // 4. Saques
-            if (d.outWithdraw > 0) {
-                subItems.push({ 
-                    label: 'Saque Estratégico', 
-                    sub: 'Transferência realizada (líquida)', 
-                    val: d.outWithdraw, 
-                    type: 'expense',
-                    dot: '#ef4444'
-                });
-                totalExpense += d.outWithdraw;
-            }
-
-            // Se for um dia importante ou o último dia, mostramos o Saldo Previsto
-            if (subItems.length > 0 || dateStr === limitDateStr) {
-                subItems.push({ 
-                    label: 'Saldo Previsto', 
-                    sub: 'Acumulado até o momento', 
-                    val: d.endBal, 
-                    type: 'balance',
-                    dot: '#64748b',
-                    customText: Formatter.currency(d.endBal)
-                });
-            }
-
-            // Renderizar se houver itens no dia
             if (subItems.length > 0) {
-                itemsRendered++;
                 const dateObj = new Date(dateStr + 'T12:00:00Z');
-                const dayName = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
-                const dayNum = dateStr.split('-')[2];
-                const monthName = dateObj.toLocaleDateString('pt-BR', { month: 'short' });
-
-                html += `<div class="timeline-day-header">${dayNum} de ${monthName} • ${dayName}</div>`;
+                const dayLabel = `${dateStr.split('-')[2]} • ${dateObj.toLocaleDateString('pt-BR', { weekday: 'long' })}`;
+                html += `<div class="timeline-day-header">${dayLabel}</div>`;
                 
                 subItems.forEach((item, idx) => {
-                    const isLast = idx === subItems.length - 1;
                     html += `
                         <div class="timeline-item">
                             <div class="timeline-marker">
                                 <div class="timeline-dot" style="background: ${item.dot}"></div>
-                                ${!isLast ? '<div class="timeline-line"></div>' : ''}
+                                ${idx < subItems.length - 1 ? '<div class="timeline-line"></div>' : ''}
                             </div>
                             <div class="timeline-content">
-                                <div>
-                                    <div class="timeline-label">${item.label}</div>
-                                    <div class="timeline-sublabel">${item.sub}</div>
-                                </div>
+                                <div><div class="timeline-label">${item.label}</div><div class="timeline-sublabel">${item.sub}</div></div>
                                 <div class="text-right">
-                                    <div class="timeline-value ${item.type}">${item.customText || (item.type === 'expense' ? '-' : '+') + Formatter.currency(item.val)}</div>
-                                    <div class="efetivar-badge">Padrão</div>
+                                    <div class="timeline-value ${item.type}">${item.val > 0 ? (item.type === 'expense' ? '-' : '+') + Formatter.currency(item.val) : item.tag}</div>
+                                    <div class="efetivar-badge">${item.tag}</div>
                                 </div>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                 });
             }
         });
 
-        if (itemsRendered === 0) {
-            container.innerHTML = '<div class="text-center py-20 text-slate-500 font-bold italic text-sm">Nenhum evento financeiro neste período.</div>';
-        } else {
-            container.innerHTML = html;
-        }
-        
+        container.innerHTML = html || '<p class="text-center text-slate-500 py-10">Sem eventos no período.</p>';
         document.getElementById('timelineTotalEntries').innerText = Formatter.currency(totalIncome);
         document.getElementById('timelineTotalExits').innerText = Formatter.currency(totalExpense);
     },
@@ -329,185 +251,77 @@ export const Renderer = {
     renderGoals(goals, dailyData, onRemove) {
         const container = document.getElementById('goalsList');
         if (!container) return;
-        
-        if (goals.length === 0) {
-            container.innerHTML = '<p class="text-center text-[10px] text-slate-500 italic">Nenhuma meta ativa</p>';
-            return;
-        }
-
-        let html = '';
         const sortedDates = Object.keys(dailyData).sort();
+        const finalBal = dailyData[sortedDates[sortedDates.length - 1]]?.endBal || 0;
 
-        goals.forEach((goal, idx) => {
-            const targetCents = Formatter.toCents(goal.value);
-            let reachedDate = '---';
-            let progress = 0;
+        container.innerHTML = goals.map((goal, idx) => {
+            const target = Formatter.toCents(goal.value);
+            const progress = Math.min(100, Math.floor((finalBal / target) * 100));
+            let date = '---';
+            for (let d of sortedDates) if (dailyData[d].endBal >= target) { date = Formatter.dateDisplay(d); break; }
             
-            // Current progress: Final projected balance / Target
-            const finalBal = dailyData[sortedDates[sortedDates.length - 1]]?.endBal || 0;
-            progress = Math.min(100, Math.floor((finalBal / targetCents) * 100));
-
-            // Find reached date in dailyData
-            for (let date of sortedDates) {
-                if (dailyData[date].endBal >= targetCents) {
-                    reachedDate = Formatter.dateDisplay(date);
-                    break;
-                }
-            }
-
-            html += `
-                <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-700 relative group overflow-hidden">
+            return `
+                <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-700 relative group">
                     <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <span class="text-xs font-bold text-white block">${goal.name}</span>
-                            <span class="text-[9px] text-slate-500 uppercase">Alvo: ${Formatter.currency(targetCents)}</span>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-[10px] text-indigo-400 font-bold block">${reachedDate}</span>
-                            <button onclick="app.removeGoal(${idx})" class="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <i class="fas fa-trash-alt text-[9px]"></i>
-                            </button>
-                        </div>
+                        <div><span class="text-xs font-bold text-white block">${goal.name}</span><span class="text-[9px] text-slate-500 uppercase">Alvo: ${Formatter.currency(target)}</span></div>
+                        <div class="text-right"><span class="text-[10px] text-indigo-400 font-bold block">${date}</span><button onclick="app.removeGoal(${idx})" class="text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash-alt text-[9px]"></i></button></div>
                     </div>
-                    <div class="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                        <div class="h-full bg-indigo-500 transition-all duration-1000" style="width: ${progress}%"></div>
-                    </div>
-                    <div class="flex justify-between mt-1">
-                        <span class="text-[8px] text-slate-600 font-bold uppercase">Progresso</span>
-                        <span class="text-[8px] text-slate-400 font-bold">${progress}%</span>
-                    </div>
-                </div>
-            `;
-        });
-        container.innerHTML = html;
+                    <div class="h-1 w-full bg-slate-800 rounded-full overflow-hidden"><div class="h-full bg-indigo-500" style="width: ${progress}%"></div></div>
+                </div>`;
+        }).join('') || '<p class="text-center text-[10px] text-slate-500 italic">Nenhuma meta ativa</p>';
     },
 
     renderAlerts(portfolio) {
         const badge = document.getElementById('alertsBadge');
-        const container = document.getElementById('alertsList');
-        const outerContainer = document.getElementById('alertsContainer');
-        if (!badge || !container) return;
-
+        const list = document.getElementById('alertsList');
+        const container = document.getElementById('alertsContainer');
         const today = new Date();
         const alerts = [];
 
         portfolio.forEach(p => {
-            const endStr = Formatter.addDays(p.date, p.days);
-            const endDate = new Date(endStr);
-            const diffDays = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
-
-            if (diffDays <= 2 && diffDays >= 0) {
-                alerts.push({
-                    type: 'warning',
-                    msg: `Contrato "${p.name}" vence em ${diffDays} dias!`,
-                    sub: `Data: ${Formatter.dateDisplay(endStr)}`,
-                    icon: 'fa-exclamation-triangle'
-                });
-            } else if (diffDays < 0 && diffDays > -5) {
-                alerts.push({
-                    type: 'danger',
-                    msg: `Contrato "${p.name}" VENCIDO!`,
-                    sub: `Venceu em: ${Formatter.dateDisplay(endStr)}`,
-                    icon: 'fa-clock'
-                });
-            }
+            const end = new Date(Formatter.addDays(p.date, p.days));
+            const diff = Math.ceil((end - today) / 86400000);
+            if (diff <= 2 && diff >= 0) alerts.push({ type: 'warning', msg: `Vence em ${diff}d: ${p.name}`, icon: 'fa-exclamation-triangle' });
+            else if (diff < 0 && diff > -5) alerts.push({ type: 'danger', msg: `VENCIDO: ${p.name}`, icon: 'fa-clock' });
         });
 
         if (alerts.length > 0) {
-            outerContainer.classList.remove('hidden');
-            badge.classList.remove('hidden');
-            badge.innerText = alerts.length;
-            
-            let html = '';
-            alerts.forEach(a => {
-                const color = a.type === 'warning' ? 'yellow' : 'red';
-                html += `
-                    <div class="p-3 bg-${color}-500/10 border border-${color}-500/20 rounded-lg flex gap-3 items-center">
-                        <i class="fas ${a.icon} text-${color}-500"></i>
-                        <div>
-                            <div class="text-xs font-bold text-white">${a.msg}</div>
-                            <div class="text-[9px] text-slate-500">${a.sub}</div>
-                        </div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
+            container.classList.remove('hidden');
+            badge.classList.remove('hidden'); badge.innerText = alerts.length;
+            list.innerHTML = alerts.map(a => `<div class="p-2 bg-slate-900 border border-slate-700 rounded flex gap-2 items-center text-[10px]"><i class="fas ${a.icon} ${a.type === 'warning' ? 'text-yellow-500' : 'text-red-500'}"></i><span class="text-white">${a.msg}</span></div>`).join('');
         } else {
-            outerContainer.classList.add('hidden');
-            badge.classList.add('hidden');
-            container.innerHTML = '<p class="text-xs text-slate-500 text-center italic">Nenhum alerta pendente</p>';
+            container.classList.add('hidden'); badge.classList.add('hidden');
         }
     },
 
     renderWithdrawButtons(onSelect, selectedValue) {
         const grid = this.els.tiersGrid();
         if (!grid) return;
-        
-        grid.innerHTML = '';
-        Calculator.WITHDRAWAL_TIERS.forEach(tierCents => {
-            const val = Formatter.fromCents(tierCents);
-            const btn = document.createElement('button');
-            btn.className = `tier-btn ${selectedValue == val ? 'selected' : ''}`;
-            btn.innerText = val.toLocaleString('pt-BR');
-            btn.onclick = () => onSelect(val);
-            grid.appendChild(btn);
-        });
+        grid.innerHTML = Calculator.WITHDRAWAL_TIERS.map(t => {
+            const v = Formatter.fromCents(t);
+            return `<button class="tier-btn ${selectedValue == v ? 'selected' : ''}" onclick="app.setWithdrawTarget(${v})">${v.toLocaleString('pt-BR')}</button>`;
+        }).join('');
     },
 
     renderProfileList(profiles, currentId, onSwitch, onDelete) {
         const list = this.els.profileList();
         if (!list) return;
-
-        list.innerHTML = '';
-        Object.entries(profiles).forEach(([id, prof]) => {
+        list.innerHTML = Object.entries(profiles).map(([id, prof]) => {
             const isCurrent = id === currentId;
-            const div = document.createElement('div');
-            div.className = `p-3 flex justify-between items-center ${isCurrent ? 'bg-slate-800' : 'hover:bg-slate-800'} transition-colors cursor-pointer`;
-            div.onclick = () => onSwitch(id);
-            div.innerHTML = `
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 rounded-full ${isCurrent ? 'bg-blue-500' : 'bg-slate-600'}"></div>
-                    <span class="text-xs ${isCurrent ? 'text-white font-bold' : 'text-slate-400'}">${prof.name}</span>
-                </div>
-                ${!isCurrent ? `<button class="text-slate-500 hover:text-red-400 px-2 delete-btn"><i class="fas fa-trash-alt text-[10px]"></i></button>` : '<span class="text-[9px] text-blue-500 font-bold uppercase">Ativo</span>'}
-            `;
-            if (!isCurrent) {
-                div.querySelector('.delete-btn').onclick = (e) => {
-                    e.stopPropagation();
-                    onDelete(id);
-                };
-            }
-            list.appendChild(div);
-        });
-        
+            return `
+                <div class="p-3 flex justify-between items-center ${isCurrent ? 'bg-slate-800' : 'hover:bg-slate-800 cursor-pointer'}" onclick="${!isCurrent ? `app.switchProfile('${id}')` : ''}">
+                    <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full ${isCurrent ? 'bg-blue-500' : 'bg-slate-600'}"></div><span class="text-xs ${isCurrent ? 'text-white font-bold' : 'text-slate-400'}">${prof.name}</span></div>
+                    ${!isCurrent ? `<button class="text-slate-500 hover:text-red-400 px-2" onclick="event.stopPropagation(); app.deleteProfile('${id}')"><i class="fas fa-trash-alt text-[10px]"></i></button>` : '<span class="text-[9px] text-blue-500 font-bold uppercase">Ativo</span>'}
+                </div>`;
+        }).join('');
         this.els.currentProfileName().innerText = profiles[currentId].name;
     },
 
     toast(message, type = 'info') {
-        let container = document.querySelector('.toast-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.className = 'toast-container';
-            document.body.appendChild(container);
-        }
-
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        
-        const icons = {
-            success: 'fa-check-circle',
-            error: 'fa-exclamation-circle',
-            info: 'fa-info-circle'
-        };
-
-        toast.innerHTML = `<i class="fas ${icons[type]}"></i> <span>${message}</span>`;
-        container.appendChild(toast);
-
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(100%)';
-            toast.style.transition = 'all 0.3s ease-in';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
+        let cont = document.querySelector('.toast-container') || Object.assign(document.createElement('div'), { className: 'toast-container' });
+        if (!cont.parentElement) document.body.appendChild(cont);
+        const t = Object.assign(document.createElement('div'), { className: `toast toast-${type}`, innerHTML: `<i class="fas ${type==='success'?'fa-check-circle':type==='error'?'fa-exclamation-circle':'fa-info-circle'}"></i> <span>${message}</span>` });
+        cont.appendChild(t);
+        setTimeout(() => { t.style.opacity='0'; t.style.transform='translateX(100%)'; setTimeout(()=>t.remove(), 300); }, 3000);
     }
 };

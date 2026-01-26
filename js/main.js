@@ -40,7 +40,8 @@ class App {
         const results = Calculator.calculate(
             store.state.inputs,
             store.state.portfolio,
-            store.state.selectedWeeks
+            store.state.selectedWeeks,
+            store.state.realizedWithdrawals
         );
 
         if (results) {
@@ -305,16 +306,24 @@ class App {
         }
 
         const wSec = document.getElementById('modalWithdrawSection');
-        if (data.tier > 0 || data.executed) {
+        if (data.status === 'realized' || data.status === 'planned') {
             wSec.classList.remove('hidden');
-            document.getElementById('modalWithdrawVal').innerText = Formatter.currency(data.net);
+            
+            const netVal = data.status === 'realized' ? data.outWithdraw : Math.floor(data.tier * 0.90);
+            document.getElementById('modalWithdrawVal').innerText = Formatter.currency(netVal);
+            
             const status = document.getElementById('modalWithdrawStatus');
-            if (data.executed) {
+            if (data.status === 'realized') {
                 status.innerText = "SAQUE REALIZADO";
                 status.className = "text-emerald-400 font-bold uppercase mt-1";
             } else {
-                status.innerText = "DISPONÍVEL PARA SAQUE";
-                status.className = "text-yellow-500 font-bold uppercase mt-1";
+                status.innerHTML = `
+                    <div class="text-yellow-500 font-bold uppercase mt-1 mb-2">SAQUE PLANEJADO</div>
+                    <button onclick="app.executeWithdrawal('${dateStr}', ${Formatter.fromCents(data.tier)})" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
+                        <i class="fas fa-hand-holding-usd mr-1"></i> Realizar Saque Agora
+                    </button>
+                `;
+                status.className = "";
             }
         } else {
             wSec.classList.add('hidden');
@@ -573,6 +582,17 @@ class App {
         reader.readAsText(file);
     }
 
+    executeWithdrawal(date, amount) {
+        if (!confirm(`Confirma o saque de R$ ${amount}? \nIsso será registrado como um 'Saque Realizado' e influenciará sua projeção.`)) return;
+
+        const realizedWithdrawals = [...(store.state.realizedWithdrawals || []), { date, amount }];
+        store.setState({ realizedWithdrawals });
+        
+        Renderer.toast('Saque realizado com sucesso!', 'success');
+        this.runCalculation();
+        this.openDayDetails(date); // Refresh modal
+    }
+
     // --- Utils ---
     openModal(id) { document.getElementById(id).classList.remove('hidden'); }
     closeModal(id) { document.getElementById(id).classList.add('hidden'); }
@@ -589,6 +609,12 @@ class App {
             this.runCalculation();
             Renderer.toast('Dados limpos');
         }
+    }
+
+    setWithdrawTarget(val) {
+        store.updateInput('withdrawTarget', val);
+        this.runCalculation();
+        Renderer.toast(`Meta de saque definida: ${Formatter.currency(Formatter.toCents(val))}`);
     }
 
     exportToCSV() {

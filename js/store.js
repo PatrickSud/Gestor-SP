@@ -60,7 +60,8 @@ class Store {
             },
             portfolio: [],
             selectedWeeks: [],
-            goals: []
+            goals: [],
+            realizedWithdrawals: []
         };
     }
 
@@ -107,7 +108,8 @@ class Store {
             inputs: { ...this.state.inputs },
             portfolio: [...this.state.portfolio],
             selectedWeeks: [...this.state.selectedWeeks],
-            goals: [...(this.state.goals || [])]
+            goals: [...(this.state.goals || [])],
+            realizedWithdrawals: [...(this.state.realizedWithdrawals || [])]
         };
 
         this.state.currentProfileId = id;
@@ -117,6 +119,7 @@ class Store {
         this.state.portfolio = [...profile.portfolio];
         this.state.selectedWeeks = [...profile.selectedWeeks];
         this.state.goals = [...(profile.goals || [])];
+        this.state.realizedWithdrawals = [...(profile.realizedWithdrawals || [])];
 
         this.saveToStorage();
         this.notify();
@@ -153,7 +156,8 @@ class Store {
             inputs: this.state.inputs,
             portfolio: this.state.portfolio,
             selectedWeeks: this.state.selectedWeeks,
-            goals: this.state.goals || []
+            goals: this.state.goals || [],
+            realizedWithdrawals: this.state.realizedWithdrawals || []
         };
 
         const dataToSave = {
@@ -175,9 +179,11 @@ class Store {
             this.state.portfolio = [...current.portfolio];
             this.state.selectedWeeks = [...current.selectedWeeks];
             this.state.goals = [...(current.goals || [])];
+            this.state.realizedWithdrawals = [...(current.realizedWithdrawals || [])];
         } else {
             this.state.inputs = this.getInitialData().inputs;
             this.state.goals = [];
+            this.state.realizedWithdrawals = [];
         }
     }
 

@@ -8,7 +8,7 @@ import { Formatter } from '../utils/formatter.js';
 export const Calculator = {
     WITHDRAWAL_TIERS: [4000, 13000, 40000, 130000, 420000, 850000, 1900000, 3800000], // Values in cents
 
-    calculate(inputs, portfolio, selectedWeeks) {
+    calculate(inputs, portfolio, selectedWeeks, realizedWithdrawals = []) {
         const {
             dataInicio: startDateStr,
             withdrawalDaySelect,
@@ -24,11 +24,7 @@ export const Calculator = {
             repeticoesCiclo,
             mergeSimToggle,
             withdrawStrategy,
-            withdrawTarget,
-            bonusTier1,
-            minTier1,
-            limitTier1,
-            bonusTier2
+            withdrawTarget
         } = inputs;
 
         if (!startDateStr) return null;
@@ -49,15 +45,16 @@ export const Calculator = {
         const dailyRate = (parseFloat(taxaDiaria) || 0) / 100;
         const totalReps = (futureToggle === 'true') ? (parseInt(repeticoesCiclo) || 1) : 0;
         
-        const bT1 = (parseFloat(bonusTier1) || 0) / 100;
-        const mT1 = Formatter.toCents(minTier1);
-        const lT1 = Formatter.toCents(limitTier1);
-        const bT2 = (parseFloat(bonusTier2) || 0) / 100;
+        // Bonus Config
+        const bT1 = (parseFloat(inputs.bonusTier1) || 0) / 100;
+        const mT1 = Formatter.toCents(inputs.minTier1);
+        const lT1 = Formatter.toCents(inputs.limitTier1);
+        const bT2 = (parseFloat(inputs.bonusTier2) || 0) / 100;
 
         // Portfolio Mapping
         const portReleases = {};
         const portMaturingDetails = {};
-        let totalCentsInvested = walletStart + initialSimCapital;
+        let totalPortfolioVal = 0;
 
         portfolio.forEach(p => {
             const endStr = Formatter.addDays(p.date, p.days);
@@ -76,7 +73,10 @@ export const Calculator = {
                 profit: profitCents, 
                 total: totalCents 
             });
+            totalPortfolioVal += valCents;
         });
+
+        const totalCentsInvested = walletStart + initialSimCapital + totalPortfolioVal;
 
         // Initialize Loop
         let currentInv = initialSimCapital;
@@ -85,8 +85,7 @@ export const Calculator = {
         let dailyData = {};
         let graphData = [];
 
-        // Determine Simulation Length
-        const simulationDays = Math.max(viewDays, totalReps * cycleDays + 30); // At least 30 safety days
+        const simulationDays = Math.max(viewDays, totalReps * cycleDays + 30);
         
         let cycleEnds = [];
         let nextWithdrawCents = 0;
@@ -98,20 +97,20 @@ export const Calculator = {
 
         for (let d = 0; d <= simulationDays; d++) {
             const currentDayStr = Formatter.addDays(startDateStr, d);
+            const startBalCents = currentInv + currentWallet;
             
             let stepIncome = 0;
             let stepReturns = 0;
             let stepWithdraw = 0;
             let stepMaturingList = [];
             let isCycleEnd = false;
-            let startBalCents = currentInv + currentWallet;
 
-            // 1. Task Income (Mon-Sat, exclude Sun)
+            // 1. Task Income (Mon-Sat)
             if (d > 0 && Formatter.getDayOfWeek(currentDayStr) !== 0) {
                 stepIncome += taskValCents;
             }
             
-            // 2. Monthly Income (every 30 days)
+            // 2. Monthly Income
             if (d > 0 && d % 30 === 0) {
                 stepIncome += monthlyIncomeCents;
             }
@@ -125,7 +124,7 @@ export const Calculator = {
             currentWallet += stepIncome;
 
             // 4. Simulated Cycle Logic
-            if (futureToggle === 'true' && completedReps < totalReps) {
+            if (futureToggle === 'true' && completedReps < totalReps && d > 0) {
                 simCycleTimer--;
                 if (simCycleTimer === 0) {
                     let bonusPerc = 0;
@@ -134,24 +133,16 @@ export const Calculator = {
 
                     const activeCap = Math.floor(currentInv * (1 + bonusPerc));
                     const profit = Math.floor(activeCap * dailyRate * cycleDays);
-                    
-                    const totalFromCycle = activeCap + profit;
-                    
-                    if (mergeSimToggle) {
-                        currentInv = totalFromCycle;
-                    } else {
-                        currentWallet += profit;
-                        // currentInv stays same as principal for next rep
-                    }
+                    currentInv = activeCap + profit;
                     
                     isCycleEnd = true;
                     cycleEnds.push(currentDayStr);
                     completedReps++;
-                    simCycleTimer = cycleDays; // Reset for next rep
+                    simCycleTimer = cycleDays;
                 }
             }
 
-            // Add portfolio returns to balance
+            // Merge Logic
             if (mergeSimToggle && futureToggle === 'true' && stepReturns > 0) {
                 currentInv += stepReturns;
             } else {
@@ -160,45 +151,64 @@ export const Calculator = {
 
             let totalPool = currentInv + currentWallet;
 
-            // 5. Withdrawal Logic (Only on designated day)
+            // 5. Withdrawal Logic
             const isWithdrawalDay = Formatter.getDayOfWeek(currentDayStr) === targetDay;
-            let availableTier = 0, netAvailable = 0, wasExecuted = false;
+            let availableTier = 0, isRealized = false, isPlanned = false;
 
-            if (isWithdrawalDay && d > 0) {
+            // Check if there's a realized withdrawal on this day
+            const realizedOnDay = realizedWithdrawals.find(w => w.date === currentDayStr);
+            if (realizedOnDay) {
+                const amountToWithdrawCents = Formatter.toCents(realizedOnDay.amount);
+                const net = Math.floor(amountToWithdrawCents * 0.90);
+                stepWithdraw = net;
+                totalWithdrawnCents += net;
+                isRealized = true;
+
+                if (currentWallet >= amountToWithdrawCents) currentWallet -= amountToWithdrawCents;
+                else {
+                    const remaining = amountToWithdrawCents - currentWallet;
+                    currentWallet = 0; currentInv -= remaining;
+                    if (currentInv < 0) currentInv = 0;
+                }
+                totalPool -= amountToWithdrawCents;
+                withdrawalHistory.push({ date: currentDayStr, val: net, status: 'realized' });
+            } 
+            // If not realized, check if it's planned for FUTURE
+            else if (isWithdrawalDay && d > 0) {
                 availableTier = this.WITHDRAWAL_TIERS.filter(t => t <= totalPool).pop() || 0;
-                netAvailable = Math.floor(availableTier * 0.90);
+                const netAvailable = Math.floor(availableTier * 0.90);
 
                 if (nextWithdrawCents === 0 && netAvailable > 0 && currentDayStr >= todayStr) {
                     nextWithdrawCents = netAvailable;
                     nextWithdrawDate = currentDayStr;
                 }
 
-                let shouldWithdraw = false;
-                if (withdrawStrategy === 'max' && availableTier > 0) shouldWithdraw = true;
-                else if (withdrawStrategy === 'fixed' && availableTier >= withdrawTargetCents) shouldWithdraw = true;
+                let shouldPlannedWithdraw = false;
+                if (withdrawStrategy === 'max' && availableTier > 0) shouldPlannedWithdraw = true;
+                else if (withdrawStrategy === 'fixed' && availableTier >= withdrawTargetCents) shouldPlannedWithdraw = true;
                 else if (withdrawStrategy === 'weekly' && availableTier > 0) {
                     const dayOfMonth = parseInt(currentDayStr.split('-')[2]);
                     const weekNum = Math.ceil(dayOfMonth / 7);
-                    if (selectedWeeks.includes(weekNum)) shouldWithdraw = true;
+                    if (selectedWeeks.includes(weekNum)) shouldPlannedWithdraw = true;
                 }
 
-                if (shouldWithdraw) {
+                if (shouldPlannedWithdraw && currentDayStr >= todayStr) {
+                    isPlanned = true;
                     const amountToWithdraw = availableTier;
                     const net = Math.floor(amountToWithdraw * 0.90);
                     stepWithdraw = net;
                     totalWithdrawnCents += net;
-                    wasExecuted = true;
-                    withdrawalHistory.push({ date: currentDayStr, val: net });
-
-                    if (currentWallet >= amountToWithdraw) {
-                        currentWallet -= amountToWithdraw;
-                    } else {
+                    
+                    if (currentWallet >= amountToWithdraw) currentWallet -= amountToWithdraw;
+                    else {
                         const remaining = amountToWithdraw - currentWallet;
-                        currentWallet = 0;
-                        currentInv -= remaining;
+                        currentWallet = 0; currentInv -= remaining;
                         if (currentInv < 0) currentInv = 0;
                     }
                     totalPool -= amountToWithdraw;
+                    withdrawalHistory.push({ date: currentDayStr, val: net, status: 'planned' });
+                } else if (shouldPlannedWithdraw) {
+                    isPlanned = true;
                 }
             }
 
@@ -211,11 +221,11 @@ export const Calculator = {
                 outWithdraw: stepWithdraw,
                 maturing: stepMaturingList,
                 tier: availableTier,
-                net: netAvailable,
-                executed: wasExecuted
+                isCycleEnd,
+                status: isRealized ? 'realized' : (isPlanned ? 'planned' : 'none')
             };
 
-            if (d <= viewDays || d % 5 === 0) { // Optimize graph points for performance
+            if (d <= viewDays || d % 5 === 0) {
                 graphData.push({ x: currentDayStr, y: Formatter.fromCents(totalPool) });
             }
         }
@@ -224,7 +234,6 @@ export const Calculator = {
         const totalMonths = Math.max(1, simulationDays / 30);
         const avgMonthlyYield = ((currentInv + currentWallet + totalWithdrawnCents) - totalCentsInvested) / totalMonths;
         
-        // Find Break-Even Day (Cumulative Withdrawn + Current Balance >= Initial Investment)
         let breakEvenDate = 'N/A';
         let paybackDays = '---';
         
@@ -233,7 +242,6 @@ export const Calculator = {
             const dayKey = sortedDailyKeys[i];
             const dayData = dailyData[dayKey];
             
-            // Current Worth = Total Pool + Cumulative Withdrawn up to that day
             const cumulativeWithdrawn = withdrawalHistory
                 .filter(w => w.date <= dayKey)
                 .reduce((acc, curr) => acc + curr.val, 0);
