@@ -76,19 +76,19 @@ class App {
             const skip = ['newInv', 'newProfile', 'editCurrentProfile', 'commitBase', 'search'];
             if (skip.some(s => el.id.startsWith(s))) return;
 
-            el.addEventListener('input', (e) => {
+            el.addEventListener('change', (e) => {
                 const val = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
                 store.updateInput(el.id, val);
                 
                 // Specific UI toggles
-                if (el.id === 'taskLevel' && val === 'custom') {
-                    document.getElementById('customTaskInput').classList.remove('hidden');
-                } else if (el.id === 'taskLevel') {
-                    document.getElementById('customTaskInput').classList.add('hidden');
-                    // Sync value
-                    const customInput = document.getElementById('taskDailyValue');
-                    customInput.value = val;
-                    store.updateInput('taskDailyValue', val);
+                if (el.id === 'taskLevel') {
+                    if (val === 'custom') {
+                        document.getElementById('customTaskInput').classList.remove('hidden');
+                    } else {
+                        document.getElementById('customTaskInput').classList.add('hidden');
+                        document.getElementById('taskDailyValue').value = val;
+                        store.updateInput('taskDailyValue', val);
+                    }
                 }
                 
                 if (el.id === 'monthlyIncomeToggle') {
@@ -99,8 +99,16 @@ class App {
                     document.getElementById('withdrawFixedOptions').classList.toggle('hidden', val !== 'fixed');
                     document.getElementById('withdrawWeeklyOptions').classList.toggle('hidden', val !== 'weekly');
                 }
+                
+                this.runCalculation(); // Force immediate calculation on change
             });
         });
+
+        // Add handler for the new Save Button
+        const saveBtn = document.getElementById('saveConfigsBtn');
+        if (saveBtn) {
+            saveBtn.onclick = () => this.savePreferences();
+        }
 
         // Investment Add Handler
         document.getElementById('addInvBtn').onclick = () => this.addInvestment();
@@ -518,8 +526,13 @@ class App {
         }
     }
 
+    savePreferences() {
+        this.runCalculation(true);
+        Renderer.toast('Preferências aplicadas e salvas!', 'success');
+        if (window.innerWidth < 1024) this.toggleSidebar(); // Close sidebar on mobile
+    }
+
     exportToCSV() {
-        // Implementation of CSV export
         const dailyData = store.state.dailyData;
         let csv = "Data,Saldo Inicial,Retorno,Renda,Aporte,Saque,Saldo Final\n";
         

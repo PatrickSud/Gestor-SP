@@ -90,7 +90,7 @@ class Store {
 
     setResults(results) {
         this.state.results = { ...this.state.results, ...results };
-        this.notify();
+        // Não chamamos notify() aqui para evitar loop infinito com o runCalculation
     }
 
     setDailyData(data) {
