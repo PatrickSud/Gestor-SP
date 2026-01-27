@@ -142,6 +142,45 @@ export const Renderer = {
     }
   },
 
+  renderSimulationSummary(results, inputs) {
+    const card = document.getElementById('simSummaryCard')
+    if (!card) return
+    const futureOn = inputs.futureToggle === 'true'
+    const hasSim =
+      results &&
+      typeof results.simInitial === 'number' &&
+      results.simInitial > 0 &&
+      results.simCycles > 0
+    if (!futureOn || !hasSim) {
+      card.classList.add('hidden')
+      return
+    }
+    card.classList.remove('hidden')
+
+    const initialEl = document.getElementById('simSummaryInitial')
+    const finalEl = document.getElementById('simSummaryFinal')
+    const profitEl = document.getElementById('simSummaryProfit')
+    const metaEl = document.getElementById('simSummaryMeta')
+
+    const simInitial = results.simInitial
+    const simFinal = results.simFinal
+    const simProfit = results.simProfit
+
+    if (initialEl) initialEl.innerText = Formatter.currency(simInitial)
+    if (finalEl) finalEl.innerText = Formatter.currency(simFinal)
+    if (profitEl) {
+      const prefix = simProfit >= 0 ? '+' : ''
+      profitEl.innerText = `${prefix}${Formatter.currency(simProfit)}`
+    }
+
+    if (metaEl) {
+      const dias = inputs.diasCiclo || '0'
+      const reps = inputs.repeticoesCiclo || '0'
+      const taxa = inputs.taxaDiaria || '0'
+      metaEl.innerText = `${dias}d • ${reps}x ciclos • ${taxa}% ao dia`
+    }
+  },
+
   renderTable(dailyData, viewDays, startDateStr) {
     const body = this.els.tabelaBody()
     if (!body) return
@@ -342,7 +381,7 @@ export const Renderer = {
         subItems.push({
           label: 'Reinvestimento Simulado',
           sub: 'Juros compostos',
-          val: 0,
+          val: d.outReinvest || 0,
           type: 'balance',
           dot: '#8b5cf6',
           tag: 'EFETIVADO'
@@ -378,6 +417,15 @@ export const Renderer = {
           .toLocaleDateString('pt-BR', { month: 'short' })
           .toUpperCase()
         const isMonthStart = dateStr.endsWith('-01')
+        if (isMonthStart) {
+          const monthLabel = dateObj
+            .toLocaleDateString('pt-BR', {
+              month: 'long',
+              year: 'numeric'
+            })
+            .toUpperCase()
+          html += `<div class="timeline-month-header">${monthLabel}</div>`
+        }
         let headerClass = isMonthStart
           ? 'timeline-day-header month-separator'
           : 'timeline-day-header'
@@ -408,6 +456,31 @@ export const Renderer = {
                             </div>
                         </div>`
         })
+
+        const dayCredit =
+          (taskIncome || 0) + (recurringIncome || 0) + (d.inReturn || 0)
+        const dayDebit = d.outWithdraw || 0
+        const creditText =
+          dayCredit > 0 ? '+' + Formatter.currency(dayCredit) : '-'
+        const debitText =
+          dayDebit > 0 ? '-' + Formatter.currency(dayDebit) : '-'
+        const balanceText = Formatter.currency(d.endBal)
+
+        html += `
+          <div class="flex justify-end gap-4 text-[10px] text-slate-400 mt-1 mb-4">
+            <div class="text-right">
+              <div class="uppercase tracking-wide text-[9px] text-emerald-400">Total Crédito</div>
+              <div class="font-mono">${creditText}</div>
+            </div>
+            <div class="text-right">
+              <div class="uppercase tracking-wide text-[9px] text-red-400">Total Débito</div>
+              <div class="font-mono">${debitText}</div>
+            </div>
+            <div class="text-right">
+              <div class="uppercase tracking-wide text-[9px] text-slate-400">Saldo</div>
+              <div class="font-mono text-slate-100">${balanceText}</div>
+            </div>
+          </div>`
       }
     })
 

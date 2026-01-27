@@ -230,9 +230,7 @@ select:focus {
 }
 
 .timeline-day-header.month-separator {
-  margin-top: 20px;
-  padding-top: 4px;
-  border-top: 1px solid rgba(148, 163, 184, 0.6);
+  margin-top: 8px;
 }
 
 .timeline-day-header.today {
@@ -261,6 +259,16 @@ select:focus {
 .timeline-day-text {
   font-size: 10px;
   color: #94a3b8;
+}
+
+.timeline-month-header {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #38bdf8;
+  margin-top: 20px;
+  margin-bottom: 2px;
 }
 
 .timeline-item {

@@ -115,6 +115,7 @@ export const Calculator = {
       let isCycleEnd = false
       let stepTaskIncome = 0
       let stepRecurringIncome = 0
+      let stepSimReinvest = 0
 
       // 1. Task Income (Mon-Sat)
       if (d > 0 && Formatter.getDayOfWeek(currentDayStr) !== 0) {
@@ -151,9 +152,11 @@ export const Calculator = {
           if (currentInv >= mT1 && currentInv <= lT1) bonusPerc = bT1
           else if (currentInv > lT1) bonusPerc = bT2
 
-          const activeCap = Math.floor(currentInv * (1 + bonusPerc))
+          const prevInv = currentInv
+          const activeCap = Math.floor(prevInv * (1 + bonusPerc))
           const profit = Math.floor(activeCap * dailyRate * cycleDays)
           currentInv = activeCap + profit
+          stepSimReinvest = currentInv - prevInv
 
           isCycleEnd = true
           cycleEnds.push(currentDayStr)
@@ -244,7 +247,7 @@ export const Calculator = {
         inIncomeTask: stepTaskIncome,
         inIncomeRecurring: stepRecurringIncome,
         inReturn: stepReturns,
-        outReinvest: currentInv,
+        outReinvest: stepSimReinvest,
         outWithdraw: stepWithdraw,
         maturing: stepMaturingList,
         tier: availableTier,
@@ -355,7 +358,13 @@ export const Calculator = {
         withdrawalHistory,
         avgMonthlyYield,
         paybackDays,
-        breakEvenDate
+        breakEvenDate,
+        simInitial: initialSimCapital,
+        simFinal: currentInv,
+        simProfit: currentInv - initialSimCapital,
+        simCycles: totalReps,
+        simCycleDays: cycleDays,
+        simTotalDays: totalReps * cycleDays
       },
       dailyData,
       cycleEnds
