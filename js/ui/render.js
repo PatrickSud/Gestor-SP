@@ -275,6 +275,7 @@ export const Renderer = {
     let totalIncome = 0
     let totalExpense = 0
     const limitDateStr = Formatter.addDays(startDateStr, viewDays)
+    const todayStr = new Date().toISOString().split('T')[0]
     const sortedDates = Object.keys(dailyData).sort()
 
     sortedDates.forEach((dateStr, index) => {
@@ -369,11 +370,19 @@ export const Renderer = {
 
       if (subItems.length > 0) {
         const dateObj = new Date(dateStr + 'T12:00:00Z')
-        const dayLabel = `${dateStr.split('-')[2]} • ${dateObj.toLocaleDateString('pt-BR', { weekday: 'long' })}`
+        const dayNum = dateStr.split('-')[2]
+        const weekday = dateObj
+          .toLocaleDateString('pt-BR', { weekday: 'short' })
+          .toUpperCase()
+        const monthShort = dateObj
+          .toLocaleDateString('pt-BR', { month: 'short' })
+          .toUpperCase()
         const isMonthStart = dateStr.endsWith('-01')
-        const headerClass = isMonthStart
+        let headerClass = isMonthStart
           ? 'timeline-day-header month-separator'
           : 'timeline-day-header'
+        if (dateStr === todayStr) headerClass += ' today'
+        const dayLabel = `<span class="timeline-day-pill">${dayNum}</span><span class="timeline-day-text">${weekday} • ${monthShort}</span>`
 
         html += `<div class="${headerClass}">${dayLabel}</div>`
 
