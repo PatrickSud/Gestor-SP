@@ -142,6 +142,26 @@ class App {
     // Investment Add Handler
     document.getElementById('addInvBtn').onclick = () => this.addInvestment()
 
+    // Monthly Fixed Income Add Handler
+    const addIncomeBtn = document.getElementById('addMonthlyIncomeBtn')
+    if (addIncomeBtn) {
+      addIncomeBtn.onclick = () => {
+        const amount = document.getElementById('monthlyIncomeAmount').value
+        const day = parseInt(document.getElementById('monthlyIncomeDay').value)
+        if (!amount || isNaN(day) || day < 1 || day > 31) {
+          return Renderer.toast(
+            'Informe o valor e um dia entre 1 e 31',
+            'error'
+          )
+        }
+        const current = store.state.inputs.fixedIncomes || []
+        store.updateInput('fixedIncomes', [...current, { amount, day }])
+        document.getElementById('monthlyIncomeAmount').value = ''
+        document.getElementById('monthlyIncomeDay').value = ''
+        Renderer.renderFixedIncomes(store.state.inputs)
+        this.runCalculation()
+      }
+    }
     // Backup Import Handler
     const importInp = document.getElementById('importFile')
     if (importInp) {
@@ -181,6 +201,7 @@ class App {
     this.updateFutureToggleVisual(futureOn)
 
     // Render Initial Pieces
+    Renderer.renderFixedIncomes(inputs)
     Renderer.renderWithdrawButtons(val => {
       store.updateInput('withdrawTarget', val)
       this.runCalculation()
@@ -207,6 +228,13 @@ class App {
   }
 
   // --- Actions ---
+  removeFixedIncome(idx) {
+    const list = store.state.inputs.fixedIncomes || []
+    const next = list.filter((_, i) => i !== idx)
+    store.updateInput('fixedIncomes', next)
+    Renderer.renderFixedIncomes(store.state.inputs)
+    this.runCalculation()
+  }
   addInvestment() {
     const name = document.getElementById('newInvName').value
     const val = parseFloat(document.getElementById('newInvVal').value)
@@ -593,11 +621,12 @@ class App {
           ? '<p class="text-xs text-slate-500 italic text-center">Nenhum saque realizado.</p>'
           : ''
       history.forEach(w => {
+        const valCents = Formatter.toCents(w.amount)
         listHtml += `
                     <div class="flex justify-between items-center text-xs bg-slate-900/50 p-2 rounded mb-1 group">
                         <span class="text-slate-400">${Formatter.dateDisplay(w.date)}</span>
                         <div class="flex items-center gap-2">
-                            <span class="text-blue-400 font-bold">${Formatter.currency(w.amount)}</span>
+                            <span class="text-blue-400 font-bold">${Formatter.currency(valCents)}</span>
                             <button onclick="app.deleteWithdrawal(${w.index})" class="text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     </div>`
@@ -623,10 +652,11 @@ class App {
           ? '<p class="text-xs text-slate-500 italic text-center">Nenhum saque neste mês.</p>'
           : ''
       monthWithdrawals.forEach(w => {
+        const valCents = Formatter.toCents(w.amount)
         withdrawHtml += `
                     <div class="flex justify-between items-center text-xs bg-slate-900/50 p-2 rounded mb-1">
                         <span class="text-slate-400">${Formatter.dateDisplay(w.date)}</span>
-                        <span class="text-blue-400 font-bold">${Formatter.currency(w.amount)}</span>
+                        <span class="text-blue-400 font-bold">${Formatter.currency(valCents)}</span>
                     </div>`
       })
 

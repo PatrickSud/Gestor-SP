@@ -15,12 +15,13 @@ export const Calculator = {
       dataInicio: startDateStr,
       withdrawalDaySelect,
       viewPeriodSelect,
-      monthlyExtraIncome,
       monthlyIncomeToggle,
+      fixedIncomes,
       taskDailyValue,
       currentWalletBalance,
       futureToggle,
       capitalInicial,
+      simStartDate,
       diasCiclo,
       taxaDiaria,
       repeticoesCiclo,
@@ -37,9 +38,7 @@ export const Calculator = {
     // Convert to cents
     const walletStart = Formatter.toCents(currentWalletBalance)
     const taskValCents = Formatter.toCents(taskDailyValue)
-    const monthlyIncomeCents = monthlyIncomeToggle
-      ? Formatter.toCents(monthlyExtraIncome)
-      : 0
+    const incomesList = monthlyIncomeToggle ? fixedIncomes || [] : []
     const initialSimCapital =
       futureToggle === 'true' ? Formatter.toCents(capitalInicial) : 0
     const withdrawTargetCents = Formatter.toCents(withdrawTarget)
@@ -95,6 +94,19 @@ export const Calculator = {
     let graphData = []
 
     const simulationDays = Math.max(viewDays, totalReps * cycleDays + 30)
+    const simStartStr =
+      futureToggle === 'true'
+        ? simStartDate || new Date().toISOString().split('T')[0]
+        : null
+    const simStartIndex =
+      simStartStr != null
+        ? Math.max(
+            0,
+            Math.floor(
+              (new Date(simStartStr) - new Date(startDateStr)) / 86400000
+            )
+          )
+        : 0
 
     let cycleEnds = []
     let nextWithdrawCents = 0
@@ -123,10 +135,17 @@ export const Calculator = {
         stepTaskIncome += taskValCents
       }
 
-      // 2. Monthly Income
-      if (d > 0 && d % 30 === 0) {
-        stepIncome += monthlyIncomeCents
-        stepRecurringIncome += monthlyIncomeCents
+      // 2. Monthly Fixed Incomes (multiple entries by day-of-month)
+      if (d > 0 && incomesList.length > 0) {
+        const dayOfMonth = parseInt(currentDayStr.split('-')[2])
+        incomesList.forEach(item => {
+          const valCents = Formatter.toCents(item.amount || 0)
+          const incomeDay = parseInt(item.day || 0)
+          if (valCents > 0 && incomeDay === dayOfMonth) {
+            stepIncome += valCents
+            stepRecurringIncome += valCents
+          }
+        })
       }
 
       // 3. Portfolio Maturities
@@ -145,7 +164,12 @@ export const Calculator = {
       totalInvProfitCents += dayProfit
 
       // 4. Simulated Cycle Logic
-      if (futureToggle === 'true' && completedReps < totalReps && d > 0) {
+      if (
+        futureToggle === 'true' &&
+        completedReps < totalReps &&
+        d > 0 &&
+        d >= simStartIndex
+      ) {
         simCycleTimer--
         if (simCycleTimer === 0) {
           let bonusPerc = 0
@@ -340,6 +364,7 @@ export const Calculator = {
         totalWithdrawn: totalWithdrawnCents,
         currentMonthWithdrawn,
         finalBalance: currentInv + currentWallet,
+        currentWalletNow: currentWallet,
         currentBalanceToday,
         projectedEndOfMonthBalance,
         nextWithdraw: nextWithdrawCents,

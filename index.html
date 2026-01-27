@@ -101,10 +101,9 @@
                     <i class="fas fa-chevron-down text-[10px] ml-1 opacity-50"></i>
                 </button>
 
-                <div
-                    class="hidden md:flex items-center gap-4 bg-slate-800 py-1.5 px-4 rounded-full border border-slate-700">
+                    <div class="hidden md:flex items-center gap-4 bg-slate-800 py-1.5 px-4 rounded-full border border-slate-700">
                     <div class="flex flex-col items-end leading-none">
-                        <span class="text-[9px] text-slate-400 font-bold uppercase">Patrimônio Total</span>
+                        <span class="text-[9px] text-slate-400 font-bold uppercase">Patrimônio Atual</span>
                         <span class="text-sm font-bold text-emerald-400" id="navTotalBalance">R$ 0,00</span>
                     </div>
                     <i class="fas fa-wallet text-emerald-500/50"></i>
@@ -204,10 +203,28 @@
                         </div>
 
                         <div id="monthlyIncomeContainer" class="hidden mt-3 relative animate-slide-down">
-                            <span class="absolute left-3 top-2.5 text-slate-500 text-xs font-bold">R$</span>
-                            <input type="number" id="monthlyExtraIncome" step="0.01"
-                                class="custom-input w-full rounded-lg py-2 pl-8 text-xs text-white placeholder-slate-600 border-slate-700"
-                                placeholder="0.00">
+                            <div class="space-y-2">
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div class="relative col-span-2">
+                                        <span class="absolute left-3 top-2.5 text-slate-500 text-xs font-bold">R$</span>
+                                        <input type="number" id="monthlyIncomeAmount" step="0.01"
+                                            class="custom-input w-full rounded-lg py-2 pl-8 text-xs text-white placeholder-slate-600 border-slate-700"
+                                            placeholder="Valor">
+                                    </div>
+                                    <div>
+                                        <input type="number" id="monthlyIncomeDay" min="1" max="31"
+                                            class="custom-input w-full rounded-lg py-2 px-3 text-xs text-white placeholder-slate-600 border-slate-700"
+                                            placeholder="Dia (1-31)">
+                                    </div>
+                                </div>
+                                <div class="flex justify-end">
+                                    <button id="addMonthlyIncomeBtn"
+                                        class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded transition-colors border border-emerald-600/50">
+                                        <i class="fas fa-plus mr-1"></i> Adicionar Renda
+                                    </button>
+                                </div>
+                                <div id="fixedIncomeList" class="space-y-1"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -261,16 +278,6 @@
                             <div class="week-btn">S5</div>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Section: Saques Realizados -->
-            <div class="space-y-3">
-                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-1">Saques Realizados</label>
-                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
-                     <button onclick="app.openCardDetails('history')" class="w-full bg-slate-900 hover:bg-slate-700 text-blue-400 text-xs font-bold py-3 rounded-lg border border-blue-500/20 transition-colors flex items-center justify-center gap-2">
-                        <i class="fas fa-history"></i> Gerenciar Histórico
-                     </button>
                 </div>
             </div>
 
@@ -459,8 +466,13 @@
                                     <div>
                                         <label class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Aporte
                                             Simulado (R$)</label>
-                                        <input type="number" id="capitalInicial" value="50" step="0.01"
-                                            class="custom-input w-full rounded-xl py-2 px-3 font-bold text-sm">
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <input type="number" id="capitalInicial" value="50" step="0.01"
+                                                class="custom-input w-full rounded-xl py-2 px-3 font-bold text-sm">
+                                            <input type="date" id="simStartDate"
+                                                class="custom-input w-full rounded-xl py-2 px-3 text-xs text-slate-400">
+                                        </div>
+                                        <span class="text-[9px] text-slate-500">Data de início da simulação</span>
                                     </div>
                                     <div class="grid grid-cols-2 gap-3">
                                         <input type="number" id="diasCiclo" value="3" placeholder="Dias"

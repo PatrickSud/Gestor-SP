@@ -127,7 +127,7 @@ export const Renderer = {
       resNextValue.innerText = `Est: ${Formatter.currency(results.nextWithdraw)}`
 
     this.els.navTotalBalance().innerText = Formatter.currency(
-      results.finalBalance
+      results.currentWalletNow ?? results.finalBalance
     )
 
     // Remove references to deleted elements (Advanced Performance Row)
@@ -179,6 +179,24 @@ export const Renderer = {
       const taxa = inputs.taxaDiaria || '0'
       metaEl.innerText = `${dias}d • ${reps}x ciclos • ${taxa}% ao dia`
     }
+  },
+
+  renderFixedIncomes(inputs) {
+    const listEl = document.getElementById('fixedIncomeList')
+    if (!listEl) return
+    const incomes = (inputs.fixedIncomes || []).map((item, idx) => {
+      const val = Formatter.currency(Formatter.toCents(item.amount || 0))
+      const day = item.day
+      return `
+        <div class="flex items-center justify-between bg-slate-900/40 border border-slate-700 rounded px-2 py-1">
+          <div class="text-[10px] text-slate-300"><span class="font-bold">${val}</span> • Dia ${day}</div>
+          <button class="text-[10px] text-red-400 hover:text-red-300" onclick="app.removeFixedIncome(${idx})"><i class="fas fa-trash-alt"></i></button>
+        </div>
+      `
+    })
+    listEl.innerHTML =
+      incomes.join('') ||
+      '<p class="text-[10px] text-slate-500 italic">Nenhuma renda fixa mensal</p>'
   },
 
   renderTable(dailyData, viewDays, startDateStr) {
