@@ -43,11 +43,21 @@ export const Renderer = {
         '<p class="text-center text-[10px] text-slate-500 py-4 italic">Nenhum investimento ativo</p>'
     }
 
-    portfolio.forEach(p => {
+    const sorted = [...portfolio].sort((a, b) => {
+      const aEnd = new Date(Formatter.addDays(a.date, a.days))
+      const bEnd = new Date(Formatter.addDays(b.date, b.days))
+      return aEnd - bEnd
+    })
+
+    sorted.forEach(p => {
       const valCents = Formatter.toCents(p.val)
       const profitCents = Math.floor(valCents * (p.rate / 100) * p.days)
       totalVal += valCents
       totalProfit += profitCents
+
+      const retornoStr = Formatter.dateDisplay(
+        Formatter.addDays(p.date, p.days)
+      )
 
       const li = document.createElement('li')
       li.className =
@@ -58,6 +68,7 @@ export const Renderer = {
                      <div>
                         <span class="text-slate-300 font-bold block">${p.name || 'Ativo'}</span>
                         <span class="text-[10px] text-slate-500">${Formatter.dateDisplay(p.date)} • ${p.rate}% (${p.days}d)</span>
+                        <span class="text-[10px] text-yellow-400">Retorno: ${retornoStr}</span>
                      </div>
                 </div>
                 <div class="text-right">
@@ -202,19 +213,50 @@ export const Renderer = {
         const isCycle = (cycleEnds || []).includes(dayStr)
 
         let classes = 'cal-day text-slate-400'
-        let dots = ''
+        const markers = []
 
         if (dayStr === todayStr) classes += ' today'
         if (data) {
-          if (data.status === 'realized') classes += ' withdraw-executed'
-          else if (data.status === 'planned') classes += ' withdraw-day'
+          const taskIncome = data.inIncomeTask ?? data.inIncome
+          const recurringIncome = data.inIncomeRecurring ?? 0
+          if (taskIncome > 0)
+            markers.push(
+              '<div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>'
+            )
+          if (recurringIncome > 0)
+            markers.push(
+              '<div class="w-1.5 h-1.5 rounded-full bg-sky-400"></div>'
+            )
+          if (data.inReturn > 0)
+            markers.push(
+              '<div class="w-1.5 h-1.5 rounded-full bg-purple-500"></div>'
+            )
+          if (data.status === 'realized') {
+            classes += ' withdraw-executed'
+            markers.push(
+              '<div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div>'
+            )
+          } else if (data.status === 'planned') {
+            classes += ' withdraw-day'
+            markers.push(
+              '<div class="w-1.5 h-1.5 rounded-full bg-yellow-400"></div>'
+            )
+          }
         }
         if (isCycle)
-          dots += `<div class="w-1 h-1 bg-emerald-500 rounded-full"></div>`
+          markers.push(
+            '<div class="w-1.5 h-1.5 rounded-full bg-violet-500"></div>'
+          )
 
         const cell = document.createElement('div')
         cell.className = classes
-        cell.innerHTML = `<span class="z-10">${day}</span>${dots ? `<div class="flex gap-0.5 mb-0.5 absolute bottom-1">${dots}</div>` : ''}`
+        const dotsHtml =
+          markers.length > 0
+            ? `<div class="flex gap-0.5 mb-0.5 absolute bottom-1">${markers.join(
+                ''
+              )}</div>`
+            : ''
+        cell.innerHTML = `<span class="z-10">${day}</span>${dotsHtml}`
         cell.onclick = () => app.openDayDetails(dayStr)
         grid.appendChild(cell)
       }
