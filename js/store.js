@@ -51,7 +51,6 @@ class Store {
                 diasCiclo: "3",
                 taxaDiaria: "1.2",
                 repeticoesCiclo: "1",
-                mergeSimToggle: false,
                 bonusTier1: "3",
                 minTier1: "50",
                 limitTier1: "99",

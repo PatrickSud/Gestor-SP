@@ -24,7 +24,6 @@ export const Calculator = {
       diasCiclo,
       taxaDiaria,
       repeticoesCiclo,
-      mergeSimToggle,
       withdrawStrategy,
       withdrawTarget
     } = inputs
@@ -163,12 +162,8 @@ export const Calculator = {
         }
       }
 
-      // Merge Logic
-      if (mergeSimToggle && futureToggle === 'true' && stepReturns > 0) {
-        currentInv += stepReturns
-      } else {
-        currentWallet += stepReturns
-      }
+      // Merge Logic (Removed - Always to Wallet)
+      currentWallet += stepReturns
 
       let totalPool = currentInv + currentWallet
 
