@@ -298,6 +298,7 @@
 
         <!-- Dashboard Cards -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Card 1: Lucro Líquido -->
             <div onclick="app.openCardDetails('profit')"
                 class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm relative overflow-hidden group">
                 <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><i
@@ -306,27 +307,33 @@
                 <h3 class="text-lg md:text-xl font-bold text-white mt-1" id="resLucroLiquido">R$ 0,00</h3>
                 <p class="text-[9px] text-emerald-400 font-bold" id="resRoi">ROI: 0%</p>
             </div>
-            <div onclick="app.openCardDetails('withdrawn')"
+
+            <!-- Card 2: Histórico de Saques -->
+            <div onclick="app.openCardDetails('history')"
                 class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm relative overflow-hidden group">
                 <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><i
-                        class="fas fa-hand-holding-usd text-4xl text-blue-500"></i></div>
-                <p class="text-[10px] font-bold text-slate-400 uppercase">Total Sacado</p>
-                <h3 class="text-lg md:text-xl font-bold text-blue-400 mt-1" id="resTotalWithdrawn">R$ 0,00</h3>
-                <p class="text-[9px] text-slate-500">Já no bolso</p>
+                        class="fas fa-history text-4xl text-blue-500"></i></div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Histórico de Saques</p>
+                <h3 class="text-lg md:text-xl font-bold text-blue-400 mt-1" id="resMonthWithdraw">R$ 0,00</h3>
+                <p class="text-[9px] text-slate-500">Sacado Mês Corrente</p>
             </div>
-            <div onclick="app.openCardDetails('balance')"
+
+            <!-- Card 3: Saldo Atual/Final -->
+            <div onclick="app.openCardDetails('balance_flow')"
                 class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm relative overflow-hidden group">
                 <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><i
                         class="fas fa-piggy-bank text-4xl text-white"></i></div>
-                <p class="text-[10px] font-bold text-slate-400 uppercase">Saldo Final</p>
-                <h3 class="text-lg md:text-xl font-bold text-white mt-1" id="resFinal">R$ 0,00</h3>
-                <p class="text-[9px] text-slate-500">Projeção Acumulada</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Saldo Atual/Final</p>
+                <h3 class="text-lg md:text-xl font-bold text-white mt-1" id="resCurrentBalance">R$ 0,00</h3>
+                <p class="text-[9px] text-slate-500" id="resProjectedMonthEnd">Final Mês: R$ 0,00</p>
             </div>
-            <div onclick="app.openCardDetails('next')"
+
+            <!-- Card 4: Próximo Saque -->
+            <div onclick="app.openCardDetails('next_withdrawals')"
                 class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm bg-gradient-to-br from-slate-800 to-yellow-900/20 border-yellow-900/30">
                 <p class="text-[10px] font-bold text-yellow-500 uppercase">Próximo Saque</p>
-                <h3 class="text-lg md:text-xl font-bold text-yellow-400 mt-1" id="resMelhorSaque">R$ 0,00</h3>
-                <p class="text-[9px] text-yellow-600/70">Líq. Disponível</p>
+                <h3 class="text-lg md:text-xl font-bold text-yellow-400 mt-1" id="resNextDate">---</h3>
+                <p class="text-[9px] text-yellow-600/70" id="resNextValue">Est: R$ 0,00</p>
             </div>
         </div>
 
