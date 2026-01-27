@@ -127,7 +127,7 @@ export const Renderer = {
       resNextValue.innerText = `Est: ${Formatter.currency(results.nextWithdraw)}`
 
     this.els.navTotalBalance().innerText = Formatter.currency(
-      results.currentWalletNow ?? results.finalBalance
+      results.currentBalanceToday
     )
 
     // Remove references to deleted elements (Advanced Performance Row)

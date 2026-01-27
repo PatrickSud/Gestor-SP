@@ -11,10 +11,45 @@ export const ChartManager = {
       chartInstance.destroy()
     }
 
+    const todayStr = new Date().toISOString().split('T')[0]
+    const futureData = (data || []).filter(d => d.x >= todayStr)
+    const baseData = futureData.length > 0 ? futureData : data
     const displayData =
-      data.length > 90
-        ? data.filter((_, i) => i % Math.ceil(data.length / 90) === 0)
-        : data
+      baseData.length > 90
+        ? baseData.filter((_, i) => i % Math.ceil(baseData.length / 90) === 0)
+        : baseData
+
+    const plannedDates = displayData
+      .filter(it => it.meta && it.meta.withdrawStatus === 'planned')
+      .map(it => it.x)
+    const returnDates = displayData
+      .filter(it => it.meta && (it.meta.returns || 0) > 0)
+      .map(it => it.x)
+
+    const markerPlugin = {
+      id: 'markerPlugin',
+      afterDatasetsDraw(chart) {
+        const { ctx, chartArea, scales } = chart
+        if (!chartArea) return
+        const topY = chartArea.top
+        const bottomY = chartArea.bottom
+        const xScale = scales.x
+        const drawLineAt = (dateStr, color) => {
+          const xPos = xScale.getPixelForValue(dateStr)
+          if (!isFinite(xPos)) return
+          ctx.save()
+          ctx.strokeStyle = color
+          ctx.lineWidth = 1
+          ctx.beginPath()
+          ctx.moveTo(xPos, topY)
+          ctx.lineTo(xPos, bottomY)
+          ctx.stroke()
+          ctx.restore()
+        }
+        plannedDates.forEach(d => drawLineAt(d, '#f59e0b'))
+        returnDates.forEach(d => drawLineAt(d, '#8b5cf6'))
+      }
+    }
 
     chartInstance = new Chart(ctx, {
       type: 'line',
@@ -64,8 +99,7 @@ export const ChartManager = {
             ticks: {
               color: '#64748b',
               font: { size: 10 },
-              callback: value =>
-                'R$ ' + value.toLocaleString('pt-BR')
+              callback: value => 'R$ ' + value.toLocaleString('pt-BR')
             }
           }
         },
@@ -80,6 +114,19 @@ export const ChartManager = {
             borderColor: '#334155',
             borderWidth: 1,
             callbacks: {
+              title: items => {
+                const item = items && items[0]
+                const rawX = item && item.raw && item.raw.x
+                const dateObj = rawX ? new Date(rawX + 'T00:00:00') : null
+                if (!dateObj) return ''
+                const dd = String(dateObj.getDate()).padStart(2, '0')
+                const mm = String(dateObj.getMonth() + 1).padStart(2, '0')
+                const yyyy = dateObj.getFullYear()
+                const weekday = dateObj
+                  .toLocaleDateString('pt-BR', { weekday: 'long' })
+                  .replace(/^\w/, c => c.toUpperCase())
+                return `${dd}/${mm} - ${weekday}, ${yyyy}`
+              },
               label: context => {
                 let label = context.dataset.label || ''
                 if (label) label += ': '
@@ -91,6 +138,16 @@ export const ChartManager = {
                 }
                 return label
               },
+              labelColor: context => {
+                const meta = context.raw && context.raw.meta
+                if (meta && meta.withdrawStatus === 'planned') {
+                  return { borderColor: '#f59e0b', backgroundColor: '#f59e0b' }
+                }
+                if (meta && (meta.returns || 0) > 0) {
+                  return { borderColor: '#8b5cf6', backgroundColor: '#8b5cf6' }
+                }
+                return { borderColor: '#3b82f6', backgroundColor: '#3b82f6' }
+              },
               afterBody: items => {
                 const item = items && items[0]
                 if (!item || !item.raw || !item.raw.meta) return []
@@ -99,7 +156,8 @@ export const ChartManager = {
 
                 if (meta.incomeTask > 0) {
                   lines.push(
-                    'Entradas (Tarefas): +' + Formatter.currency(meta.incomeTask)
+                    'Entradas (Tarefas): +' +
+                      Formatter.currency(meta.incomeTask)
                   )
                 }
                 if (meta.incomeRecurring > 0) {
@@ -118,7 +176,10 @@ export const ChartManager = {
                     'Saque Planejado: -' + Formatter.currency(meta.withdrawNet)
                   )
                 }
-                if (meta.withdrawStatus === 'realized' && meta.withdrawNet > 0) {
+                if (
+                  meta.withdrawStatus === 'realized' &&
+                  meta.withdrawNet > 0
+                ) {
                   lines.push(
                     'Saque Realizado: -' + Formatter.currency(meta.withdrawNet)
                   )
@@ -132,7 +193,8 @@ export const ChartManager = {
             }
           }
         }
-      }
+      },
+      plugins: [markerPlugin]
     })
   }
 }

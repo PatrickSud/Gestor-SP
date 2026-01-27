@@ -92,6 +92,7 @@ export const Calculator = {
     let totalWithdrawnCents = 0
     let dailyData = {}
     let graphData = []
+    let simCapitalPure = initialSimCapital
 
     const simulationDays = Math.max(viewDays, totalReps * cycleDays + 30)
     const simStartStr =
@@ -172,15 +173,23 @@ export const Calculator = {
       ) {
         simCycleTimer--
         if (simCycleTimer === 0) {
-          let bonusPerc = 0
-          if (currentInv >= mT1 && currentInv <= lT1) bonusPerc = bT1
-          else if (currentInv > lT1) bonusPerc = bT2
+          let bonusPercCur = 0
+          if (currentInv >= mT1 && currentInv <= lT1) bonusPercCur = bT1
+          else if (currentInv > lT1) bonusPercCur = bT2
+          let bonusPercPure = 0
+          if (simCapitalPure >= mT1 && simCapitalPure <= lT1)
+            bonusPercPure = bT1
+          else if (simCapitalPure > lT1) bonusPercPure = bT2
 
           const prevInv = currentInv
-          const activeCap = Math.floor(prevInv * (1 + bonusPerc))
-          const profit = Math.floor(activeCap * dailyRate * cycleDays)
-          currentInv = activeCap + profit
+          const activeCapCur = Math.floor(prevInv * (1 + bonusPercCur))
+          const profitCur = Math.floor(activeCapCur * dailyRate * cycleDays)
+          currentInv = activeCapCur + profitCur
           stepSimReinvest = currentInv - prevInv
+
+          const activeCapPure = Math.floor(simCapitalPure * (1 + bonusPercPure))
+          const profitPure = Math.floor(activeCapPure * dailyRate * cycleDays)
+          simCapitalPure = activeCapPure + profitPure
 
           isCycleEnd = true
           cycleEnds.push(currentDayStr)
@@ -385,8 +394,8 @@ export const Calculator = {
         paybackDays,
         breakEvenDate,
         simInitial: initialSimCapital,
-        simFinal: currentInv,
-        simProfit: currentInv - initialSimCapital,
+        simFinal: simCapitalPure,
+        simProfit: simCapitalPure - initialSimCapital,
         simCycles: totalReps,
         simCycleDays: cycleDays,
         simTotalDays: totalReps * cycleDays
