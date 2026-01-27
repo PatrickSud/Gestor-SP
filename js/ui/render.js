@@ -243,67 +243,105 @@ export const Renderer = {
       if (index === 0) {
         subItems.push({
           label: 'Saldo de Abertura',
-          sub: 'Base inicial',
+          sub: 'Valor adicionado manualmente',
           val: d.startBal,
-          type: 'balance',
-          dot: '#3b82f6',
+          type: 'manual',
+          dot: '#f97316',
           tag: 'INÍCIO'
         })
       }
-      if (d.inIncome > 0) {
+
+      const taskIncome = d.inIncomeTask ?? d.inIncome
+      const recurringIncome = d.inIncomeRecurring ?? 0
+
+      if (taskIncome > 0) {
         subItems.push({
           label: 'Entradas (Tarefas)',
           sub: 'Renda diária',
-          val: d.inIncome,
-          type: 'income',
-          dot: '#10b981',
+          val: taskIncome,
+          type: 'task',
+          dot: '#22c55e',
           tag: 'RECEBIDO'
         })
-        totalIncome += d.inIncome
+        totalIncome += taskIncome
       }
+
+      if (recurringIncome > 0) {
+        subItems.push({
+          label: 'Entradas (Recorrentes)',
+          sub: 'Renda fixa',
+          val: recurringIncome,
+          type: 'recurring',
+          dot: '#0ea5e9',
+          tag: 'RECEBIDO'
+        })
+        totalIncome += recurringIncome
+      }
+
       if (d.inReturn > 0) {
+        const names = (d.maturing || []).map(m => m.name).filter(n => !!n) || []
+        let subLabel = 'Capital reavido'
+        if (names.length === 1) subLabel = names[0]
+        else if (names.length > 1) subLabel = `${names[0]} +${names.length - 1}`
+
         subItems.push({
           label: 'Retorno de Contrato',
-          sub: 'Capital Reavido',
+          sub: subLabel,
           val: d.inReturn,
-          type: 'income',
-          dot: '#10b981',
+          type: 'return',
+          dot: '#a855f7',
           tag: 'RECEBIDO'
         })
         totalIncome += d.inReturn
       }
+
       if (d.isCycleEnd) {
         subItems.push({
           label: 'Reinvestimento Simulado',
-          sub: 'Juros Compostos',
+          sub: 'Juros compostos',
           val: 0,
           type: 'balance',
           dot: '#8b5cf6',
           tag: 'EFETIVADO'
         })
       }
+
       if (d.status !== 'none') {
-        const label =
-          d.status === 'realized' ? 'Saque Confirmado' : 'Saque Planejado'
-        const val =
-          d.status === 'realized' ? d.outWithdraw : Math.floor(d.tier * 0.9)
+        const realized = d.status === 'realized'
+        const label = realized ? 'Saque Realizado' : 'Saque Planejado'
+        const val = realized ? d.outWithdraw : Math.floor(d.tier * 0.9)
+        const itemType = realized ? 'withdraw-realized' : 'withdraw-planned'
+        const dotColor = realized ? '#3b82f6' : '#eab308'
+
         subItems.push({
           label,
-          sub: 'Transferência estratégica',
-          val: val,
-          type: d.status === 'realized' ? 'expense' : 'balance',
-          dot: d.status === 'realized' ? '#3b82f6' : '#10b981',
+          sub: realized ? 'Transferência concluída' : 'Projeção de saque',
+          val,
+          type: itemType,
+          dot: dotColor,
           tag: d.status.toUpperCase()
         })
-        if (d.status === 'realized') totalExpense += d.outWithdraw
+
+        if (realized) totalExpense += d.outWithdraw
       }
 
       if (subItems.length > 0) {
         const dateObj = new Date(dateStr + 'T12:00:00Z')
         const dayLabel = `${dateStr.split('-')[2]} • ${dateObj.toLocaleDateString('pt-BR', { weekday: 'long' })}`
-        html += `<div class="timeline-day-header">${dayLabel}</div>`
+        const isMonthStart = dateStr.endsWith('-01')
+        const headerClass = isMonthStart
+          ? 'timeline-day-header month-separator'
+          : 'timeline-day-header'
+
+        html += `<div class="${headerClass}">${dayLabel}</div>`
 
         subItems.forEach((item, idx) => {
+          const isWithdraw =
+            item.type === 'withdraw-realized' ||
+            item.type === 'withdraw-planned'
+          const sign = isWithdraw ? '-' : '+'
+          const showValue = item.val > 0
+
           html += `
                         <div class="timeline-item">
                             <div class="timeline-marker">
@@ -313,7 +351,7 @@ export const Renderer = {
                             <div class="timeline-content">
                                 <div><div class="timeline-label">${item.label}</div><div class="timeline-sublabel">${item.sub}</div></div>
                                 <div class="text-right">
-                                    <div class="timeline-value ${item.type}">${item.val > 0 ? (item.type === 'expense' ? '-' : '+') + Formatter.currency(item.val) : item.tag}</div>
+                                    <div class="timeline-value ${item.type}">${showValue ? sign + Formatter.currency(item.val) : item.tag}</div>
                                     <div class="efetivar-badge">${item.tag}</div>
                                 </div>
                             </div>

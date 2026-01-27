@@ -85,6 +85,9 @@ export const Calculator = {
     const totalCentsInvested =
       walletStart + initialSimCapital + totalPortfolioVal
 
+    let totalIncomeCents = 0
+    let totalInvProfitCents = 0
+
     // Initialize Loop
     let currentInv = initialSimCapital
     let currentWallet = walletStart
@@ -111,15 +114,19 @@ export const Calculator = {
       let stepWithdraw = 0
       let stepMaturingList = []
       let isCycleEnd = false
+      let stepTaskIncome = 0
+      let stepRecurringIncome = 0
 
       // 1. Task Income (Mon-Sat)
       if (d > 0 && Formatter.getDayOfWeek(currentDayStr) !== 0) {
         stepIncome += taskValCents
+        stepTaskIncome += taskValCents
       }
 
       // 2. Monthly Income
       if (d > 0 && d % 30 === 0) {
         stepIncome += monthlyIncomeCents
+        stepRecurringIncome += monthlyIncomeCents
       }
 
       // 3. Portfolio Maturities
@@ -129,6 +136,13 @@ export const Calculator = {
       }
 
       currentWallet += stepIncome
+      totalIncomeCents += stepIncome
+
+      const dayProfit =
+        stepMaturingList && stepMaturingList.length > 0
+          ? stepMaturingList.reduce((acc, m) => acc + (m.profit || 0), 0)
+          : 0
+      totalInvProfitCents += dayProfit
 
       // 4. Simulated Cycle Logic
       if (futureToggle === 'true' && completedReps < totalReps && d > 0) {
@@ -232,6 +246,8 @@ export const Calculator = {
         startBal: startBalCents,
         endBal: totalPool,
         inIncome: stepIncome,
+        inIncomeTask: stepTaskIncome,
+        inIncomeRecurring: stepRecurringIncome,
         inReturn: stepReturns,
         outReinvest: currentInv,
         outWithdraw: stepWithdraw,
@@ -242,7 +258,23 @@ export const Calculator = {
       }
 
       if (d <= viewDays || d % 5 === 0) {
-        graphData.push({ x: currentDayStr, y: Formatter.fromCents(totalPool) })
+        graphData.push({
+          x: currentDayStr,
+          y: Formatter.fromCents(totalPool),
+          meta: {
+            incomeTask: stepTaskIncome,
+            incomeRecurring: stepRecurringIncome,
+            returns: stepReturns,
+            withdrawNet: stepWithdraw,
+            withdrawStatus: isRealized
+              ? 'realized'
+              : isPlanned
+                ? 'planned'
+                : 'none',
+            isCycleEnd,
+            isStart: d === 0
+          }
+        })
       }
     }
 
