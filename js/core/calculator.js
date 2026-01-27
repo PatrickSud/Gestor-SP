@@ -87,12 +87,12 @@ export const Calculator = {
     let totalInvProfitCents = 0
 
     // Initialize Loop
-    let currentInv = initialSimCapital
+    let currentInv = 0
     let currentWallet = walletStart
     let totalWithdrawnCents = 0
     let dailyData = {}
     let graphData = []
-    let simCapitalPure = initialSimCapital
+    let simCapitalPure = 0
 
     const simulationDays = Math.max(viewDays, totalReps * cycleDays + 30)
     const simStartStr =
@@ -129,6 +129,14 @@ export const Calculator = {
       let stepTaskIncome = 0
       let stepRecurringIncome = 0
       let stepSimReinvest = 0
+      if (
+        futureToggle === 'true' &&
+        d === simStartIndex &&
+        initialSimCapital > 0
+      ) {
+        currentInv += initialSimCapital
+        simCapitalPure += initialSimCapital
+      }
 
       // 1. Task Income (Mon-Sat)
       if (d > 0 && Formatter.getDayOfWeek(currentDayStr) !== 0) {
