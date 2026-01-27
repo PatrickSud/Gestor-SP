@@ -341,17 +341,136 @@ class App {
       data.endBal
     )
 
-    document.getElementById('modalFlowIncome').innerText = Formatter.currency(
-      data.inIncome
-    )
-    document.getElementById('modalFlowReturns').innerText = Formatter.currency(
-      data.inReturn
-    )
-    document.getElementById('modalFlowReinvest').innerText =
-      `-${Formatter.currency(data.outReinvest)}` // Simplified display
-    document.getElementById('modalFlowWithdraw').innerText =
-      `-${Formatter.currency(data.outWithdraw)}`
+    // Detailed Flows (New structure)
+    const flowsContainer = document.getElementById('modalFlowsContainer') // Ensure this container exists in HTML or we reuse existing slots
+    // Since we don't want to change HTML structure too much, we will map values to existing IDs where possible
+    // But for better visual separation, we might need to inject HTML into a container if the static structure is too rigid.
+    // Let's check the HTML structure of the modal first.
+    // Based on previous code: modalFlowIncome, modalFlowReturns, modalFlowReinvest, modalFlowWithdraw
 
+    // We will update the text content and color classes for existing elements to match new style
+
+    // 1. Income (Combined or Separated?)
+    // The current modal has separate fields. Let's try to use them or inject a list.
+    // Given the request for consistency, let's replace the static list with a dynamic one generated here, similar to timeline.
+    // We need to find the container in index.html first.
+    // Wait, let's look at index.html content for 'dayModal'.
+
+    this.renderDayModalContent(data, dateStr)
+    this.openModal('dayModal')
+  }
+
+  renderDayModalContent(data, dateStr) {
+    // Re-using the logic from renderTimeline to ensure consistency
+    const items = []
+
+    // Manual/Start
+    // Usually startBal is just the balance, but if it's the first day and has manual value?
+    // For day details, we show Start Balance as a header.
+    // We focus on flows (Entradas/Saidas)
+
+    if (data.inIncomeTask > 0) {
+      items.push({
+        label: 'Entradas (Tarefas)',
+        val: data.inIncomeTask,
+        type: 'task',
+        icon: 'fa-check-circle'
+      })
+    }
+    if (data.inIncomeRecurring > 0) {
+      items.push({
+        label: 'Entradas (Recorrentes)',
+        val: data.inIncomeRecurring,
+        type: 'recurring',
+        icon: 'fa-calendar-check'
+      })
+    }
+    if (data.inReturn > 0) {
+      items.push({
+        label: 'Retorno de Contrato',
+        val: data.inReturn,
+        type: 'return',
+        icon: 'fa-undo'
+      })
+    }
+    if (data.isCycleEnd) {
+      items.push({
+        label: 'Reinvestimento Simulado',
+        val: 0,
+        type: 'balance',
+        icon: 'fa-sync-alt',
+        text: 'EFETIVADO'
+      })
+    }
+
+    // Withdrawals
+    if (data.status !== 'none') {
+      const isRealized = data.status === 'realized'
+      items.push({
+        label: isRealized ? 'Saque Realizado' : 'Saque Planejado',
+        val: isRealized ? data.outWithdraw : Math.floor(data.tier * 0.9),
+        type: isRealized ? 'withdraw-realized' : 'withdraw-planned',
+        icon: isRealized ? 'fa-wallet' : 'fa-clock',
+        isExpense: true
+      })
+    }
+
+    // Generate HTML for flows
+    let flowsHtml = ''
+    if (items.length === 0) {
+      flowsHtml =
+        '<p class="text-xs text-slate-500 italic text-center py-2">Sem movimentações neste dia.</p>'
+    } else {
+      items.forEach(item => {
+        const colorClass = `timeline-value ${item.type}` // reusing css classes
+        // Map types to text colors for the label/icon if needed, or just use white/slate
+        let iconColor = 'text-slate-400'
+        if (item.type === 'task') iconColor = 'text-emerald-400'
+        if (item.type === 'recurring') iconColor = 'text-sky-400'
+        if (item.type === 'return') iconColor = 'text-purple-400'
+        if (item.type === 'withdraw-planned') iconColor = 'text-yellow-400'
+        if (item.type === 'withdraw-realized') iconColor = 'text-blue-400'
+
+        const valDisplay = item.text || Formatter.currency(item.val)
+        const sign =
+          item.val > 0 && !item.text ? (item.isExpense ? '-' : '+') : ''
+
+        flowsHtml += `
+                <div class="flex justify-between items-center text-xs bg-slate-900/30 p-2 rounded mb-1 border border-slate-700/30">
+                    <div class="flex items-center gap-2">
+                        <i class="fas ${item.icon} ${iconColor}"></i>
+                        <span class="text-slate-300">${item.label}</span>
+                    </div>
+                    <span class="font-bold ${colorClass.replace('timeline-value', '') === ' balance' ? 'text-purple-400' : ''}" style="${this.getColorStyle(item.type)}">${sign}${valDisplay}</span>
+                </div>`
+      })
+    }
+
+    // Inject into the modal structure.
+    // We need to modify index.html to have a container for this, OR we overwrite the existing static grid.
+    // Let's assume we can overwrite the 'modalFlowsGrid' div if we find it, or the specific IDs.
+    // Actually, let's replace the content of the "Resumo do Dia" section.
+
+    // Since I cannot easily change index.html and main.js in one go without potential mismatches,
+    // I will target the specific IDs currently used: modalFlowIncome, modalFlowReturns, etc.
+    // BUT, the user wants DIFFERENTIATION. The current HTML has:
+    // - Entradas (combines all)
+    // - Retornos
+    // - Reinvestimentos
+    // - Saques
+
+    // To support the new detailed view, I should hide the old static grid and inject the new list.
+    // I'll check if there is a container I can use.
+    // If not, I'll use JS to rewrite the innerHTML of the parent container of those static elements.
+
+    const grid = document.getElementById('modalFlowsGrid')
+    if (grid) {
+      grid.innerHTML = flowsHtml
+      grid.classList.remove('grid', 'grid-cols-2') // Remove grid layout if we want a list
+      grid.classList.add('flex', 'flex-col', 'gap-1')
+    }
+
+    // Maturing List (Keep existing logic but update style)
     const matList = document.getElementById('modalMaturingList')
     const matSec = document.getElementById('modalMaturingSection')
     if (data.maturing && data.maturing.length > 0) {
@@ -359,26 +478,24 @@ class App {
       matList.innerHTML = data.maturing
         .map(
           m => `
-                <div class="flex justify-between items-center text-[10px] border-b border-slate-700/50 py-1 last:border-0">
-                    <span class="text-slate-300 truncate w-1/2">${m.name}</span>
-                    <div class="text-right">
-                        <span class="block text-emerald-400 font-bold">+${Formatter.currency(m.total)}</span>
-                        <span class="text-slate-500 text-[9px]">(Lucro: ${Formatter.currency(m.profit)})</span>
-                    </div>
-                </div>`
+                  <div class="flex justify-between items-center text-[10px] border-b border-slate-700/50 py-1 last:border-0">
+                      <span class="text-slate-300 truncate w-1/2">${m.name}</span>
+                      <div class="text-right">
+                          <span class="block text-purple-400 font-bold">+${Formatter.currency(m.total)}</span>
+                          <span class="text-slate-500 text-[9px]">(Lucro: ${Formatter.currency(m.profit)})</span>
+                      </div>
+                  </div>`
         )
         .join('')
     } else {
       matSec.classList.add('hidden')
     }
 
+    // Withdraw Action Section (Keep logic)
     const wSec = document.getElementById('modalWithdrawSection')
     const canWithdraw = data.tier > 0 || data.status !== 'none'
-
     if (canWithdraw) {
       wSec.classList.remove('hidden')
-
-      // Value display logic
       const amountToDisplay =
         data.status === 'realized'
           ? data.outWithdraw
@@ -392,22 +509,38 @@ class App {
         status.className = 'text-blue-400 font-bold uppercase mt-1'
       } else {
         const label =
-          data.status === 'planned'
-            ? 'SAQUE PLANEJADO'
-            : 'DISPONÍVEL (FORA DA ESTRATÉGIA)'
+          data.status === 'planned' ? 'SAQUE PLANEJADO' : 'DISPONÍVEL'
         status.innerHTML = `
-                    <div class="text-emerald-500 font-bold uppercase mt-1 mb-2">${label}</div>
-                    <button onclick="app.executeWithdrawal('${dateStr}', ${Formatter.fromCents(data.tier)})" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
-                        <i class="fas fa-hand-holding-usd mr-1"></i> Realizar Saque Agora
-                    </button>
-                `
+                      <div class="text-emerald-500 font-bold uppercase mt-1 mb-2">${label}</div>
+                      <button onclick="app.executeWithdrawal('${dateStr}', ${Formatter.fromCents(data.tier)})" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
+                          <i class="fas fa-hand-holding-usd mr-1"></i> Realizar Saque Agora
+                      </button>
+                  `
         status.className = ''
       }
     } else {
       wSec.classList.add('hidden')
     }
+  }
 
-    this.openModal('dayModal')
+  getColorStyle(type) {
+    // Helper to match styles if classes aren't enough (since timeline classes are in style.css, they should work if valid HTML)
+    // timeline-value.income { color: #10b981; }
+    // timeline-value.task { color: #22c55e; }
+    switch (type) {
+      case 'task':
+        return 'color: #22c55e;'
+      case 'recurring':
+        return 'color: #0ea5e9;'
+      case 'return':
+        return 'color: #a855f7;'
+      case 'withdraw-planned':
+        return 'color: #eab308;'
+      case 'withdraw-realized':
+        return 'color: #3b82f6;'
+      default:
+        return ''
+    }
   }
 
   openTimelineModal() {

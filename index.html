@@ -264,6 +264,16 @@
                 </div>
             </div>
 
+            <!-- Section: Saques Realizados -->
+            <div class="space-y-3">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-1">Saques Realizados</label>
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
+                     <button onclick="app.openCardDetails('history')" class="w-full bg-slate-900 hover:bg-slate-700 text-blue-400 text-xs font-bold py-3 rounded-lg border border-blue-500/20 transition-colors flex items-center justify-center gap-2">
+                        <i class="fas fa-history"></i> Gerenciar Histórico
+                     </button>
+                </div>
+            </div>
+
             <!-- Section: Utils & Backup -->
             <div class="space-y-3 pt-2">
                 <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-1">Sistema &
@@ -611,15 +621,8 @@
                         <span class="text-white font-bold font-mono text-lg" id="modalEndBal">R$ 0,00</span>
                     </div>
                 </div>
-                <div class="space-y-2 border-t border-slate-700/50 pt-3 text-xs">
-                    <div class="flex justify-between"><span>Renda/Extras</span> <span class="text-indigo-400"
-                            id="modalFlowIncome">R$ 0,00</span></div>
-                    <div class="flex justify-between"><span>Retorno Inv.</span> <span class="text-emerald-400"
-                            id="modalFlowReturns">R$ 0,00</span></div>
-                    <div class="flex justify-between"><span>Reinvestimentos</span> <span class="text-blue-400"
-                            id="modalFlowReinvest">-R$ 0,00</span></div>
-                    <div class="flex justify-between"><span>Saques</span> <span class="text-yellow-500"
-                            id="modalFlowWithdraw">-R$ 0,00</span></div>
+                <div id="modalFlowsGrid" class="border-t border-slate-700/50 pt-3">
+                    <!-- Dynamic Content Injected Here -->
                 </div>
                 <div id="modalMaturingSection" class="border-t border-slate-700/50 pt-3 hidden">
                     <p class="text-[10px] text-slate-400 font-bold uppercase mb-2">Contratos Finalizados</p>
