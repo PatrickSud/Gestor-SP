@@ -426,10 +426,9 @@ class App {
     if (data.isCycleEnd) {
       items.push({
         label: 'Reinvestimento Simulado',
-        val: 0,
+        val: data.outReinvest || 0,
         type: 'balance',
-        icon: 'fa-sync-alt',
-        text: 'EFETIVADO'
+        icon: 'fa-sync-alt'
       })
     }
 
@@ -615,31 +614,62 @@ class App {
         index: i
       }))
       history.sort((a, b) => b.date.localeCompare(a.date))
-
-      let listHtml =
+      const currentMonthStr = new Date().toISOString().substring(0, 7)
+      const grossMonthTotal = history
+        .filter(w => w.date.startsWith(currentMonthStr))
+        .reduce((acc, w) => acc + Formatter.toCents(w.amount), 0)
+      const netMonthTotal = history
+        .filter(w => w.date.startsWith(currentMonthStr))
+        .reduce(
+          (acc, w) => acc + Math.floor(Formatter.toCents(w.amount) * 0.9),
+          0
+        )
+      const grossList =
         history.length === 0
           ? '<p class="text-xs text-slate-500 italic text-center">Nenhum saque realizado.</p>'
-          : ''
-      history.forEach(w => {
-        const valCents = Formatter.toCents(w.amount)
-        listHtml += `
+          : history
+              .map(
+                w => `
                     <div class="flex justify-between items-center text-xs bg-slate-900/50 p-2 rounded mb-1 group">
                         <span class="text-slate-400">${Formatter.dateDisplay(w.date)}</span>
                         <div class="flex items-center gap-2">
-                            <span class="text-blue-400 font-bold">${Formatter.currency(valCents)}</span>
+                            <span class="text-blue-400 font-bold">${Formatter.currency(Formatter.toCents(w.amount))}</span>
                             <button onclick="app.deleteWithdrawal(${w.index})" class="text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     </div>`
-      })
-
+              )
+              .join('')
+      const netList =
+        history.length === 0
+          ? '<p class="text-xs text-slate-500 italic text-center">Nenhum saque realizado.</p>'
+          : history
+              .map(
+                w => `
+                    <div class="flex justify-between items-center text-xs bg-slate-900/50 p-2 rounded mb-1 group">
+                        <span class="text-slate-400">${Formatter.dateDisplay(w.date)}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-blue-400 font-bold">${Formatter.currency(Math.floor(Formatter.toCents(w.amount) * 0.9))}</span>
+                            <button onclick="app.deleteWithdrawal(${w.index})" class="text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    </div>`
+              )
+              .join('')
+      this._historyGrossListHtml = grossList
+      this._historyNetListHtml = netList
+      this._historyGrossMonth = grossMonthTotal
+      this._historyNetMonth = netMonthTotal
       html = `
                 <h3 class="text-lg font-bold text-blue-400 mb-4"><i class="fas fa-history mr-2"></i>Histórico de Saques</h3>
+                <div class="flex gap-2 mb-3">
+                  <button id="historyTabNet" class="px-2 py-1 text-[10px] font-bold rounded border border-slate-700 text-white bg-slate-700">Líquido</button>
+                  <button id="historyTabGross" class="px-2 py-1 text-[10px] font-bold rounded border border-slate-700 text-slate-400 hover:text-white">Bruto</button>
+                </div>
                 <div class="text-center mb-4">
-                    <span class="text-3xl font-black text-white">${Formatter.currency(results.currentMonthWithdrawn)}</span>
+                    <span class="text-3xl font-black text-white" id="historyMonthTotal"></span>
                     <p class="text-[10px] text-slate-500">Sacado no Mês Corrente</p>
                 </div>
                 <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Histórico Completo</p>
-                <div class="max-h-[200px] overflow-y-auto custom-scrollbar">${listHtml}</div>
+                <div class="max-h-[200px] overflow-y-auto custom-scrollbar" id="historyList"></div>
             `
     } else if (type === 'balance_flow') {
       const currentMonthStr = new Date().toISOString().substring(0, 7)
@@ -706,9 +736,42 @@ class App {
     }
 
     content.innerHTML = html
+    const tabNet = document.getElementById('historyTabNet')
+    const tabGross = document.getElementById('historyTabGross')
+    if (tabNet && tabGross) {
+      tabNet.onclick = () => this.setHistoryView('net')
+      tabGross.onclick = () => this.setHistoryView('gross')
+      this.setHistoryView('net')
+    }
     this.openModal('cardModal')
   }
 
+  setHistoryView(mode) {
+    const monthEl = document.getElementById('historyMonthTotal')
+    const listEl = document.getElementById('historyList')
+    const tabNet = document.getElementById('historyTabNet')
+    const tabGross = document.getElementById('historyTabGross')
+    if (!monthEl || !listEl || !tabNet || !tabGross) return
+    if (mode === 'net') {
+      monthEl.innerText = Formatter.currency(this._historyNetMonth || 0)
+      listEl.innerHTML =
+        this._historyNetListHtml ||
+        '<p class="text-xs text-slate-500 italic text-center">Nenhum saque realizado.</p>'
+      tabNet.className =
+        'px-2 py-1 text-[10px] font-bold rounded border border-slate-700 text-white bg-slate-700'
+      tabGross.className =
+        'px-2 py-1 text-[10px] font-bold rounded border border-slate-700 text-slate-400 hover:text-white'
+    } else {
+      monthEl.innerText = Formatter.currency(this._historyGrossMonth || 0)
+      listEl.innerHTML =
+        this._historyGrossListHtml ||
+        '<p class="text-xs text-slate-500 italic text-center">Nenhum saque realizado.</p>'
+      tabGross.className =
+        'px-2 py-1 text-[10px] font-bold rounded border border-slate-700 text-white bg-slate-700'
+      tabNet.className =
+        'px-2 py-1 text-[10px] font-bold rounded border border-slate-700 text-slate-400 hover:text-white'
+    }
+  }
   // --- Profile Actions ---
   openProfileModal() {
     const current = store.state.profiles[store.state.currentProfileId]

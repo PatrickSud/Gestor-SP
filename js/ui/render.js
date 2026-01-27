@@ -314,6 +314,9 @@ export const Renderer = {
               )}</div>`
             : ''
         cell.innerHTML = `<span class="z-10">${day}</span>${dotsHtml}`
+        if (data && typeof data.endBal === 'number') {
+          cell.title = `Saldo: ${Formatter.currency(data.endBal)}`
+        }
         cell.onclick = () => app.openDayDetails(dayStr)
         grid.appendChild(cell)
       }
