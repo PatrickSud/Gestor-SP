@@ -184,6 +184,8 @@ export const Renderer = {
       const taxa = inputs.taxaDiaria || '0'
       metaEl.innerText = `${dias}d • ${reps}x ciclos • ${taxa}% ao dia`
     }
+
+    // Renderizar lista de retornos (Fim de Ciclo)
     const listEl = document.getElementById('simSummaryCycleEnds')
     if (listEl) {
       const ends = Array.isArray(cycleEnds) ? cycleEnds : []
@@ -191,18 +193,24 @@ export const Renderer = {
         const tags = ends
           .map(d => {
             const [y, m, day] = d.split('-')
-            return `<span class="px-2 py-0.5 text-[10px] rounded bg-violet-900 text-violet-100 font-bold border border-violet-700/50 shadow-sm">${day}/${m}</span>`
+            return `<span class="px-2 py-0.5 text-[10px] rounded bg-violet-900/50 text-violet-200 font-bold border border-violet-700/50 shadow-sm">${day}/${m}</span>`
           })
           .join('')
+        
         listEl.innerHTML = `
           <div class="mt-3 pt-3 border-t border-slate-700/50">
-            <div class="text-[9px] text-slate-500 uppercase font-bold mb-2 tracking-wider">Previsão de Retornos:</div>
+            <div class="text-[9px] text-slate-500 uppercase font-bold mb-2 tracking-wider flex items-center gap-1.5">
+              <i class="fas fa-calendar-alt text-violet-400"></i> Previsão de Retornos:
+            </div>
             <div class="flex flex-wrap gap-1.5">${tags}</div>
           </div>
         `
       } else {
-        listEl.innerHTML =
-          '<span class="text-[10px] text-slate-500 italic">Sem ciclos concluídos</span>'
+        listEl.innerHTML = `
+          <div class="mt-3 pt-3 border-t border-slate-700/50">
+            <span class="text-[9px] text-slate-500 italic uppercase font-bold tracking-wider">Sem ciclos concluídos no período.</span>
+          </div>
+        `
       }
     }
   },
@@ -300,12 +308,7 @@ export const Renderer = {
 
         if (dayStr === todayStr) classes += ' today'
         if (data) {
-          const taskIncome = data.inIncomeTask ?? data.inIncome
           const recurringIncome = data.inIncomeRecurring ?? 0
-          if (taskIncome > 0)
-            markers.push(
-              '<div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>'
-            )
           if (recurringIncome > 0)
             markers.push(
               '<div class="w-1.5 h-1.5 rounded-full bg-sky-400"></div>'
