@@ -39,7 +39,8 @@ class Store {
         dataInicio: today,
         withdrawalDaySelect: '1',
         viewPeriodSelect: '30',
-        currentWalletBalance: '0',
+        personalWalletStart: '0',
+        revenueWalletStart: '0',
         monthlyExtraIncome: '0',
         monthlyIncomeToggle: false,
         fixedIncomes: [],
@@ -58,12 +59,13 @@ class Store {
         limitTier1: '99',
         bonusTier2: '6',
         commitBaseName: '',
-        withdrawWallet: 'revenue'
+        // removed withdrawWallet
       },
       portfolio: [],
       selectedWeeks: [],
       goals: [],
-      realizedWithdrawals: []
+      realizedWithdrawals: [],
+      manualAdjustments: []
     }
   }
 
@@ -159,7 +161,8 @@ class Store {
       portfolio: this.state.portfolio,
       selectedWeeks: this.state.selectedWeeks,
       goals: this.state.goals || [],
-      realizedWithdrawals: this.state.realizedWithdrawals || []
+      realizedWithdrawals: this.state.realizedWithdrawals || [],
+      manualAdjustments: this.state.manualAdjustments || []
     }
 
     const dataToSave = {
@@ -180,7 +183,8 @@ class Store {
       portfolio: this.state.portfolio,
       selectedWeeks: this.state.selectedWeeks,
       goals: this.state.goals || [],
-      realizedWithdrawals: this.state.realizedWithdrawals || []
+      realizedWithdrawals: this.state.realizedWithdrawals || [],
+      manualAdjustments: this.state.manualAdjustments || []
     }
     return {
       currentProfileId: this.state.currentProfileId,
@@ -200,6 +204,7 @@ class Store {
     this.state.selectedWeeks = [...current.selectedWeeks]
     this.state.goals = [...(current.goals || [])]
     this.state.realizedWithdrawals = [...(current.realizedWithdrawals || [])]
+    this.state.manualAdjustments = [...(current.manualAdjustments || [])]
 
     this.saveToStorage() // Update local storage too
     this.notify()
@@ -222,10 +227,12 @@ class Store {
       this.state.selectedWeeks = [...current.selectedWeeks]
       this.state.goals = [...(current.goals || [])]
       this.state.realizedWithdrawals = [...(current.realizedWithdrawals || [])]
+      this.state.manualAdjustments = [...(current.manualAdjustments || [])]
     } else {
       this.state.inputs = this.getInitialData().inputs
       this.state.goals = []
       this.state.realizedWithdrawals = []
+      this.state.manualAdjustments = []
     }
   }
 
@@ -254,6 +261,7 @@ class Store {
       this.state.portfolio = [...current.portfolio]
       this.state.selectedWeeks = [...current.selectedWeeks]
       this.state.goals = [...(current.goals || [])]
+      this.state.manualAdjustments = [...(current.manualAdjustments || [])]
 
       this.saveToStorage()
       this.notify()

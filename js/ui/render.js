@@ -448,6 +448,33 @@ export const Renderer = {
         })
       }
 
+      if ((d.manualAdjPersonal || 0) !== 0) {
+        subItems.push({
+          label: 'Ajuste Manual (Pessoal)',
+          sub: d.manualAdjPersonal > 0 ? 'Entrada manual' : 'Saída manual',
+          val: Math.abs(d.manualAdjPersonal),
+          type: 'manual-personal',
+          dot: '#10b981',
+          tag: d.manualAdjPersonal > 0 ? 'AJUSTE +' : 'AJUSTE -'
+        })
+        totalIncome += d.manualAdjPersonal > 0 ? d.manualAdjPersonal : 0
+        totalExpense +=
+          d.manualAdjPersonal < 0 ? Math.abs(d.manualAdjPersonal) : 0
+      }
+      if ((d.manualAdjRevenue || 0) !== 0) {
+        subItems.push({
+          label: 'Ajuste Manual (Receita)',
+          sub: d.manualAdjRevenue > 0 ? 'Entrada manual' : 'Saída manual',
+          val: Math.abs(d.manualAdjRevenue),
+          type: 'manual-revenue',
+          dot: '#6366f1',
+          tag: d.manualAdjRevenue > 0 ? 'AJUSTE +' : 'AJUSTE -'
+        })
+        totalIncome += d.manualAdjRevenue > 0 ? d.manualAdjRevenue : 0
+        totalExpense +=
+          d.manualAdjRevenue < 0 ? Math.abs(d.manualAdjRevenue) : 0
+      }
+
       if (d.status !== 'none') {
         const realized = d.status === 'realized'
         const label = realized ? 'Saque Realizado' : 'Saque Planejado'
@@ -500,6 +527,10 @@ export const Renderer = {
             item.type === 'withdraw-planned'
           const sign = isWithdraw ? '-' : '+'
           const showValue = item.val > 0
+          const actionBtn =
+            item.type === 'withdraw-planned'
+              ? `<button class="ml-2 text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-0.5 rounded" onclick="app.executeWithdrawal('${dateStr}', ${Formatter.fromCents(d.tier)})">Sacar</button>`
+              : ''
 
           html += `
                         <div class="timeline-item">
@@ -510,7 +541,7 @@ export const Renderer = {
                             <div class="timeline-content">
                                 <div><div class="timeline-label">${item.label}</div><div class="timeline-sublabel">${item.sub}</div></div>
                                 <div class="text-right">
-                                    <div class="timeline-value ${item.type}">${showValue ? sign + Formatter.currency(item.val) : item.tag}</div>
+                                    <div class="timeline-value ${item.type}">${showValue ? sign + Formatter.currency(item.val) : item.tag}${actionBtn}</div>
                                     <div class="efetivar-badge">${item.tag}</div>
                                 </div>
                             </div>
