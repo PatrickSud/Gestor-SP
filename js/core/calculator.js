@@ -42,6 +42,7 @@ export const Calculator = {
     const initialSimCapital =
       futureToggle === 'true' ? Formatter.toCents(capitalInicial) : 0
     const withdrawTargetCents = Formatter.toCents(withdrawTarget)
+    const selectedWallet = inputs.withdrawWallet || 'revenue'
 
     // Simulation Params
     const cycleDays = parseInt(diasCiclo) || 1
@@ -257,16 +258,20 @@ export const Calculator = {
 
       // Subtract from balance
         if (amountToWithdrawCents > 0) {
-        const net = Math.floor(amountToWithdrawCents * 0.9)
+        const net =
+          selectedWallet === 'personal'
+            ? amountToWithdrawCents
+            : Math.floor(amountToWithdrawCents * 0.9)
         stepWithdraw = net
         totalWithdrawnCents += net
           let remaining = amountToWithdrawCents
-          const fromRevenue = Math.min(revenueWallet, remaining)
-          if (fromRevenue > 0) {
-            revenueWallet -= fromRevenue
-            remaining -= fromRevenue
-          }
-          if (remaining > 0) {
+          if (selectedWallet === 'revenue') {
+            const fromRevenue = Math.min(revenueWallet, remaining)
+            if (fromRevenue > 0) {
+              revenueWallet -= fromRevenue
+              remaining -= fromRevenue
+            }
+          } else {
             const fromPersonal = Math.min(personalWallet, remaining)
             if (fromPersonal > 0) {
               personalWallet -= fromPersonal
@@ -286,7 +291,10 @@ export const Calculator = {
         })
 
         // Update Next Withdraw Info for dashboard
-        const netAvailable = Math.floor(availableTier * 0.9)
+        const netAvailable =
+          selectedWallet === 'personal'
+            ? availableTier
+            : Math.floor(availableTier * 0.9)
         if (
           nextWithdrawCents === 0 &&
           netAvailable > 0 &&
@@ -380,8 +388,7 @@ export const Calculator = {
       .slice(0, 8)
       .map(w => ({
         ...w,
-        wallet:
-          (dailyData[w.date] && dailyData[w.date].recommendedWallet) || 'revenue'
+        wallet: selectedWallet
       }))
 
     // 4. Current Balance (Today)
@@ -408,10 +415,7 @@ export const Calculator = {
     }
 
     // Recommendation for next withdrawal
-    const nextWalletRecommendation =
-      nextWithdrawDate !== '-' && dailyData[nextWithdrawDate]
-        ? dailyData[nextWithdrawDate].recommendedWallet
-        : 'none'
+    const nextWalletRecommendation = selectedWallet
     return {
       results: {
         netProfit: totalIncomeCents + totalInvProfitCents,

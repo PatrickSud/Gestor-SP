@@ -173,6 +173,27 @@ class App {
     }
   }
 
+  setWithdrawWallet(mode) {
+    const val = mode === 'personal' ? 'personal' : 'revenue'
+    store.updateInput('withdrawWallet', val)
+    const btnP = document.getElementById('btnWithdrawPersonal')
+    const btnR = document.getElementById('btnWithdrawRevenue')
+    if (btnP && btnR) {
+      if (val === 'personal') {
+        btnP.className =
+          'px-2 py-1 text-[10px] font-bold rounded border border-emerald-500 text-white bg-emerald-600/30'
+        btnR.className =
+          'px-2 py-1 text-[10px] font-bold rounded border border-slate-700 text-slate-300 hover:text-white'
+      } else {
+        btnR.className =
+          'px-2 py-1 text-[10px] font-bold rounded border border-indigo-500 text-white bg-indigo-600/30'
+        btnP.className =
+          'px-2 py-1 text-[10px] font-bold rounded border border-slate-700 text-slate-300 hover:text-white'
+      }
+    }
+    this.runCalculation()
+  }
+
   applyStoreToUI() {
     const { inputs } = store.state
     for (const [id, value] of Object.entries(inputs)) {
@@ -212,6 +233,23 @@ class App {
       Renderer.renderWithdrawButtons(null, val) // Refresh selection
     }, inputs.withdrawTarget)
 
+    // Withdraw wallet buttons state
+    const btnP = document.getElementById('btnWithdrawPersonal')
+    const btnR = document.getElementById('btnWithdrawRevenue')
+    if (btnP && btnR) {
+      const val = inputs.withdrawWallet || 'revenue'
+      if (val === 'personal') {
+        btnP.className =
+          'px-2 py-1 text-[10px] font-bold rounded border border-emerald-500 text-white bg-emerald-600/30'
+        btnR.className =
+          'px-2 py-1 text-[10px] font-bold rounded border border-slate-700 text-slate-300 hover:text-white'
+      } else {
+        btnR.className =
+          'px-2 py-1 text-[10px] font-bold rounded border border-indigo-500 text-white bg-indigo-600/30'
+        btnP.className =
+          'px-2 py-1 text-[10px] font-bold rounded border border-slate-700 text-slate-300 hover:text-white'
+      }
+    }
     this.restoreWeeksUI()
   }
 

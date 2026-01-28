@@ -189,6 +189,28 @@
                             <span class="font-bold text-emerald-400" id="projectedBalanceDisplay">R$ 0,00</span>
                         </div>
                     </div>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="bg-slate-900/40 p-3 rounded-lg border border-slate-700">
+                        <span class="block text-[9px] text-slate-500 uppercase font-bold">Carteira Pessoal</span>
+                        <span class="block text-sm font-bold text-white" id="sidebarPersonalBalance">R$ 0,00</span>
+                    </div>
+                    <div class="bg-slate-900/40 p-3 rounded-lg border border-slate-700">
+                        <span class="block text-[9px] text-slate-500 uppercase font-bold">Carteira de Receita</span>
+                        <span class="block text-sm font-bold text-white" id="sidebarRevenueBalance">R$ 0,00</span>
+                    </div>
+                </div>
+                
+                <div class="border border-slate-700 rounded-lg p-3 bg-slate-900/30">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-[10px] text-slate-400 font-bold uppercase">Carteira do Saque</label>
+                        <span class="text-[9px] text-slate-500">Uma por semana</span>
+                    </div>
+                    <div class="flex gap-2" id="withdrawWalletButtons">
+                        <button id="btnWithdrawPersonal" onclick="app.setWithdrawWallet('personal')" class="px-2 py-1 text-[10px] font-bold rounded border border-slate-700 text-slate-300 hover:text-white">Pessoal</button>
+                        <button id="btnWithdrawRevenue" onclick="app.setWithdrawWallet('revenue')" class="px-2 py-1 text-[10px] font-bold rounded border border-slate-700 text-slate-300 hover:text-white">Receita</button>
+                    </div>
+                </div>
 
                     <div class="border border-slate-700 rounded-lg p-3 bg-slate-900/30">
                         <div class="flex items-center justify-between">
