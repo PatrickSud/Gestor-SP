@@ -37,8 +37,8 @@ export const Calculator = {
     const todayStr = new Date().toISOString().split('T')[0]
 
     // Convert to cents
-    const personalStart = Formatter.toCents(personalWalletStart)
-    const revenueStart = Formatter.toCents(revenueWalletStart)
+    const personalStart = Formatter.toCents(personalWalletStart || '0')
+    const revenueStart = Formatter.toCents(revenueWalletStart || '0')
     const taskValCents = Formatter.toCents(taskDailyValue)
     const incomesList = monthlyIncomeToggle ? fixedIncomes || [] : []
     const initialSimCapital =

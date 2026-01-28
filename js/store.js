@@ -189,11 +189,11 @@ class Store {
   }
 
   loadFromPersistence(data) {
-    const migrated = this.migrateData(data)
-    if (!migrated || !migrated.profiles) return
+    const { data: migratedData, migrated } = this.migrateData(data)
+    if (!migratedData || !migratedData.profiles) return
 
-    this.state.currentProfileId = migrated.currentProfileId
-    this.state.profiles = migrated.profiles
+    this.state.currentProfileId = migratedData.currentProfileId
+    this.state.profiles = migratedData.profiles
 
     const current = this.state.profiles[this.state.currentProfileId].data
     this.state.inputs = { ...current.inputs }
@@ -207,7 +207,8 @@ class Store {
   }
 
   migrateData(data) {
-    if (!data || !data.profiles) return data
+    if (!data || !data.profiles) return { data, migrated: false }
+    let migrated = false
 
     Object.keys(data.profiles).forEach(id => {
       const profileData = data.profiles[id].data
@@ -222,10 +223,15 @@ class Store {
           profileData.inputs.revenueWalletStart = '0'
           // Clean up old variable
           delete profileData.inputs.currentWalletBalance
+          migrated = true
         }
       }
     })
-    return data
+
+    if (migrated) {
+      console.log('Dados migrados para estrutura de carteira dupla.')
+    }
+    return { data, migrated }
   }
 
   setPersistenceCallback(callback) {
@@ -235,7 +241,7 @@ class Store {
   loadFromStorage() {
     const saved = localStorage.getItem('gestor_sp_profiles')
     if (saved) {
-      const parsed = this.migrateData(JSON.parse(saved))
+      const { data: parsed, migrated } = this.migrateData(JSON.parse(saved))
       this.state.currentProfileId = parsed.currentProfileId
       this.state.profiles = parsed.profiles
 
@@ -245,6 +251,10 @@ class Store {
       this.state.selectedWeeks = [...current.selectedWeeks]
       this.state.goals = [...(current.goals || [])]
       this.state.realizedWithdrawals = [...(current.realizedWithdrawals || [])]
+
+      if (migrated) {
+        this.saveToStorage() // Persist migration immediately
+      }
     } else {
       this.state.inputs = this.getInitialData().inputs
       this.state.goals = []
@@ -264,7 +274,7 @@ class Store {
 
   importAllData(jsonString) {
     try {
-      const parsed = this.migrateData(JSON.parse(jsonString))
+      const { data: parsed, migrated } = this.migrateData(JSON.parse(jsonString))
       if (!parsed.profiles || !parsed.currentProfileId)
         throw new Error('Formato inválido')
 

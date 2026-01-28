@@ -18,22 +18,30 @@ class App {
     // Global access for onclick handlers in HTML (temporary until fully migrated)
     window.app = this
 
-    // Initialize UI State from Store
-    this.applyStoreToUI()
+    try {
+      // Initialize UI State from Store
+      this.applyStoreToUI()
 
-    // Initial Calculation
-    this.runCalculation()
+      // Initial Calculation
+      this.runCalculation()
 
-    // Subscribe to store changes
-    store.subscribe(state => {
-      this.runCalculation(false) // Run without saving to avoid infinite loops
-      this.updateUIPieces(state)
-    })
+      // Subscribe to store changes
+      store.subscribe(state => {
+        this.runCalculation(false) // Run without saving to avoid infinite loops
+        this.updateUIPieces(state)
+      })
 
-    // Set up event listeners
-    this.setupEventListeners()
+      // Set up event listeners
+      this.setupEventListeners()
 
-    Renderer.toast('Sistema inicializado com sucesso', 'success')
+      Renderer.toast('Sistema inicializado com sucesso', 'success')
+    } catch (error) {
+      console.error('Erro na inicialização do App:', error)
+      Renderer.toast(
+        'Erro ao carregar dados. Tente redefinir as configurações se o problema persistir.',
+        'error'
+      )
+    }
   }
 
   // --- Core Logic ---
