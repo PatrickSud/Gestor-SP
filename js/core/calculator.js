@@ -78,32 +78,57 @@ export const Calculator = {
 
         const totalCentsInvested = walletStart + initialSimCapital + totalPortfolioVal;
 
-        // Initialize Loop
-        let currentInv = initialSimCapital;
-        let currentWallet = walletStart;
-        let totalWithdrawnCents = 0;
-        let dailyData = {};
-        let graphData = [];
+    // Initialize Loop
+    let currentInv = 0
+    let currentWallet = walletStart
+    let totalWithdrawnCents = 0
+    let dailyData = {}
+    let graphData = []
+    let simCapitalPure = 0
 
-        const simulationDays = Math.max(viewDays, totalReps * cycleDays + 30);
-        
-        let cycleEnds = [];
-        let nextWithdrawCents = 0;
-        let nextWithdrawDate = '-';
-        let withdrawalHistory = [];
-        
-        let simCycleTimer = cycleDays;
-        let completedReps = 0;
+    const simulationDays = Math.max(viewDays, totalReps * cycleDays + 30)
+    const simStartStr =
+      futureToggle === 'true'
+        ? simStartDate || new Date().toISOString().split('T')[0]
+        : null
+    const simStartIndex =
+      simStartStr != null
+        ? Math.max(
+            0,
+            Math.floor(
+              (new Date(simStartStr) - new Date(startDateStr)) / 86400000
+            )
+          )
+        : 0
 
-        for (let d = 0; d <= simulationDays; d++) {
-            const currentDayStr = Formatter.addDays(startDateStr, d);
-            const startBalCents = currentInv + currentWallet;
-            
-            let stepIncome = 0;
-            let stepReturns = 0;
-            let stepWithdraw = 0;
-            let stepMaturingList = [];
-            let isCycleEnd = false;
+    let cycleEnds = []
+    let nextWithdrawCents = 0
+    let nextWithdrawDate = '-'
+    let withdrawalHistory = []
+
+    let simCycleTimer = cycleDays
+    let completedReps = 0
+
+    for (let d = 0; d <= simulationDays; d++) {
+      const currentDayStr = Formatter.addDays(startDateStr, d)
+      const startBalCents = currentInv + currentWallet
+
+      let stepIncome = 0
+      let stepReturns = 0
+      let stepWithdraw = 0
+      let stepMaturingList = []
+      let isCycleEnd = false
+      let stepTaskIncome = 0
+      let stepRecurringIncome = 0
+      let stepSimReinvest = 0
+      if (
+        futureToggle === 'true' &&
+        d === simStartIndex &&
+        initialSimCapital > 0
+      ) {
+        currentInv += initialSimCapital
+        simCapitalPure += initialSimCapital
+      }
 
             // 1. Task Income (Mon-Sat)
             if (d > 0 && Formatter.getDayOfWeek(currentDayStr) !== 0) {
