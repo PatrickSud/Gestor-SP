@@ -428,9 +428,13 @@ class App {
     // Withdrawals
     if (data.status !== 'none') {
       const isRealized = data.status === 'realized'
+      const netVal = isRealized 
+        ? data.outWithdraw 
+        : (data.recommendedWallet === 'personal' ? data.tier : Math.floor(data.tier * 0.9))
+
       items.push({
         label: isRealized ? 'Saque Realizado' : 'Saque Planejado',
-        val: isRealized ? data.outWithdraw : Math.floor(data.tier * 0.9),
+        val: netVal,
         type: isRealized ? 'withdraw-realized' : 'withdraw-planned',
         icon: isRealized ? 'fa-wallet' : 'fa-clock',
         isExpense: true
@@ -557,6 +561,10 @@ class App {
         const note = data.withdrawalNote || ''
         const isPartial = data.isPartial
 
+        // Reconstrução do Saldo Anterior (Exibir disponível antes do saque)
+        const displayPersonal = data.endPersonal + (data.outWithdrawPersonal || 0)
+        const displayRevenue = data.endRevenue + (data.outWithdrawRevenue || 0)
+
         status.innerHTML = `
                       <div class="flex items-center justify-center gap-2 mt-1">
                         <div class="${isActionDay ? 'text-emerald-500' : 'text-slate-400'} font-bold uppercase">${label}</div>
@@ -568,12 +576,12 @@ class App {
                       <div class="grid grid-cols-2 gap-2 mt-3 mb-3">
                         <div class="bg-slate-900/80 p-2 rounded border ${isActionDay && rec === 'personal' ? 'border-indigo-500' : 'border-slate-700'} relative">
                             <span class="text-[8px] text-slate-500 block">PESSOAL</span>
-                            <span class="text-[10px] font-bold text-white">${Formatter.currency(data.endPersonal)}</span>
+                            <span class="text-[10px] font-bold text-white">${Formatter.currency(displayPersonal)}</span>
                             ${isActionDay && rec === 'personal' ? '<span class="absolute -top-2 -right-1 bg-indigo-600 text-[7px] px-1 rounded text-white font-bold">SUGERIDO</span>' : ''}
                         </div>
                         <div class="bg-slate-900/80 p-2 rounded border ${isActionDay && rec === 'revenue' ? 'border-emerald-500' : 'border-slate-700'} relative">
                             <span class="text-[8px] text-slate-500 block">RECEITA</span>
-                            <span class="text-[10px] font-bold text-white">${Formatter.currency(data.endRevenue)}</span>
+                            <span class="text-[10px] font-bold text-white">${Formatter.currency(displayRevenue)}</span>
                             ${isActionDay && rec === 'revenue' ? '<span class="absolute -top-2 -right-1 bg-emerald-600 text-[7px] px-1 rounded text-white font-bold">SUGERIDO</span>' : ''}
                         </div>
                       </div>
