@@ -520,16 +520,48 @@ class App {
 
       const status = document.getElementById('modalWithdrawStatus')
       if (data.status === 'realized') {
-        status.innerText = 'SAQUE CONFIRMADO'
-        status.className = 'text-blue-400 font-bold uppercase mt-1'
+        const withdrawalIdx = (store.state.realizedWithdrawals || []).findIndex(w => w.date === dateStr)
+        const withdrawal = store.state.realizedWithdrawals[withdrawalIdx]
+        const walletLabel = withdrawal?.wallet === 'personal' ? 'Carteira Pessoal' : 'Carteira de Receita'
+        status.innerHTML = `
+            <div class="text-blue-400 font-bold uppercase mt-1">SAQUE CONFIRMADO</div>
+            <div class="text-[9px] text-slate-500 uppercase mt-1 mb-2">Saca de: ${walletLabel}</div>
+            <button onclick="app.deleteWithdrawal(${withdrawalIdx})" class="w-full bg-slate-800 hover:bg-red-900/40 text-red-400 text-[10px] font-bold py-2 rounded border border-red-900/30 transition-colors">
+                <i class="fas fa-trash-alt mr-1"></i> Cancelar Saque
+            </button>
+        `
+        status.className = ''
       } else {
         const label =
           data.status === 'planned' ? 'SAQUE PLANEJADO' : 'DISPONÍVEL'
+        
+        const rec = data.recommendedWallet
+        const amountStr = Formatter.fromCents(amountToDisplay)
+
         status.innerHTML = `
                       <div class="text-emerald-500 font-bold uppercase mt-1 mb-2">${label}</div>
-                      <button onclick="app.executeWithdrawal('${dateStr}', ${Formatter.fromCents(data.tier)})" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
-                          <i class="fas fa-hand-holding-usd mr-1"></i> Realizar Saque Agora
-                      </button>
+                      
+                      <div class="grid grid-cols-2 gap-2 mb-3">
+                        <div class="bg-slate-900/80 p-2 rounded border ${rec === 'personal' ? 'border-indigo-500' : 'border-slate-700'} relative">
+                            <span class="text-[8px] text-slate-500 block">PESSOAL</span>
+                            <span class="text-[10px] font-bold text-white">${Formatter.currency(data.endPersonal)}</span>
+                            ${rec === 'personal' ? '<span class="absolute -top-2 -right-1 bg-indigo-600 text-[7px] px-1 rounded text-white font-bold">SUGERIDO</span>' : ''}
+                        </div>
+                        <div class="bg-slate-900/80 p-2 rounded border ${rec === 'revenue' ? 'border-emerald-500' : 'border-slate-700'} relative">
+                            <span class="text-[8px] text-slate-500 block">RECEITA</span>
+                            <span class="text-[10px] font-bold text-white">${Formatter.currency(data.endRevenue)}</span>
+                            ${rec === 'revenue' ? '<span class="absolute -top-2 -right-1 bg-emerald-600 text-[7px] px-1 rounded text-white font-bold">SUGERIDO</span>' : ''}
+                        </div>
+                      </div>
+
+                      <div class="flex flex-col gap-2">
+                        <button onclick="app.executeWithdrawal('${dateStr}', ${amountStr}, 'revenue')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
+                            <i class="fas fa-hand-holding-usd mr-1"></i> Sacar da Receita
+                        </button>
+                        <button onclick="app.executeWithdrawal('${dateStr}', ${amountStr}, 'personal')" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
+                            <i class="fas fa-wallet mr-1"></i> Sacar da Pessoal
+                        </button>
+                      </div>
                   `
         status.className = ''
       }
@@ -922,17 +954,35 @@ class App {
     reader.readAsText(file)
   }
 
-  executeWithdrawal(date, amount) {
+  executeWithdrawal(date, amount, walletType = 'revenue') {
+    const dayData = store.state.dailyData[date]
+    if (!dayData) return
+
+    let finalAmount = amount
+    const availableCents =
+      walletType === 'revenue' ? dayData.endRevenue : dayData.endPersonal
+    const amountCents = Formatter.toCents(amount)
+
+    if (amountCents > availableCents) {
+      finalAmount = Formatter.fromCents(availableCents)
+      const walletName =
+        walletType === 'revenue' ? 'Carteira de Receita' : 'Carteira Pessoal'
+      Renderer.toast(
+        `Saldo insuficiente. Saque ajustado para o limite da ${walletName}: R$ ${finalAmount.toFixed(2)}`,
+        'warning'
+      )
+    }
+
     if (
       !confirm(
-        `Confirma o saque de R$ ${amount}? \nIsso será registrado como um 'Saque Realizado' e influenciará sua projeção.`
+        `Confirma o saque de R$ ${finalAmount.toFixed(2)} da ${walletType === 'revenue' ? 'Carteira de Receita' : 'Carteira Pessoal'}?`
       )
     )
       return
 
     const realizedWithdrawals = [
       ...(store.state.realizedWithdrawals || []),
-      { date, amount }
+      { date, amount: finalAmount.toFixed(2), wallet: walletType }
     ]
     store.setState({ realizedWithdrawals })
 
@@ -944,11 +994,13 @@ class App {
   deleteWithdrawal(index) {
     if (!confirm('Deseja excluir este registro de saque?')) return
     const list = [...(store.state.realizedWithdrawals || [])]
+    const date = list[index] ? list[index].date : null
     list.splice(index, 1)
     store.setState({ realizedWithdrawals: list })
     Renderer.toast('Saque removido')
     this.runCalculation()
-    this.openCardDetails('history')
+    if (date) this.openDayDetails(date)
+    else this.openCardDetails('history')
   }
 
   // --- Utils ---

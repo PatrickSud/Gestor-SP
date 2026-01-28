@@ -265,25 +265,49 @@ export const Calculator = {
         stepWithdraw = net
         totalWithdrawnCents += net
 
-        if (currentRevenueWallet >= amountToWithdrawCents) {
-          currentRevenueWallet -= amountToWithdrawCents
-        } else {
-          const remaining = amountToWithdrawCents - currentRevenueWallet
-          currentRevenueWallet = 0
-          if (currentPersonalWallet >= remaining) {
-            currentPersonalWallet -= remaining
+        const walletPreference = realizedOnDay?.wallet
+        const firstWallet = walletPreference === 'personal' ? 'personal' : 'revenue'
+
+        if (firstWallet === 'personal') {
+          if (currentPersonalWallet >= amountToWithdrawCents) {
+            currentPersonalWallet -= amountToWithdrawCents
           } else {
-            const stillRemaining = remaining - currentPersonalWallet
+            const remaining = amountToWithdrawCents - currentPersonalWallet
             currentPersonalWallet = 0
-            currentInv -= stillRemaining
-            if (currentInv < 0) currentInv = 0
+            if (currentRevenueWallet >= remaining) {
+              currentRevenueWallet -= remaining
+            } else {
+              const stillRemaining = remaining - currentRevenueWallet
+              currentRevenueWallet = 0
+              currentInv -= stillRemaining
+              if (currentInv < 0) currentInv = 0
+            }
+          }
+        } else {
+          // Default: Revenue first
+          if (currentRevenueWallet >= amountToWithdrawCents) {
+            currentRevenueWallet -= amountToWithdrawCents
+          } else {
+            const remaining = amountToWithdrawCents - currentRevenueWallet
+            currentRevenueWallet = 0
+            if (currentPersonalWallet >= remaining) {
+              currentPersonalWallet -= remaining
+            } else {
+              const stillRemaining = remaining - currentPersonalWallet
+              currentPersonalWallet = 0
+              currentInv -= stillRemaining
+              if (currentInv < 0) currentInv = 0
+            }
           }
         }
+
         totalPool -= amountToWithdrawCents
         withdrawalHistory.push({
           date: currentDayStr,
           val: net,
-          status: isRealized ? 'realized' : 'planned'
+          status: isRealized ? 'realized' : 'planned',
+          wallet:
+            isRealized && realizedOnDay.wallet ? realizedOnDay.wallet : 'revenue'
         })
 
         // Update Next Withdraw Info for dashboard
@@ -301,6 +325,10 @@ export const Calculator = {
       dailyData[currentDayStr] = {
         startBal: startBalCents,
         endBal: totalPool,
+        endPersonal: currentPersonalWallet,
+        endRevenue: currentRevenueWallet,
+        recommendedWallet:
+          currentRevenueWallet >= withdrawTargetCents ? 'revenue' : 'personal',
         inIncome: stepIncome,
         inIncomeTask: stepTaskIncome,
         inIncomeRecurring: stepRecurringIncome,
