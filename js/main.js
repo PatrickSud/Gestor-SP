@@ -50,7 +50,8 @@ class App {
       store.state.inputs,
       store.state.portfolio,
       store.state.selectedWeeks,
-      store.state.realizedWithdrawals
+      store.state.realizedWithdrawals,
+      store.state.manualAdjustments
     )
 
     if (results) {
@@ -1005,9 +1006,20 @@ class App {
     this.openDayDetails(date) // Refresh modal
   }
 
+  adjustWallet(walletType, delta) {
+    if (isNaN(delta) || delta === 0) return
+    const today = new Date().toISOString().split('T')[0]
+    const list = [...(store.state.manualAdjustments || [])]
+    list.push({ date: today, amount: delta.toFixed(2), wallet: walletType })
+    store.setState({ manualAdjustments: list })
+    this.runCalculation()
+    this.openBalanceAdjustmentModal()
+    Renderer.toast(`Carteira atualizada: ${delta > 0 ? '+' : ''}R$ ${delta.toFixed(2)}`, 'success')
+  }
+
   openBalanceAdjustmentModal() {
-    const pVal = store.state.inputs.personalWalletStart || '0'
-    const rVal = store.state.inputs.revenueWalletStart || '0'
+    const todayPersonal = store.state.results.todayPersonalBalance || 0
+    const todayRevenue = store.state.results.todayRevenueBalance || 0
 
     const html = `
       <div class="space-y-6">
@@ -1016,8 +1028,8 @@ class App {
             <i class="fas fa-adjust text-xl"></i>
           </div>
           <div>
-            <h3 class="text-lg font-bold text-white">Ajuste Rápido de Saldo</h3>
-            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Configuração Inicial de Gestão</p>
+            <h3 class="text-lg font-bold text-white">Ajuste de Saldo (Hoje)</h3>
+            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Correção de saldo corrente</p>
           </div>
         </div>
 
@@ -1026,21 +1038,28 @@ class App {
           <div class="bg-slate-900/50 p-4 rounded-xl border border-indigo-500/30">
             <div class="flex justify-between items-center mb-2">
               <label class="text-[10px] text-indigo-300 font-bold uppercase">Carteira Pessoal</label>
-              <div class="flex gap-1">
-                <button onclick="app.adjustInput('personalWalletStart', -50); app.openBalanceAdjustmentModal()" class="text-[9px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded border border-slate-700">-50</button>
-                <button onclick="app.adjustInput('personalWalletStart', 50); app.openBalanceAdjustmentModal()" class="text-[9px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded border border-slate-700">+50</button>
-              </div>
             </div>
-            <div class="flex items-center gap-3">
-               <span class="text-xl font-bold text-white">R$</span>
-               <input type="number" value="${pVal}" step="0.01" 
-                 onchange="app.adjustInput('personalWalletStart', parseFloat(this.value) - ${pVal}); app.openBalanceAdjustmentModal()"
-                 class="bg-transparent text-2xl font-black text-white outline-none w-full">
+            <div class="mb-3">
+               <span class="text-[10px] text-slate-500 block uppercase font-bold">Saldo Atual:</span>
+               <span class="text-2xl font-black text-white">${Formatter.currency(todayPersonal)}</span>
             </div>
+            
+            <div class="flex gap-2 items-center">
+               <div class="relative flex-1">
+                 <span class="absolute left-3 top-2 text-xs text-slate-500 font-bold">R$</span>
+                 <input type="number" id="manualAdjPersonal" step="0.01" value="0.00"
+                   class="custom-input w-full rounded-lg py-2 pl-8 text-xs text-white bg-slate-800 border-slate-700 outline-none">
+               </div>
+               <button onclick="app.adjustWallet('personal', parseFloat(document.getElementById('manualAdjPersonal').value || 0))" 
+                 class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors">
+                 Ajustar
+               </button>
+            </div>
+
             <div class="flex gap-1 mt-3">
-               <button onclick="app.adjustInput('personalWalletStart', -10); app.openBalanceAdjustmentModal()" class="flex-1 text-[10px] bg-slate-800 py-1.5 rounded border border-slate-700">-10</button>
-               <button onclick="app.adjustInput('personalWalletStart', 10); app.openBalanceAdjustmentModal()" class="flex-1 text-[10px] bg-slate-800 py-1.5 rounded border border-slate-700">+10</button>
-               <button onclick="app.adjustInput('personalWalletStart', 100); app.openBalanceAdjustmentModal()" class="flex-1 text-[10px] bg-indigo-600 py-1.5 rounded font-bold">+100</button>
+               <button onclick="app.adjustWallet('personal', -10)" class="flex-1 text-[10px] bg-slate-800 py-1.5 rounded border border-slate-700">-10</button>
+               <button onclick="app.adjustWallet('personal', 10)" class="flex-1 text-[10px] bg-slate-800 py-1.5 rounded border border-slate-700">+10</button>
+               <button onclick="app.adjustWallet('personal', 100)" class="flex-1 text-[10px] bg-indigo-800/40 py-1.5 rounded border border-indigo-500/30 font-bold text-indigo-300">+100</button>
             </div>
           </div>
 
@@ -1048,24 +1067,35 @@ class App {
           <div class="bg-slate-900/50 p-4 rounded-xl border border-emerald-500/30">
             <div class="flex justify-between items-center mb-2">
               <label class="text-[10px] text-emerald-300 font-bold uppercase">Carteira de Receita</label>
-              <div class="flex gap-1">
-                <button onclick="app.adjustInput('revenueWalletStart', -50); app.openBalanceAdjustmentModal()" class="text-[9px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded border border-slate-700">-50</button>
-                <button onclick="app.adjustInput('revenueWalletStart', 50); app.openBalanceAdjustmentModal()" class="text-[9px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded border border-slate-700">+50</button>
-              </div>
             </div>
-            <div class="flex items-center gap-3">
-               <span class="text-xl font-bold text-white">R$</span>
-               <input type="number" value="${rVal}" step="0.01"
-                 onchange="app.adjustInput('revenueWalletStart', parseFloat(this.value) - ${rVal}); app.openBalanceAdjustmentModal()"
-                 class="bg-transparent text-2xl font-black text-white outline-none w-full">
+            <div class="mb-3">
+               <span class="text-[10px] text-slate-500 block uppercase font-bold">Saldo Atual:</span>
+               <span class="text-2xl font-black text-white">${Formatter.currency(todayRevenue)}</span>
             </div>
+
+            <div class="flex gap-2 items-center">
+               <div class="relative flex-1">
+                 <span class="absolute left-3 top-2 text-xs text-slate-500 font-bold">R$</span>
+                 <input type="number" id="manualAdjRevenue" step="0.01" value="0.00"
+                   class="custom-input w-full rounded-lg py-2 pl-8 text-xs text-white bg-slate-800 border-slate-700 outline-none">
+               </div>
+               <button onclick="app.adjustWallet('revenue', parseFloat(document.getElementById('manualAdjRevenue').value || 0))" 
+                 class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors">
+                 Ajustar
+               </button>
+            </div>
+
             <div class="flex gap-1 mt-3">
-               <button onclick="app.adjustInput('revenueWalletStart', -10); app.openBalanceAdjustmentModal()" class="flex-1 text-[10px] bg-slate-800 py-1.5 rounded border border-slate-700">-10</button>
-               <button onclick="app.adjustInput('revenueWalletStart', 10); app.openBalanceAdjustmentModal()" class="flex-1 text-[10px] bg-slate-800 py-1.5 rounded border border-slate-700">+10</button>
-               <button onclick="app.adjustInput('revenueWalletStart', 100); app.openBalanceAdjustmentModal()" class="flex-1 text-[10px] bg-emerald-600 py-1.5 rounded font-bold">+100</button>
+               <button onclick="app.adjustWallet('revenue', -10)" class="flex-1 text-[10px] bg-slate-800 py-1.5 rounded border border-slate-700">-10</button>
+               <button onclick="app.adjustWallet('revenue', 10)" class="flex-1 text-[10px] bg-slate-800 py-1.5 rounded border border-slate-700">+10</button>
+               <button onclick="app.adjustWallet('revenue', 100)" class="flex-1 text-[10px] bg-emerald-800/40 py-1.5 rounded border border-emerald-500/30 font-bold text-emerald-300">+100</button>
             </div>
           </div>
         </div>
+        
+        <p class="text-[10px] text-slate-500 text-center italic px-4">
+          Este ajuste cria uma transação manual para corrigir o saldo de hoje, sem alterar o saldo inicial da gestão.
+        </p>
 
         <button onclick="app.closeModal('cardModal')" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-colors text-xs uppercase tracking-widest">
           Concluir Ajustes

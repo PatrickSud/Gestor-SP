@@ -472,9 +472,30 @@ export const Renderer = {
         })
 
         if (realized) {
-            debitoPessoal += (d.outWithdrawPersonal || 0)
-            debitoReceita += (d.outWithdrawRevenue || 0)
+          debitoPessoal += d.outWithdrawPersonal || 0
+          debitoReceita += d.outWithdrawRevenue || 0
         }
+      }
+
+      const adjPersonal = d.inAdjustmentPersonal || 0
+      const adjRevenue = d.inAdjustmentRevenue || 0
+      const totalAdj = adjPersonal + adjRevenue
+
+      if (totalAdj !== 0) {
+        subItems.push({
+          label: 'Ajuste Manual de Saldo',
+          sub: totalAdj > 0 ? 'Correção positiva' : 'Correção negativa',
+          val: Math.abs(totalAdj),
+          type: 'manual',
+          dot: '#f59e0b',
+          tag: totalAdj > 0 ? 'CRÉDITO' : 'DÉBITO'
+        })
+
+        if (adjPersonal > 0) creditoPessoal += adjPersonal
+        else debitoPessoal += Math.abs(adjPersonal)
+
+        if (adjRevenue > 0) creditoReceita += adjRevenue
+        else debitoReceita += Math.abs(adjRevenue)
       }
 
       if (subItems.length > 0) {

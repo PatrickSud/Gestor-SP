@@ -10,7 +10,7 @@ export const Calculator = {
     4000, 13000, 40000, 130000, 420000, 850000, 1900000, 3800000
   ], // Values in cents
 
-  calculate(inputs, portfolio, selectedWeeks, realizedWithdrawals = []) {
+  calculate(inputs, portfolio, selectedWeeks, realizedWithdrawals = [], manualAdjustments = []) {
     const {
       dataInicio: startDateStr,
       withdrawalDaySelect,
@@ -220,6 +220,20 @@ export const Calculator = {
         })
       }
 
+      // 4. Manual Adjustments (Corrections/Transactions)
+      let stepAdjustmentPersonal = 0
+      let stepAdjustmentRevenue = 0
+      manualAdjustments.filter(a => a.date === currentDayStr).forEach(a => {
+        const valCents = Formatter.toCents(a.amount || 0)
+        if (a.wallet === 'personal') {
+          currentPersonalWallet += valCents
+          stepAdjustmentPersonal += valCents
+        } else {
+          currentRevenueWallet += valCents
+          stepAdjustmentRevenue += valCents
+        }
+      })
+
       let totalPool = currentInv + currentPersonalWallet + currentRevenueWallet
 
       // 5. Withdrawal Logic
@@ -349,6 +363,8 @@ export const Calculator = {
         inReturn: stepReturns,
         inReturnPrincipal: stepReturnPrincipal,
         inReturnProfit: stepReturnProfit,
+        inAdjustmentPersonal: stepAdjustmentPersonal,
+        inAdjustmentRevenue: stepAdjustmentRevenue,
         outReinvest: stepSimReinvest,
         outWithdraw: stepWithdraw,
         outWithdrawPersonal: stepWithdrawPersonal,

@@ -63,7 +63,8 @@ class Store {
       portfolio: [],
       selectedWeeks: [],
       goals: [],
-      realizedWithdrawals: []
+      realizedWithdrawals: [],
+      manualAdjustments: []
     }
   }
 
