@@ -80,7 +80,11 @@ class App {
       )
       Renderer.renderAlerts(store.state.portfolio)
 
-      Renderer.renderSimulationSummary(results.results, store.state.inputs, results.cycleEnds)
+      Renderer.renderSimulationSummary(
+        results.results,
+        store.state.inputs,
+        results.cycleEnds
+      )
 
       if (save) store.saveToStorage()
     }
@@ -715,9 +719,15 @@ class App {
           : ''
 
       nextList.forEach(w => {
+        const badge =
+          w.wallet === 'personal'
+            ? '<span class="ml-2 px-1.5 py-0.5 text-[9px] rounded bg-emerald-900/30 border border-emerald-500/30 text-emerald-300">Carteira Pessoal</span>'
+            : w.wallet === 'revenue'
+              ? '<span class="ml-2 px-1.5 py-0.5 text-[9px] rounded bg-indigo-900/30 border border-indigo-500/30 text-indigo-300">Carteira de Receita</span>'
+              : ''
         listHtml += `
                     <div class="flex justify-between items-center text-xs bg-slate-900/50 p-2 rounded mb-1">
-                        <span class="text-slate-400">${Formatter.dateDisplay(w.date)}</span>
+                        <span class="text-slate-400">${Formatter.dateDisplay(w.date)} ${badge}</span>
                         <span class="text-yellow-400 font-bold">${Formatter.currency(w.val)}</span>
                     </div>`
       })
@@ -728,6 +738,18 @@ class App {
                     <span class="text-xs text-slate-400 block">Próxima Data Estimada</span>
                     <span class="text-xl font-bold text-white">${results.nextWithdrawDate !== '-' ? Formatter.dateDisplay(results.nextWithdrawDate) : '---'}</span>
                     <span class="text-sm font-bold text-yellow-400 block mt-1">${Formatter.currency(results.nextWithdraw)}</span>
+                    ${
+                      results.nextWithdrawWallet &&
+                      results.nextWithdrawWallet !== 'none'
+                        ? `<div class="mt-2 text-[10px]">
+                              ${
+                                results.nextWithdrawWallet === 'personal'
+                                  ? '<span class="px-2 py-0.5 rounded bg-emerald-900/30 border border-emerald-500/30 text-emerald-300">Sugerido: Carteira Pessoal (sem taxa)</span>'
+                                  : '<span class="px-2 py-0.5 rounded bg-indigo-900/30 border border-indigo-500/30 text-indigo-300">Sugerido: Carteira de Receita</span>'
+                              }
+                           </div>`
+                        : ''
+                    }
                 </div>
                 
                 <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Previsão (Próx. 8 Semanas)</p>
