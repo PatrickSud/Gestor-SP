@@ -286,40 +286,51 @@ export const Calculator = {
           targetWallet = currentRevenueWallet >= amountToWithdrawCents ? 'revenue' : 'personal'
         }
 
-        // Define effective gross limited by balance
+        // Define effective gross limited by balance AND Tiers
         const availableBalance = targetWallet === 'personal' ? currentPersonalWallet : currentRevenueWallet
-        const grossWithdrawal = Math.min(amountToWithdrawCents, availableBalance)
-
-        if (targetWallet === 'personal') {
-          currentPersonalWallet -= grossWithdrawal
-          stepWithdrawPersonal = grossWithdrawal
+        
+        let grossWithdrawal = 0
+        if (availableBalance >= amountToWithdrawCents) {
+          grossWithdrawal = amountToWithdrawCents
         } else {
-          currentRevenueWallet -= grossWithdrawal
-          stepWithdrawRevenue = grossWithdrawal
+          // Se o saldo da carteira não cobre a meta sugerida, 
+          // busca o maior Tier que esta carteira consegue cobrir sozinha.
+          grossWithdrawal = this.WITHDRAWAL_TIERS.filter(t => t <= availableBalance).pop() || 0
         }
 
-        // Calculate Net (Fee only on Revenue)
-        const net = targetWallet === 'personal' ? grossWithdrawal : Math.floor(grossWithdrawal * 0.9)
-        
-        stepWithdraw = net
-        totalWithdrawnCents += net
+        if (grossWithdrawal > 0) {
+          if (targetWallet === 'personal') {
+            currentPersonalWallet -= grossWithdrawal
+            stepWithdrawPersonal = grossWithdrawal
+          } else {
+            currentRevenueWallet -= grossWithdrawal
+            stepWithdrawRevenue = grossWithdrawal
+          }
 
-        totalPool -= grossWithdrawal
-        withdrawalHistory.push({
-          date: currentDayStr,
-          val: net,
-          status: isRealized ? 'realized' : 'planned',
-          wallet: targetWallet
-        })
+          // Calculate Net (Fee only on Revenue)
+          const net = targetWallet === 'personal' ? grossWithdrawal : Math.floor(grossWithdrawal * 0.9)
+          
+          stepWithdraw = net
+          totalWithdrawnCents += net
+
+          totalPool -= grossWithdrawal
+          withdrawalHistory.push({
+            date: currentDayStr,
+            val: net,
+            status: isRealized ? 'realized' : 'planned',
+            wallet: targetWallet
+          })
+        }
 
         // Update Next Withdraw Info for dashboard
-        const netAvailable = Math.floor(availableTier * 0.9)
-        if (
-          nextWithdrawCents === 0 &&
-          netAvailable > 0 &&
-          currentDayStr >= todayStr
-        ) {
-          nextWithdrawCents = netAvailable
+        if (nextWithdrawCents === 0 && availableTier > 0 && currentDayStr >= todayStr) {
+          // Determine recommendation for this future date to show correct net in dashboard
+          let nextRecWallet = 'revenue'
+          if (currentRevenueWallet >= availableTier) nextRecWallet = 'revenue'
+          else if (currentPersonalWallet >= availableTier) nextRecWallet = 'personal'
+          else nextRecWallet = currentRevenueWallet >= currentPersonalWallet ? 'revenue' : 'personal'
+
+          nextWithdrawCents = nextRecWallet === 'personal' ? availableTier : Math.floor(availableTier * 0.9)
           nextWithdrawDate = currentDayStr
         }
       }

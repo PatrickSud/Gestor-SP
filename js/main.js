@@ -513,20 +513,23 @@ class App {
       matSec.classList.add('hidden')
     }
 
-    // Withdraw Action Section (Keep logic)
+    // Withdraw Action Section (Strictly for Withdrawal Day)
     const wSec = document.getElementById('modalWithdrawSection')
-    const canWithdraw = data.tier > 0 || data.status !== 'none'
-    if (canWithdraw) {
+    const targetDay = parseInt(store.state.inputs.withdrawalDaySelect)
+    const isWithdrawalDay = Formatter.getDayOfWeek(dateStr) === targetDay
+    const isRealized = data.status === 'realized'
+
+    if (isRealized || (isWithdrawalDay && data.tier > 0)) {
       wSec.classList.remove('hidden')
-      const amountToDisplay =
-        data.status === 'realized'
-          ? data.outWithdraw
-          : Math.floor(data.tier * 0.9)
-      document.getElementById('modalWithdrawVal').innerText =
-        Formatter.currency(amountToDisplay)
+      
+      const amountToDisplay = data.status === 'realized'
+        ? data.outWithdraw
+        : (data.recommendedWallet === 'personal' ? data.tier : Math.floor(data.tier * 0.9))
+
+      document.getElementById('modalWithdrawVal').innerText = Formatter.currency(amountToDisplay)
 
       const status = document.getElementById('modalWithdrawStatus')
-      if (data.status === 'realized') {
+      if (isRealized) {
         const withdrawalIdx = (store.state.realizedWithdrawals || []).findIndex(w => w.date === dateStr)
         const withdrawal = store.state.realizedWithdrawals[withdrawalIdx]
         const walletLabel = withdrawal?.wallet === 'personal' ? 'Carteira Pessoal' : 'Carteira de Receita'
@@ -539,9 +542,7 @@ class App {
         `
         status.className = ''
       } else {
-        const label =
-          data.status === 'planned' ? 'SAQUE PLANEJADO' : 'DISPONÍVEL'
-        
+        const label = data.status === 'planned' ? 'SAQUE PLANEJADO' : 'DISPONÍVEL'
         const rec = data.recommendedWallet
         const amountStr = Formatter.fromCents(amountToDisplay)
 
@@ -979,11 +980,18 @@ class App {
     const amountCents = Formatter.toCents(amount)
 
     if (amountCents > availableCents) {
-      finalAmount = Formatter.fromCents(availableCents)
-      const walletName =
-        walletType === 'revenue' ? 'Carteira de Receita' : 'Carteira Pessoal'
+      // Find highest tier covered by the wallet
+      const tiers = Calculator.WITHDRAWAL_TIERS || [4000, 13000, 40000, 130000, 420000, 850000, 1900000, 3800000]
+      const bestTierCents = tiers.filter(t => t <= availableCents).pop() || 0
+      
+      if (bestTierCents === 0) {
+        return Renderer.toast(`Saldo insuficiente na ${walletType === 'revenue' ? 'Carteira de Receita' : 'Carteira Pessoal'} para qualquer nível de saque.`, 'error')
+      }
+
+      finalAmount = Formatter.fromCents(bestTierCents)
+      const walletName = walletType === 'revenue' ? 'Carteira de Receita' : 'Carteira Pessoal'
       Renderer.toast(
-        `Saldo insuficiente. Saque ajustado para o limite da ${walletName}: R$ ${finalAmount.toFixed(2)}`,
+        `Saldo insuficiente para R$ ${amount.toFixed(2)}. Ajustado para o maior nível possível na ${walletName}: R$ ${finalAmount.toFixed(2)}`,
         'warning'
       )
     }
