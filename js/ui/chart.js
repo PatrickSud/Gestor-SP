@@ -165,6 +165,18 @@ export const ChartManager = {
                 if (!item || !item.raw || !item.raw.meta) return []
                 const meta = item.raw.meta
                 const lines = []
+                const sel =
+                  meta.selectedWallet === 'personal' ? 'Pessoal' : 'Receita'
+                const rec =
+                  meta.recommendedWallet === 'personal'
+                    ? 'Pessoal'
+                    : meta.recommendedWallet === 'revenue'
+                      ? 'Receita'
+                      : '—'
+                lines.push(`Carteira selecionada: ${sel}`)
+                if (meta.recommendedWallet) {
+                  lines.push(`Carteira sugerida: ${rec}`)
+                }
 
                 if (meta.incomeTask > 0) {
                   lines.push(

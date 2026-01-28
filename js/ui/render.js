@@ -336,7 +336,15 @@ export const Renderer = {
             : ''
         cell.innerHTML = `<span class="z-10">${day}</span>${dotsHtml}`
         if (data && typeof data.endBal === 'number') {
-          cell.title = `Saldo: ${Formatter.currency(data.endBal)}`
+          const rec =
+            data.recommendedWallet === 'personal'
+              ? 'Pessoal'
+              : data.recommendedWallet === 'revenue'
+                ? 'Receita'
+                : '—'
+          cell.title = `Saldo: ${Formatter.currency(
+            data.endBal
+          )} • Carteira sugerida: ${rec}`
         }
         cell.onclick = () => app.openDayDetails(dayStr)
         grid.appendChild(cell)

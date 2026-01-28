@@ -250,10 +250,17 @@ export const Calculator = {
       )
       if (realizedOnDay) {
         isRealized = true
-        amountToWithdrawCents = Formatter.toCents(realizedOnDay.amount)
+        const chosenBal =
+          selectedWallet === 'personal' ? personalWallet : revenueWallet
+        amountToWithdrawCents = Math.min(
+          Formatter.toCents(realizedOnDay.amount),
+          chosenBal
+        )
       } else if (isPlanned) {
-        // If not manual, use planned strategy
-        amountToWithdrawCents = availableTier
+        // Planned uses tier capped by chosen wallet balance
+        const chosenBal =
+          selectedWallet === 'personal' ? personalWallet : revenueWallet
+        amountToWithdrawCents = Math.min(availableTier, chosenBal)
       }
 
       // Subtract from balance
@@ -278,11 +285,7 @@ export const Calculator = {
               remaining -= fromPersonal
             }
           }
-          if (remaining > 0) {
-            currentInv -= remaining
-            if (currentInv < 0) currentInv = 0
-            remaining = 0
-          }
+          // Do NOT consume investment if wallet is insufficient; cap was applied above
         totalPool -= amountToWithdrawCents
         withdrawalHistory.push({
           date: currentDayStr,
@@ -291,10 +294,13 @@ export const Calculator = {
         })
 
         // Update Next Withdraw Info for dashboard
+        const chosenBal =
+          selectedWallet === 'personal' ? personalWallet : revenueWallet
+        const tierCap = Math.min(availableTier, chosenBal)
         const netAvailable =
           selectedWallet === 'personal'
-            ? availableTier
-            : Math.floor(availableTier * 0.9)
+            ? tierCap
+            : Math.floor(tierCap * 0.9)
         if (
           nextWithdrawCents === 0 &&
           netAvailable > 0 &&
@@ -345,6 +351,8 @@ export const Calculator = {
               : isPlanned
                 ? 'planned'
                 : 'none',
+            selectedWallet,
+            recommendedWallet,
             isCycleEnd,
             isStart: d === 0
           }
@@ -355,7 +363,7 @@ export const Calculator = {
     // Advanced KPI Calculation
     const totalMonths = Math.max(1, simulationDays / 30)
     const avgMonthlyYield =
-      (currentInv + currentWallet + totalWithdrawnCents - totalCentsInvested) /
+      (currentInv + personalWallet + revenueWallet + totalWithdrawnCents - totalCentsInvested) /
       totalMonths
 
     let breakEvenDate = 'N/A'
@@ -423,8 +431,8 @@ export const Calculator = {
         totalInvProfitCents,
         totalWithdrawn: totalWithdrawnCents,
         currentMonthWithdrawn,
-        finalBalance: currentInv + currentWallet,
-        currentWalletNow: currentWallet,
+        finalBalance: currentInv + personalWallet + revenueWallet,
+        currentWalletNow: personalWallet + revenueWallet,
         currentBalanceToday,
         currentPersonalToday,
         currentRevenueToday,
