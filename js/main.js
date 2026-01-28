@@ -342,12 +342,10 @@ class App {
   }
 
   adjustInput(id, delta) {
-    const el = document.getElementById(id)
-    if (!el) return
-    const current = parseFloat(el.value) || 0
+    const current = parseFloat(store.state.inputs[id]) || 0
     const newVal = Math.max(0, current + delta).toFixed(2)
-    el.value = newVal
     store.updateInput(id, newVal)
+    this.applyStoreToUI()
     this.runCalculation()
   }
 
@@ -997,6 +995,77 @@ class App {
     Renderer.toast('Saque realizado com sucesso!', 'success')
     this.runCalculation()
     this.openDayDetails(date) // Refresh modal
+  }
+
+  openBalanceAdjustmentModal() {
+    const pVal = store.state.inputs.personalWalletStart || '0'
+    const rVal = store.state.inputs.revenueWalletStart || '0'
+
+    const html = `
+      <div class="space-y-6">
+        <div class="flex items-center gap-3 border-b border-slate-700 pb-3">
+          <div class="w-10 h-10 bg-indigo-500/20 text-indigo-400 rounded-lg flex items-center justify-center">
+            <i class="fas fa-adjust text-xl"></i>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-white">Ajuste Rápido de Saldo</h3>
+            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Configuração Inicial de Gestão</p>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <!-- Pessoal -->
+          <div class="bg-slate-900/50 p-4 rounded-xl border border-indigo-500/30">
+            <div class="flex justify-between items-center mb-2">
+              <label class="text-[10px] text-indigo-300 font-bold uppercase">Carteira Pessoal</label>
+              <div class="flex gap-1">
+                <button onclick="app.adjustInput('personalWalletStart', -50); app.openBalanceAdjustmentModal()" class="text-[9px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded border border-slate-700">-50</button>
+                <button onclick="app.adjustInput('personalWalletStart', 50); app.openBalanceAdjustmentModal()" class="text-[9px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded border border-slate-700">+50</button>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+               <span class="text-xl font-bold text-white">R$</span>
+               <input type="number" value="${pVal}" step="0.01" 
+                 onchange="app.adjustInput('personalWalletStart', parseFloat(this.value) - ${pVal}); app.openBalanceAdjustmentModal()"
+                 class="bg-transparent text-2xl font-black text-white outline-none w-full">
+            </div>
+            <div class="flex gap-1 mt-3">
+               <button onclick="app.adjustInput('personalWalletStart', -10); app.openBalanceAdjustmentModal()" class="flex-1 text-[10px] bg-slate-800 py-1.5 rounded border border-slate-700">-10</button>
+               <button onclick="app.adjustInput('personalWalletStart', 10); app.openBalanceAdjustmentModal()" class="flex-1 text-[10px] bg-slate-800 py-1.5 rounded border border-slate-700">+10</button>
+               <button onclick="app.adjustInput('personalWalletStart', 100); app.openBalanceAdjustmentModal()" class="flex-1 text-[10px] bg-indigo-600 py-1.5 rounded font-bold">+100</button>
+            </div>
+          </div>
+
+          <!-- Receita -->
+          <div class="bg-slate-900/50 p-4 rounded-xl border border-emerald-500/30">
+            <div class="flex justify-between items-center mb-2">
+              <label class="text-[10px] text-emerald-300 font-bold uppercase">Carteira de Receita</label>
+              <div class="flex gap-1">
+                <button onclick="app.adjustInput('revenueWalletStart', -50); app.openBalanceAdjustmentModal()" class="text-[9px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded border border-slate-700">-50</button>
+                <button onclick="app.adjustInput('revenueWalletStart', 50); app.openBalanceAdjustmentModal()" class="text-[9px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded border border-slate-700">+50</button>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+               <span class="text-xl font-bold text-white">R$</span>
+               <input type="number" value="${rVal}" step="0.01"
+                 onchange="app.adjustInput('revenueWalletStart', parseFloat(this.value) - ${rVal}); app.openBalanceAdjustmentModal()"
+                 class="bg-transparent text-2xl font-black text-white outline-none w-full">
+            </div>
+            <div class="flex gap-1 mt-3">
+               <button onclick="app.adjustInput('revenueWalletStart', -10); app.openBalanceAdjustmentModal()" class="flex-1 text-[10px] bg-slate-800 py-1.5 rounded border border-slate-700">-10</button>
+               <button onclick="app.adjustInput('revenueWalletStart', 10); app.openBalanceAdjustmentModal()" class="flex-1 text-[10px] bg-slate-800 py-1.5 rounded border border-slate-700">+10</button>
+               <button onclick="app.adjustInput('revenueWalletStart', 100); app.openBalanceAdjustmentModal()" class="flex-1 text-[10px] bg-emerald-600 py-1.5 rounded font-bold">+100</button>
+            </div>
+          </div>
+        </div>
+
+        <button onclick="app.closeModal('cardModal')" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-colors text-xs uppercase tracking-widest">
+          Concluir Ajustes
+        </button>
+      </div>
+    `
+    document.getElementById('cardModalContent').innerHTML = html
+    this.openModal('cardModal')
   }
 
   deleteWithdrawal(index) {

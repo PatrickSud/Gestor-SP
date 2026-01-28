@@ -433,6 +433,8 @@ export const Calculator = {
         currentPersonalWallet,
         currentRevenueWallet,
         currentBalanceToday,
+        todayPersonalBalance: todayData ? todayData.endPersonal : 0,
+        todayRevenueBalance: todayData ? todayData.endRevenue : 0,
         projectedEndOfMonthBalance,
         nextWithdraw: nextWithdrawCents,
         nextWithdrawDate: nextWithdrawDate,

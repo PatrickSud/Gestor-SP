@@ -130,9 +130,10 @@ export const Renderer = {
     if (resNextValue)
       resNextValue.innerText = `Est: ${Formatter.currency(results.nextWithdraw)}`
 
-    this.els.navTotalBalance().innerText = Formatter.currency(
-      results.currentBalanceToday
-    )
+    const headerPersonal = document.getElementById('headerPersonalBalance')
+    const headerRevenue = document.getElementById('headerRevenueBalance')
+    if (headerPersonal) headerPersonal.innerText = Formatter.currency(results.todayPersonalBalance)
+    if (headerRevenue) headerRevenue.innerText = Formatter.currency(results.todayRevenueBalance)
 
     // Remove references to deleted elements (Advanced Performance Row)
     // If elements don't exist, getElementById returns null, so we should check before accessing properties if we kept the cache.
