@@ -25,6 +25,9 @@ export const ChartManager = {
     const returnDates = baseData
       .filter(it => it.meta && (it.meta.returns || 0) > 0)
       .map(it => it.x)
+    const realizedDates = baseData
+      .filter(it => it.meta && it.meta.withdrawStatus === 'realized')
+      .map(it => it.x)
 
     const markerPlugin = {
       id: 'markerPlugin',
@@ -35,19 +38,22 @@ export const ChartManager = {
         const bottomY = chartArea.bottom
         const xScale = scales.x
         const drawLineAt = (dateStr, color) => {
-          const xPos = xScale.getPixelForValue(new Date(dateStr))
+          const xPos = xScale.getPixelForValue(new Date(dateStr + 'T00:00:00'))
           if (!isFinite(xPos)) return
           ctx.save()
           ctx.strokeStyle = color
-          ctx.lineWidth = 1
+          ctx.lineWidth = 1.5
+          ctx.setLineDash([4, 4])
           ctx.beginPath()
           ctx.moveTo(xPos, topY)
           ctx.lineTo(xPos, bottomY)
           ctx.stroke()
           ctx.restore()
         }
+
         plannedDates.forEach(d => drawLineAt(d, '#f59e0b'))
         returnDates.forEach(d => drawLineAt(d, '#8b5cf6'))
+        realizedDates.forEach(d => drawLineAt(d, '#3b82f6'))
       }
     }
 
