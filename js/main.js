@@ -554,44 +554,60 @@ class App {
         `
         status.className = ''
       } else {
-        const isActionDay = isWithdrawalDay && data.tier > 0
-        const label = isActionDay ? (data.status === 'planned' ? 'SAQUE PLANEJADO' : 'DISPONÍVEL') : 'SALDOS EM CARTEIRA'
+        const isPlanned = data.status === 'planned'
+        const isOptional = data.status === 'none' && isWithdrawalDay && data.tier > 0
+        const isActionDay = isPlanned || isOptional
+        
+        let label = 'SALDOS EM CARTEIRA'
+        let labelColor = 'text-slate-400'
+        if (isPlanned) {
+          label = 'SAQUE PLANEJADO'
+          labelColor = 'text-emerald-500'
+        } else if (isOptional) {
+          label = 'SAQUE DISPONÍVEL'
+          labelColor = 'text-sky-400'
+        }
+
         const rec = data.recommendedWallet
         const walletName = rec === 'personal' ? 'Carteira Pessoal' : 'Carteira de Receita'
         const note = data.withdrawalNote || ''
         const isPartial = data.isPartial
+        const showMetaWarning = isOptional && store.state.inputs.withdrawStrategy === 'fixed'
 
         // Reconstrução do Saldo Anterior (Exibir disponível antes do saque)
         const displayPersonal = data.endPersonal + (data.outWithdrawPersonal || 0)
         const displayRevenue = data.endRevenue + (data.outWithdrawRevenue || 0)
 
         status.innerHTML = `
-                      <div class="flex items-center justify-center gap-2 mt-1">
-                        <div class="${isActionDay ? 'text-emerald-500' : 'text-slate-400'} font-bold uppercase">${label}</div>
-                        ${isPartial ? '<span class="bg-amber-500/20 text-amber-500 text-[8px] px-1.5 py-0.5 rounded border border-amber-500/30 flex items-center gap-1 font-bold animate-pulse"><i class="fas fa-exclamation-triangle"></i> META PARCIAL</span>' : ''}
+                      <div class="flex flex-col items-center justify-center gap-1 mt-1">
+                        <div class="flex items-center gap-2">
+                          <div class="${labelColor} font-bold uppercase">${label}</div>
+                          ${isPartial ? '<span class="bg-amber-500/20 text-amber-500 text-[8px] px-1.5 py-0.5 rounded border border-amber-500/30 flex items-center gap-1 font-bold animate-pulse"><i class="fas fa-exclamation-triangle"></i> META PARCIAL</span>' : ''}
+                          ${showMetaWarning ? '<span class="bg-slate-700 text-slate-300 text-[8px] px-1.5 py-0.5 rounded border border-slate-600 flex items-center gap-1 font-bold"><i class="fas fa-info-circle"></i> META NÃO ATINGIDA</span>' : ''}
+                        </div>
+                        ${isActionDay ? `<div class="text-[9px] text-slate-500 uppercase">Fonte Projetada: ${walletName} ${isOptional ? '(Opcional)' : ''}</div>` : ''}
+                        ${note && isActionDay ? `<div class="text-[8px] text-slate-400 italic mt-1">"${note}"</div>` : ''}
                       </div>
-                      ${isActionDay ? `<div class="text-[9px] text-slate-500 uppercase mt-0.5">Fonte Projetada: ${walletName}</div>` : ''}
-                      ${note && isActionDay ? `<div class="text-[8px] text-slate-400 italic mb-2">"${note}"</div>` : isActionDay ? '<div class="mb-2"></div>' : ''}
-                      
+
                       <div class="grid grid-cols-2 gap-2 mt-3 mb-3">
                         <div class="bg-slate-900/80 p-2 rounded border ${isActionDay && rec === 'personal' ? 'border-indigo-500' : 'border-slate-700'} relative">
                             <span class="text-[8px] text-slate-500 block">PESSOAL</span>
                             <span class="text-[10px] font-bold text-white">${Formatter.currency(displayPersonal)}</span>
-                            ${isActionDay && rec === 'personal' ? '<span class="absolute -top-2 -right-1 bg-indigo-600 text-[7px] px-1 rounded text-white font-bold">SUGERIDO</span>' : ''}
+                            ${isActionDay && rec === 'personal' ? `<span class="absolute -top-2 -right-1 ${isPlanned ? 'bg-indigo-600' : 'bg-slate-600'} text-[7px] px-1 rounded text-white font-bold">${isPlanned ? 'SUGERIDO' : 'MELHOR OPÇÃO'}</span>` : ''}
                         </div>
                         <div class="bg-slate-900/80 p-2 rounded border ${isActionDay && rec === 'revenue' ? 'border-emerald-500' : 'border-slate-700'} relative">
                             <span class="text-[8px] text-slate-500 block">RECEITA</span>
                             <span class="text-[10px] font-bold text-white">${Formatter.currency(displayRevenue)}</span>
-                            ${isActionDay && rec === 'revenue' ? '<span class="absolute -top-2 -right-1 bg-emerald-600 text-[7px] px-1 rounded text-white font-bold">SUGERIDO</span>' : ''}
+                            ${isActionDay && rec === 'revenue' ? `<span class="absolute -top-2 -right-1 ${isPlanned ? 'bg-emerald-600' : 'bg-slate-600'} text-[7px] px-1 rounded text-white font-bold">${isPlanned ? 'SUGERIDO' : 'MELHOR OPÇÃO'}</span>` : ''}
                         </div>
                       </div>
 
                       ${isActionDay ? `
                       <div class="flex flex-col gap-2">
-                        <button onclick="app.executeWithdrawal('${dateStr}', ${Formatter.fromCents(data.tier)}, 'revenue')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
+                        <button onclick="app.executeWithdrawal('${dateStr}', ${Formatter.fromCents(data.tier)}, 'revenue')" class="w-full ${isPlanned ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-slate-700 hover:bg-slate-600'} text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
                             <i class="fas fa-hand-holding-usd mr-1"></i> Sacar da Receita
                         </button>
-                        <button onclick="app.executeWithdrawal('${dateStr}', ${Formatter.fromCents(data.tier)}, 'personal')" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
+                        <button onclick="app.executeWithdrawal('${dateStr}', ${Formatter.fromCents(data.tier)}, 'personal')" class="w-full ${isPlanned ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-700 hover:bg-slate-600'} text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
                             <i class="fas fa-wallet mr-1"></i> Sacar da Pessoal
                         </button>
                       </div>

@@ -243,6 +243,7 @@ export const Calculator = {
       let isRealized = false
       let isPlanned = false
       let amountToWithdrawCents = 0
+      let amountToDisplayCents = 0
       let targetWallet = 'revenue'
       let withdrawalNote = ''
       let isPartial = false
@@ -255,9 +256,23 @@ export const Calculator = {
         const revTier = this.WITHDRAWAL_TIERS.filter(t => t <= currentRevenueWallet).pop() || 0
         const persTier = this.WITHDRAWAL_TIERS.filter(t => t <= currentPersonalWallet).pop() || 0
         const revNet = Math.floor(revTier * 0.9)
-        const persNet = persTier // 0% fee
+        const persNet = persTier
 
-        // Logic check for Meta Fixa
+        // Determine Best Available Option (for either Planned or Optional)
+        let bestTier = 0
+        let bestWallet = 'revenue'
+        let bestNet = 0
+
+        if (persNet >= revNet && persNet > 0) {
+          bestTier = persTier
+          bestWallet = 'personal'
+          bestNet = persNet
+        } else if (revNet > 0) {
+          bestTier = revTier
+          bestWallet = 'revenue'
+          bestNet = revNet
+        }
+
         if (withdrawStrategy === 'fixed') {
           if (currentRevenueWallet >= withdrawTargetCents) {
             isPlanned = true
@@ -270,20 +285,11 @@ export const Calculator = {
             amountToWithdrawCents = withdrawTargetCents
             withdrawalNote = 'Meta atingida (Pessoal)'
           } else {
-            // Fallback: Best net among available tiers
-            if (persNet >= revNet && persNet > 0) {
-              isPlanned = true
-              targetWallet = 'personal'
-              amountToWithdrawCents = persTier
-              isPartial = true
-              withdrawalNote = 'Melhor opção líquida (Pessoal)'
-            } else if (revNet > 0) {
-              isPlanned = true
-              targetWallet = 'revenue'
-              amountToWithdrawCents = revTier
-              isPartial = true
-              withdrawalNote = 'Melhor opção líquida (Receita)'
-            }
+            // ESTRITO: Não chegamos na meta. Não planeja o saque.
+            isPlanned = false
+            amountToWithdrawCents = 0
+            targetWallet = bestWallet
+            amountToDisplayCents = bestTier // Usado apenas para o dailyData.tier
           }
         } else if (withdrawStrategy === 'max' || withdrawStrategy === 'weekly') {
           let shouldCheckWeekly = true
@@ -293,17 +299,18 @@ export const Calculator = {
             shouldCheckWeekly = selectedWeeks.includes(weekNum)
           }
 
-          if (shouldCheckWeekly) {
-            if (persNet >= revNet && persNet > 0) {
-              isPlanned = true
-              targetWallet = 'personal'
-              amountToWithdrawCents = persTier
-            } else if (revNet > 0) {
-              isPlanned = true
-              targetWallet = 'revenue'
-              amountToWithdrawCents = revTier
-            }
+          if (shouldCheckWeekly && bestTier > 0) {
+            isPlanned = true
+            targetWallet = bestWallet
+            amountToWithdrawCents = bestTier
           }
+        }
+        
+        // Se isPlanned for falso na meta fixa, ainda guardamos o tier disponível para o UI
+        if (withdrawStrategy === 'fixed' && !isPlanned) {
+           // Já configurado acima
+        } else {
+           amountToDisplayCents = amountToWithdrawCents
         }
       }
 
@@ -375,7 +382,7 @@ export const Calculator = {
         outWithdrawPersonal: stepWithdrawPersonal,
         outWithdrawRevenue: stepWithdrawRevenue,
         maturing: stepMaturingList,
-        tier: amountToWithdrawCents || 0,
+        tier: amountToDisplayCents,
         isCycleEnd,
         status: isRealized ? 'realized' : isPlanned ? 'planned' : 'none'
       }
