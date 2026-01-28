@@ -264,28 +264,28 @@ export const Calculator = {
       }
 
       // Subtract from balance
-        if (amountToWithdrawCents > 0) {
+      if (amountToWithdrawCents > 0) {
         const net =
           selectedWallet === 'personal'
             ? amountToWithdrawCents
             : Math.floor(amountToWithdrawCents * 0.9)
         stepWithdraw = net
         totalWithdrawnCents += net
-          let remaining = amountToWithdrawCents
-          if (selectedWallet === 'revenue') {
-            const fromRevenue = Math.min(revenueWallet, remaining)
-            if (fromRevenue > 0) {
-              revenueWallet -= fromRevenue
-              remaining -= fromRevenue
-            }
-          } else {
-            const fromPersonal = Math.min(personalWallet, remaining)
-            if (fromPersonal > 0) {
-              personalWallet -= fromPersonal
-              remaining -= fromPersonal
-            }
+        let remaining = amountToWithdrawCents
+        if (selectedWallet === 'revenue') {
+          const fromRevenue = Math.min(revenueWallet, remaining)
+          if (fromRevenue > 0) {
+            revenueWallet -= fromRevenue
+            remaining -= fromRevenue
           }
-          // Do NOT consume investment if wallet is insufficient; cap was applied above
+        } else {
+          const fromPersonal = Math.min(personalWallet, remaining)
+          if (fromPersonal > 0) {
+            personalWallet -= fromPersonal
+            remaining -= fromPersonal
+          }
+        }
+        // Do NOT consume investment if wallet is insufficient; cap was applied above
         totalPool -= amountToWithdrawCents
         withdrawalHistory.push({
           date: currentDayStr,
@@ -298,9 +298,7 @@ export const Calculator = {
           selectedWallet === 'personal' ? personalWallet : revenueWallet
         const tierCap = Math.min(availableTier, chosenBal)
         const netAvailable =
-          selectedWallet === 'personal'
-            ? tierCap
-            : Math.floor(tierCap * 0.9)
+          selectedWallet === 'personal' ? tierCap : Math.floor(tierCap * 0.9)
         if (
           nextWithdrawCents === 0 &&
           netAvailable > 0 &&
@@ -363,7 +361,11 @@ export const Calculator = {
     // Advanced KPI Calculation
     const totalMonths = Math.max(1, simulationDays / 30)
     const avgMonthlyYield =
-      (currentInv + personalWallet + revenueWallet + totalWithdrawnCents - totalCentsInvested) /
+      (currentInv +
+        personalWallet +
+        revenueWallet +
+        totalWithdrawnCents -
+        totalCentsInvested) /
       totalMonths
 
     let breakEvenDate = 'N/A'
@@ -444,7 +446,8 @@ export const Calculator = {
         roi:
           totalCentsInvested > 0
             ? ((currentInv +
-                currentWallet +
+                personalWallet +
+                revenueWallet +
                 totalWithdrawnCents -
                 totalCentsInvested) /
                 totalCentsInvested) *
