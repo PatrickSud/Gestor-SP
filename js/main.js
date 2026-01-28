@@ -544,10 +544,12 @@ class App {
       } else {
         const label = data.status === 'planned' ? 'SAQUE PLANEJADO' : 'DISPONÍVEL'
         const rec = data.recommendedWallet
+        const walletName = rec === 'personal' ? 'Carteira Pessoal' : 'Carteira de Receita'
         const amountStr = Formatter.fromCents(amountToDisplay)
 
         status.innerHTML = `
-                      <div class="text-emerald-500 font-bold uppercase mt-1 mb-2">${label}</div>
+                      <div class="text-emerald-500 font-bold uppercase mt-1">${label}</div>
+                      <div class="text-[9px] text-slate-500 uppercase mb-2">Fonte Projetada: ${walletName}</div>
                       
                       <div class="grid grid-cols-2 gap-2 mb-3">
                         <div class="bg-slate-900/80 p-2 rounded border ${rec === 'personal' ? 'border-indigo-500' : 'border-slate-700'} relative">

@@ -321,8 +321,11 @@ export const Renderer = {
             )
           } else if (data.status === 'planned') {
             classes += ' withdraw-day'
+            // Diferenciação Visual: Laranja para Pessoal, Amarelo para Receita
+            const isPersonal = data.outWithdrawPersonal > 0
+            const dotColor = isPersonal ? 'bg-orange-500' : 'bg-yellow-400'
             markers.push(
-              '<div class="w-1.5 h-1.5 rounded-full bg-yellow-400"></div>'
+              `<div class="w-1.5 h-1.5 rounded-full ${dotColor}"></div>`
             )
           }
         }

@@ -237,10 +237,11 @@ export const Calculator = {
       let totalPool = currentInv + currentPersonalWallet + currentRevenueWallet
 
       // 5. Withdrawal Logic
-      const isWithdrawalDay =
-        Formatter.getDayOfWeek(currentDayStr) === targetDay
-      const availableTier =
-        this.WITHDRAWAL_TIERS.filter(t => t <= totalPool).pop() || 0
+      const isWithdrawalDay = Formatter.getDayOfWeek(currentDayStr) === targetDay
+      
+      // Nova Lógica: Liquidez Imediata (Somente o que está nas carteiras)
+      const liquidPool = currentPersonalWallet + currentRevenueWallet
+      const availableTier = this.WITHDRAWAL_TIERS.filter(t => t <= liquidPool).pop() || 0
 
       let isRealized = false
       let isPlanned = false
@@ -248,13 +249,14 @@ export const Calculator = {
 
       // Strategy Planning
       if (isWithdrawalDay && d > 0) {
-        if (withdrawStrategy === 'max' && availableTier > 0) isPlanned = true
-        else if (
-          withdrawStrategy === 'fixed' &&
-          availableTier >= withdrawTargetCents
-        )
+        if (withdrawStrategy === 'max' && availableTier > 0) {
           isPlanned = true
-        else if (withdrawStrategy === 'weekly' && availableTier > 0) {
+        } else if (withdrawStrategy === 'fixed') {
+          // Só planeja se a Meta Fixa for atingida pela LIQUIDEZ atual
+          if (liquidPool >= withdrawTargetCents) {
+            isPlanned = true
+          }
+        } else if (withdrawStrategy === 'weekly' && availableTier > 0) {
           const dayOfMonth = parseInt(currentDayStr.split('-')[2])
           const weekNum = Math.ceil(dayOfMonth / 7)
           if (selectedWeeks.includes(weekNum)) isPlanned = true
@@ -282,8 +284,19 @@ export const Calculator = {
         if (isRealized) {
           targetWallet = realizedOnDay.wallet || 'revenue'
         } else {
-          // Planned: use recommendation logic (revenue first if sufficient)
-          targetWallet = currentRevenueWallet >= amountToWithdrawCents ? 'revenue' : 'personal'
+          // Planned Strategy Priority:
+          // 1. Revenue covers the amount
+          if (currentRevenueWallet >= amountToWithdrawCents) {
+            targetWallet = 'revenue'
+          } 
+          // 2. Personal covers the amount
+          else if (currentPersonalWallet >= amountToWithdrawCents) {
+            targetWallet = 'personal'
+          }
+          // 3. Neither covers alone, use higher balance
+          else {
+            targetWallet = currentRevenueWallet >= currentPersonalWallet ? 'revenue' : 'personal'
+          }
         }
 
         // Define effective gross limited by balance AND Tiers
