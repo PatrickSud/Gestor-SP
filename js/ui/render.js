@@ -182,17 +182,23 @@ export const Renderer = {
     const listEl = document.getElementById('simSummaryCycleEnds')
     if (listEl) {
       const ends = Array.isArray(cycleEnds) ? cycleEnds : []
-      listEl.innerHTML =
-        ends.length > 0
-          ? ends
-              .map(
-                d =>
-                  `<span class="px-2 py-1 text-[10px] rounded bg-violet-900/30 border border-violet-500/30 text-violet-300">${Formatter.dateDisplay(
-                    d
-                  )}</span>`
-              )
-              .join(' ')
-          : '<span class="text-[10px] text-slate-500 italic">Sem ciclos concluídos</span>'
+      if (ends.length > 0) {
+        const tags = ends
+          .map(d => {
+            const [y, m, day] = d.split('-')
+            return `<span class="px-2 py-0.5 text-[10px] rounded bg-violet-900 text-violet-100 font-bold border border-violet-700/50 shadow-sm">${day}/${m}</span>`
+          })
+          .join('')
+        listEl.innerHTML = `
+          <div class="mt-3 pt-3 border-t border-slate-700/50">
+            <div class="text-[9px] text-slate-500 uppercase font-bold mb-2 tracking-wider">Previsão de Retornos:</div>
+            <div class="flex flex-wrap gap-1.5">${tags}</div>
+          </div>
+        `
+      } else {
+        listEl.innerHTML =
+          '<span class="text-[10px] text-slate-500 italic">Sem ciclos concluídos</span>'
+      }
     }
   },
 

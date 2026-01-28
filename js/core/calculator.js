@@ -179,8 +179,12 @@ export const Calculator = {
         d > 0 &&
         d >= simStartIndex
       ) {
-        simCycleTimer--
-        if (simCycleTimer === 0) {
+        const expectedEndDate = Formatter.addDays(
+          simStartStr,
+          (completedReps + 1) * cycleDays
+        )
+
+        if (currentDayStr === expectedEndDate) {
           let bonusPercCur = 0
           if (currentInv >= mT1 && currentInv <= lT1) bonusPercCur = bT1
           else if (currentInv > lT1) bonusPercCur = bT2
@@ -202,7 +206,6 @@ export const Calculator = {
           isCycleEnd = true
           cycleEnds.push(currentDayStr)
           completedReps++
-          simCycleTimer = cycleDays
         }
       }
 
