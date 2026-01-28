@@ -278,67 +278,38 @@ export const Calculator = {
 
       // Subtract from balance
       if (amountToWithdrawCents > 0) {
-        const walletPreference = realizedOnDay?.wallet
-        const firstWallet = walletPreference === 'personal' ? 'personal' : 'revenue'
-
-        if (firstWallet === 'personal') {
-          if (currentPersonalWallet >= amountToWithdrawCents) {
-            currentPersonalWallet -= amountToWithdrawCents
-            stepWithdrawPersonal = amountToWithdrawCents
-          } else {
-            stepWithdrawPersonal = currentPersonalWallet
-            const remaining = amountToWithdrawCents - currentPersonalWallet
-            currentPersonalWallet = 0
-            if (currentRevenueWallet >= remaining) {
-              currentRevenueWallet -= remaining
-              stepWithdrawRevenue = remaining
-            } else {
-              stepWithdrawRevenue = currentRevenueWallet
-              const stillRemaining = remaining - currentRevenueWallet
-              currentRevenueWallet = 0
-              currentInv -= stillRemaining
-              if (currentInv < 0) currentInv = 0
-            }
-          }
+        let targetWallet = 'revenue'
+        if (isRealized) {
+          targetWallet = realizedOnDay.wallet || 'revenue'
         } else {
-          // Default: Revenue first
-          if (currentRevenueWallet >= amountToWithdrawCents) {
-            currentRevenueWallet -= amountToWithdrawCents
-            stepWithdrawRevenue = amountToWithdrawCents
-          } else {
-            stepWithdrawRevenue = currentRevenueWallet
-            const remaining = amountToWithdrawCents - currentRevenueWallet
-            currentRevenueWallet = 0
-            if (currentPersonalWallet >= remaining) {
-              currentPersonalWallet -= remaining
-              stepWithdrawPersonal = remaining
-            } else {
-              stepWithdrawPersonal = currentPersonalWallet
-              const stillRemaining = remaining - currentPersonalWallet
-              currentPersonalWallet = 0
-              currentInv -= stillRemaining
-              if (currentInv < 0) currentInv = 0
-            }
-          }
+          // Planned: use recommendation logic (revenue first if sufficient)
+          targetWallet = currentRevenueWallet >= amountToWithdrawCents ? 'revenue' : 'personal'
         }
 
-        // Calculate Net after knowing the source
-        // Personal = 0% fee, Revenue/Inventory = 10% fee
-        const fromInventory = Math.max(0, amountToWithdrawCents - stepWithdrawRevenue - stepWithdrawPersonal)
-        const net = Math.floor(stepWithdrawRevenue * 0.9) + 
-                    stepWithdrawPersonal + 
-                    Math.floor(fromInventory * 0.9)
+        // Define effective gross limited by balance
+        const availableBalance = targetWallet === 'personal' ? currentPersonalWallet : currentRevenueWallet
+        const grossWithdrawal = Math.min(amountToWithdrawCents, availableBalance)
+
+        if (targetWallet === 'personal') {
+          currentPersonalWallet -= grossWithdrawal
+          stepWithdrawPersonal = grossWithdrawal
+        } else {
+          currentRevenueWallet -= grossWithdrawal
+          stepWithdrawRevenue = grossWithdrawal
+        }
+
+        // Calculate Net (Fee only on Revenue)
+        const net = targetWallet === 'personal' ? grossWithdrawal : Math.floor(grossWithdrawal * 0.9)
         
         stepWithdraw = net
         totalWithdrawnCents += net
 
-        totalPool -= amountToWithdrawCents
+        totalPool -= grossWithdrawal
         withdrawalHistory.push({
           date: currentDayStr,
           val: net,
           status: isRealized ? 'realized' : 'planned',
-          wallet:
-            isRealized && realizedOnDay.wallet ? realizedOnDay.wallet : 'revenue'
+          wallet: targetWallet
         })
 
         // Update Next Withdraw Info for dashboard
