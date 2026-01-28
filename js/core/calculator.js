@@ -236,78 +236,89 @@ export const Calculator = {
 
       let totalPool = currentInv + currentPersonalWallet + currentRevenueWallet
 
-      // 5. Withdrawal Logic
+      // 5. Withdrawal Logic (Smart Decision)
       const isWithdrawalDay = Formatter.getDayOfWeek(currentDayStr) === targetDay
-      
-      // Nova Lógica: Liquidez Imediata (Somente o que está nas carteiras)
-      const liquidPool = currentPersonalWallet + currentRevenueWallet
-      const availableTier = this.WITHDRAWAL_TIERS.filter(t => t <= liquidPool).pop() || 0
+      const realizedOnDay = (realizedWithdrawals || []).find(w => w.date === currentDayStr)
 
       let isRealized = false
       let isPlanned = false
       let amountToWithdrawCents = 0
+      let targetWallet = 'revenue'
+      let withdrawalNote = ''
+      let isPartial = false
 
-      // Strategy Planning
-      if (isWithdrawalDay && d > 0) {
-        if (withdrawStrategy === 'max' && availableTier > 0) {
-          isPlanned = true
-        } else if (withdrawStrategy === 'fixed') {
-          // Só planeja se a Meta Fixa for atingida pela LIQUIDEZ atual
-          if (liquidPool >= withdrawTargetCents) {
-            isPlanned = true
-          }
-        } else if (withdrawStrategy === 'weekly' && availableTier > 0) {
-          const dayOfMonth = parseInt(currentDayStr.split('-')[2])
-          const weekNum = Math.ceil(dayOfMonth / 7)
-          if (selectedWeeks.includes(weekNum)) isPlanned = true
-        }
-      }
-
-      // Check Manual Realized (Overrides planning)
-      const realizedOnDay = (realizedWithdrawals || []).find(
-        w => w.date === currentDayStr
-      )
       if (realizedOnDay) {
         isRealized = true
         amountToWithdrawCents = Formatter.toCents(realizedOnDay.amount)
-      } else if (isPlanned) {
-        // If not manual, use planned strategy
-        amountToWithdrawCents = availableTier
+        targetWallet = realizedOnDay.wallet || 'revenue'
+      } else if (isWithdrawalDay && d > 0 && withdrawStrategy !== 'none') {
+        const revTier = this.WITHDRAWAL_TIERS.filter(t => t <= currentRevenueWallet).pop() || 0
+        const persTier = this.WITHDRAWAL_TIERS.filter(t => t <= currentPersonalWallet).pop() || 0
+        const revNet = Math.floor(revTier * 0.9)
+        const persNet = persTier // 0% fee
+
+        // Logic check for Meta Fixa
+        if (withdrawStrategy === 'fixed') {
+          if (currentRevenueWallet >= withdrawTargetCents) {
+            isPlanned = true
+            targetWallet = 'revenue'
+            amountToWithdrawCents = withdrawTargetCents
+            withdrawalNote = 'Meta atingida (Receita)'
+          } else if (currentPersonalWallet >= withdrawTargetCents) {
+            isPlanned = true
+            targetWallet = 'personal'
+            amountToWithdrawCents = withdrawTargetCents
+            withdrawalNote = 'Meta atingida (Pessoal)'
+          } else {
+            // Fallback: Best net among available tiers
+            if (persNet >= revNet && persNet > 0) {
+              isPlanned = true
+              targetWallet = 'personal'
+              amountToWithdrawCents = persTier
+              isPartial = true
+              withdrawalNote = 'Melhor opção líquida (Pessoal)'
+            } else if (revNet > 0) {
+              isPlanned = true
+              targetWallet = 'revenue'
+              amountToWithdrawCents = revTier
+              isPartial = true
+              withdrawalNote = 'Melhor opção líquida (Receita)'
+            }
+          }
+        } else if (withdrawStrategy === 'max' || withdrawStrategy === 'weekly') {
+          let shouldCheckWeekly = true
+          if (withdrawStrategy === 'weekly') {
+            const dayOfMonth = parseInt(currentDayStr.split('-')[2])
+            const weekNum = Math.ceil(dayOfMonth / 7)
+            shouldCheckWeekly = selectedWeeks.includes(weekNum)
+          }
+
+          if (shouldCheckWeekly) {
+            if (persNet >= revNet && persNet > 0) {
+              isPlanned = true
+              targetWallet = 'personal'
+              amountToWithdrawCents = persTier
+            } else if (revNet > 0) {
+              isPlanned = true
+              targetWallet = 'revenue'
+              amountToWithdrawCents = revTier
+            }
+          }
+        }
       }
 
       let stepWithdrawPersonal = 0
       let stepWithdrawRevenue = 0
 
-      // Subtract from balance
       if (amountToWithdrawCents > 0) {
-        let targetWallet = 'revenue'
-        if (isRealized) {
-          targetWallet = realizedOnDay.wallet || 'revenue'
-        } else {
-          // Planned Strategy Priority:
-          // 1. Revenue covers the amount
-          if (currentRevenueWallet >= amountToWithdrawCents) {
-            targetWallet = 'revenue'
-          } 
-          // 2. Personal covers the amount
-          else if (currentPersonalWallet >= amountToWithdrawCents) {
-            targetWallet = 'personal'
-          }
-          // 3. Neither covers alone, use higher balance
-          else {
-            targetWallet = currentRevenueWallet >= currentPersonalWallet ? 'revenue' : 'personal'
-          }
-        }
-
-        // Define effective gross limited by balance AND Tiers
+        let grossWithdrawal = 0
         const availableBalance = targetWallet === 'personal' ? currentPersonalWallet : currentRevenueWallet
         
-        let grossWithdrawal = 0
+        // Final sanity check on balance (mostly for realized/manual)
         if (availableBalance >= amountToWithdrawCents) {
           grossWithdrawal = amountToWithdrawCents
         } else {
-          // Se o saldo da carteira não cobre a meta sugerida, 
-          // busca o maior Tier que esta carteira consegue cobrir sozinha.
+          // Find max tier for manual overflow or realized error
           grossWithdrawal = this.WITHDRAWAL_TIERS.filter(t => t <= availableBalance).pop() || 0
         }
 
@@ -320,13 +331,11 @@ export const Calculator = {
             stepWithdrawRevenue = grossWithdrawal
           }
 
-          // Calculate Net (Fee only on Revenue)
           const net = targetWallet === 'personal' ? grossWithdrawal : Math.floor(grossWithdrawal * 0.9)
-          
           stepWithdraw = net
           totalWithdrawnCents += net
-
           totalPool -= grossWithdrawal
+
           withdrawalHistory.push({
             date: currentDayStr,
             val: net,
@@ -336,14 +345,8 @@ export const Calculator = {
         }
 
         // Update Next Withdraw Info for dashboard
-        if (nextWithdrawCents === 0 && availableTier > 0 && currentDayStr >= todayStr) {
-          // Determine recommendation for this future date to show correct net in dashboard
-          let nextRecWallet = 'revenue'
-          if (currentRevenueWallet >= availableTier) nextRecWallet = 'revenue'
-          else if (currentPersonalWallet >= availableTier) nextRecWallet = 'personal'
-          else nextRecWallet = currentRevenueWallet >= currentPersonalWallet ? 'revenue' : 'personal'
-
-          nextWithdrawCents = nextRecWallet === 'personal' ? availableTier : Math.floor(availableTier * 0.9)
+        if (nextWithdrawCents === 0 && d > 0 && currentDayStr >= todayStr) {
+          nextWithdrawCents = stepWithdraw > 0 ? stepWithdraw : 0
           nextWithdrawDate = currentDayStr
         }
       }
@@ -351,26 +354,14 @@ export const Calculator = {
       const stepReturnProfit = dayProfit
       const stepReturnPrincipal = stepReturns - dayProfit
 
-      // Lógica inteligente de recomendação
-      let recWallet = 'revenue'
-      if (availableTier > 0) {
-        if (currentRevenueWallet >= availableTier) {
-          recWallet = 'revenue'
-        } else if (currentPersonalWallet >= availableTier) {
-          recWallet = 'personal'
-        } else {
-          recWallet = currentRevenueWallet >= currentPersonalWallet ? 'revenue' : 'personal'
-        }
-      } else {
-        recWallet = currentRevenueWallet >= currentPersonalWallet ? 'revenue' : 'personal'
-      }
-
       dailyData[currentDayStr] = {
         startBal: startBalCents,
         endBal: totalPool,
         endPersonal: currentPersonalWallet,
         endRevenue: currentRevenueWallet,
-        recommendedWallet: recWallet,
+        recommendedWallet: targetWallet,
+        withdrawalNote,
+        isPartial,
         inIncome: stepIncome,
         inIncomeTask: stepTaskIncome,
         inIncomeRecurring: stepRecurringIncome,
@@ -384,7 +375,7 @@ export const Calculator = {
         outWithdrawPersonal: stepWithdrawPersonal,
         outWithdrawRevenue: stepWithdrawRevenue,
         maturing: stepMaturingList,
-        tier: availableTier,
+        tier: amountToWithdrawCents || 0,
         isCycleEnd,
         status: isRealized ? 'realized' : isPlanned ? 'planned' : 'none'
       }

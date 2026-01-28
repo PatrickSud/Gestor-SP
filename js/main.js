@@ -554,10 +554,16 @@ class App {
         const label = isActionDay ? (data.status === 'planned' ? 'SAQUE PLANEJADO' : 'DISPONÍVEL') : 'SALDOS EM CARTEIRA'
         const rec = data.recommendedWallet
         const walletName = rec === 'personal' ? 'Carteira Pessoal' : 'Carteira de Receita'
+        const note = data.withdrawalNote || ''
+        const isPartial = data.isPartial
 
         status.innerHTML = `
-                      <div class="${isActionDay ? 'text-emerald-500' : 'text-slate-400'} font-bold uppercase mt-1">${label}</div>
-                      ${isActionDay ? `<div class="text-[9px] text-slate-500 uppercase mb-2">Fonte Projetada: ${walletName}</div>` : ''}
+                      <div class="flex items-center justify-center gap-2 mt-1">
+                        <div class="${isActionDay ? 'text-emerald-500' : 'text-slate-400'} font-bold uppercase">${label}</div>
+                        ${isPartial ? '<span class="bg-amber-500/20 text-amber-500 text-[8px] px-1.5 py-0.5 rounded border border-amber-500/30 flex items-center gap-1 font-bold animate-pulse"><i class="fas fa-exclamation-triangle"></i> META PARCIAL</span>' : ''}
+                      </div>
+                      ${isActionDay ? `<div class="text-[9px] text-slate-500 uppercase mt-0.5">Fonte Projetada: ${walletName}</div>` : ''}
+                      ${note && isActionDay ? `<div class="text-[8px] text-slate-400 italic mb-2">"${note}"</div>` : isActionDay ? '<div class="mb-2"></div>' : ''}
                       
                       <div class="grid grid-cols-2 gap-2 mt-3 mb-3">
                         <div class="bg-slate-900/80 p-2 rounded border ${isActionDay && rec === 'personal' ? 'border-indigo-500' : 'border-slate-700'} relative">
@@ -582,7 +588,7 @@ class App {
                         </button>
                       </div>
                       ` : `
-                      <div class="text-[9px] text-slate-500 italic text-center">Saques disponíveis apenas aos domingos (ou no dia configurado).</div>
+                      <div class="text-[9px] text-slate-500 italic text-center">Saques disponíveis apenas no dia configurado.</div>
                       `}
                   `
         status.className = ''
