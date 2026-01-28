@@ -333,28 +333,14 @@ class App {
     chevron.classList.toggle('rotate-180', isHidden)
   }
 
-  syncBalance() {
-    const projected = Formatter.fromCents(store.state.results.finalBalance) // Simple sync for today would be better
-    // Based on original logic: projectedTodayBalance
-    // Need to extract today's balance from dailyData
-    const todayStr = new Date().toISOString().split('T')[0]
-    const todayData = store.state.dailyData[todayStr]
-
-    if (!todayData)
-      return Renderer.toast('Dados de hoje não disponíveis', 'error')
-
-    const val = Formatter.fromCents(todayData.endBal)
-
-    if (
-      confirm(
-        `Deseja atualizar o Saldo Inicial para R$ ${val.toFixed(2)}?\nIsso altera a base de cálculo.`
-      )
-    ) {
-      store.updateInput('currentWalletBalance', val.toFixed(2))
-      document.getElementById('currentWalletBalance').value = val.toFixed(2)
-      this.runCalculation()
-      Renderer.toast('Saldo sincronizado')
-    }
+  adjustInput(id, delta) {
+    const el = document.getElementById(id)
+    if (!el) return
+    const current = parseFloat(el.value) || 0
+    const newVal = Math.max(0, current + delta).toFixed(2)
+    el.value = newVal
+    store.updateInput(id, newVal)
+    this.runCalculation()
   }
 
   openDayDetails(dateStr) {

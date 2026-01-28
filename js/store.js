@@ -39,7 +39,8 @@ class Store {
         dataInicio: today,
         withdrawalDaySelect: '1',
         viewPeriodSelect: '30',
-        currentWalletBalance: '0',
+        personalWalletStart: '0',
+        revenueWalletStart: '0',
         monthlyExtraIncome: '0',
         monthlyIncomeToggle: false,
         fixedIncomes: [],
@@ -188,10 +189,11 @@ class Store {
   }
 
   loadFromPersistence(data) {
-    if (!data || !data.profiles) return
+    const migrated = this.migrateData(data)
+    if (!migrated || !migrated.profiles) return
 
-    this.state.currentProfileId = data.currentProfileId
-    this.state.profiles = data.profiles
+    this.state.currentProfileId = migrated.currentProfileId
+    this.state.profiles = migrated.profiles
 
     const current = this.state.profiles[this.state.currentProfileId].data
     this.state.inputs = { ...current.inputs }
@@ -204,6 +206,28 @@ class Store {
     this.notify()
   }
 
+  migrateData(data) {
+    if (!data || !data.profiles) return data
+
+    Object.keys(data.profiles).forEach(id => {
+      const profileData = data.profiles[id].data
+      if (profileData && profileData.inputs) {
+        // If old variable exists and new ones don't or are '0'
+        if (
+          profileData.inputs.currentWalletBalance !== undefined &&
+          profileData.inputs.personalWalletStart === undefined
+        ) {
+          profileData.inputs.personalWalletStart =
+            profileData.inputs.currentWalletBalance
+          profileData.inputs.revenueWalletStart = '0'
+          // Clean up old variable
+          delete profileData.inputs.currentWalletBalance
+        }
+      }
+    })
+    return data
+  }
+
   setPersistenceCallback(callback) {
     this.onPersistenceUpdate = callback
   }
@@ -211,7 +235,7 @@ class Store {
   loadFromStorage() {
     const saved = localStorage.getItem('gestor_sp_profiles')
     if (saved) {
-      const parsed = JSON.parse(saved)
+      const parsed = this.migrateData(JSON.parse(saved))
       this.state.currentProfileId = parsed.currentProfileId
       this.state.profiles = parsed.profiles
 
@@ -240,7 +264,7 @@ class Store {
 
   importAllData(jsonString) {
     try {
-      const parsed = JSON.parse(jsonString)
+      const parsed = this.migrateData(JSON.parse(jsonString))
       if (!parsed.profiles || !parsed.currentProfileId)
         throw new Error('Formato inválido')
 

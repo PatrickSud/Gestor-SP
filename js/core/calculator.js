@@ -18,7 +18,8 @@ export const Calculator = {
       monthlyIncomeToggle,
       fixedIncomes,
       taskDailyValue,
-      currentWalletBalance,
+      personalWalletStart,
+      revenueWalletStart,
       futureToggle,
       capitalInicial,
       simStartDate,
@@ -36,7 +37,8 @@ export const Calculator = {
     const todayStr = new Date().toISOString().split('T')[0]
 
     // Convert to cents
-    const walletStart = Formatter.toCents(currentWalletBalance)
+    const personalStart = Formatter.toCents(personalWalletStart)
+    const revenueStart = Formatter.toCents(revenueWalletStart)
     const taskValCents = Formatter.toCents(taskDailyValue)
     const incomesList = monthlyIncomeToggle ? fixedIncomes || [] : []
     const initialSimCapital =
@@ -81,14 +83,15 @@ export const Calculator = {
     })
 
     const totalCentsInvested =
-      walletStart + initialSimCapital + totalPortfolioVal
+      personalStart + revenueStart + initialSimCapital + totalPortfolioVal
 
     let totalIncomeCents = 0
     let totalInvProfitCents = 0
 
     // Initialize Loop
     let currentInv = 0
-    let currentWallet = walletStart
+    let currentPersonalWallet = personalStart
+    let currentRevenueWallet = revenueStart
     let totalWithdrawnCents = 0
     let dailyData = {}
     let graphData = []
@@ -119,7 +122,7 @@ export const Calculator = {
 
     for (let d = 0; d <= simulationDays; d++) {
       const currentDayStr = Formatter.addDays(startDateStr, d)
-      const startBalCents = currentInv + currentWallet
+      const startBalCents = currentInv + currentPersonalWallet + currentRevenueWallet
 
       let stepIncome = 0
       let stepReturns = 0
@@ -163,7 +166,7 @@ export const Calculator = {
         stepMaturingList = portMaturingDetails[currentDayStr]
       }
 
-      currentWallet += stepIncome
+      currentRevenueWallet += stepIncome
       totalIncomeCents += stepIncome
 
       const dayProfit =
@@ -209,10 +212,15 @@ export const Calculator = {
         }
       }
 
-      // Merge Logic (Removed - Always to Wallet)
-      currentWallet += stepReturns
+      // Split Returns: Principal to Personal, Profit to Revenue
+      if (stepMaturingList && stepMaturingList.length > 0) {
+        stepMaturingList.forEach(m => {
+          currentPersonalWallet += m.val
+          currentRevenueWallet += m.profit
+        })
+      }
 
-      let totalPool = currentInv + currentWallet
+      let totalPool = currentInv + currentPersonalWallet + currentRevenueWallet
 
       // 5. Withdrawal Logic
       const isWithdrawalDay =
@@ -257,13 +265,19 @@ export const Calculator = {
         stepWithdraw = net
         totalWithdrawnCents += net
 
-        if (currentWallet >= amountToWithdrawCents)
-          currentWallet -= amountToWithdrawCents
-        else {
-          const remaining = amountToWithdrawCents - currentWallet
-          currentWallet = 0
-          currentInv -= remaining
-          if (currentInv < 0) currentInv = 0
+        if (currentRevenueWallet >= amountToWithdrawCents) {
+          currentRevenueWallet -= amountToWithdrawCents
+        } else {
+          const remaining = amountToWithdrawCents - currentRevenueWallet
+          currentRevenueWallet = 0
+          if (currentPersonalWallet >= remaining) {
+            currentPersonalWallet -= remaining
+          } else {
+            const stillRemaining = remaining - currentPersonalWallet
+            currentPersonalWallet = 0
+            currentInv -= stillRemaining
+            if (currentInv < 0) currentInv = 0
+          }
         }
         totalPool -= amountToWithdrawCents
         withdrawalHistory.push({
@@ -323,7 +337,11 @@ export const Calculator = {
     // Advanced KPI Calculation
     const totalMonths = Math.max(1, simulationDays / 30)
     const avgMonthlyYield =
-      (currentInv + currentWallet + totalWithdrawnCents - totalCentsInvested) /
+      (currentInv +
+        currentPersonalWallet +
+        currentRevenueWallet +
+        totalWithdrawnCents -
+        totalCentsInvested) /
       totalMonths
 
     let breakEvenDate = 'N/A'
@@ -383,8 +401,9 @@ export const Calculator = {
         totalInvProfitCents,
         totalWithdrawn: totalWithdrawnCents,
         currentMonthWithdrawn,
-        finalBalance: currentInv + currentWallet,
-        currentWalletNow: currentWallet,
+        finalBalance: currentInv + currentPersonalWallet + currentRevenueWallet,
+        currentPersonalWallet,
+        currentRevenueWallet,
         currentBalanceToday,
         projectedEndOfMonthBalance,
         nextWithdraw: nextWithdrawCents,
@@ -393,7 +412,8 @@ export const Calculator = {
         roi:
           totalCentsInvested > 0
             ? ((currentInv +
-                currentWallet +
+                currentPersonalWallet +
+                currentRevenueWallet +
                 totalWithdrawnCents -
                 totalCentsInvested) /
                 totalCentsInvested) *

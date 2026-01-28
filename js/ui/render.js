@@ -114,6 +114,10 @@ export const Renderer = {
     if (resProjectedMonthEnd)
       resProjectedMonthEnd.innerText = `Final Mês: ${Formatter.currency(results.projectedEndOfMonthBalance)}`
 
+    const projectedBalanceDisplay = document.getElementById('projectedBalanceDisplay')
+    if (projectedBalanceDisplay)
+        projectedBalanceDisplay.innerText = Formatter.currency(results.finalBalance)
+
     // Card 4: Próximo Saque
     const resNextDate = document.getElementById('resNextDate')
     if (resNextDate)
