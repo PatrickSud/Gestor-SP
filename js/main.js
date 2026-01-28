@@ -80,7 +80,7 @@ class App {
       )
       Renderer.renderAlerts(store.state.portfolio)
 
-      Renderer.renderSimulationSummary(results.results, store.state.inputs)
+      Renderer.renderSimulationSummary(results.results, store.state.inputs, results.cycleEnds)
 
       if (save) store.saveToStorage()
     }

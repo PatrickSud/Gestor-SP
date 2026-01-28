@@ -142,7 +142,7 @@ export const Renderer = {
     }
   },
 
-  renderSimulationSummary(results, inputs) {
+  renderSimulationSummary(results, inputs, cycleEnds = []) {
     const card = document.getElementById('simSummaryCard')
     if (!card) return
     const futureOn = inputs.futureToggle === 'true'
@@ -178,6 +178,21 @@ export const Renderer = {
       const reps = inputs.repeticoesCiclo || '0'
       const taxa = inputs.taxaDiaria || '0'
       metaEl.innerText = `${dias}d • ${reps}x ciclos • ${taxa}% ao dia`
+    }
+    const listEl = document.getElementById('simSummaryCycleEnds')
+    if (listEl) {
+      const ends = Array.isArray(cycleEnds) ? cycleEnds : []
+      listEl.innerHTML =
+        ends.length > 0
+          ? ends
+              .map(
+                d =>
+                  `<span class="px-2 py-1 text-[10px] rounded bg-violet-900/30 border border-violet-500/30 text-violet-300">${Formatter.dateDisplay(
+                    d
+                  )}</span>`
+              )
+              .join(' ')
+          : '<span class="text-[10px] text-slate-500 italic">Sem ciclos concluídos</span>'
     }
   },
 

@@ -19,10 +19,10 @@ export const ChartManager = {
         ? baseData.filter((_, i) => i % Math.ceil(baseData.length / 90) === 0)
         : baseData
 
-    const plannedDates = displayData
+    const plannedDates = baseData
       .filter(it => it.meta && it.meta.withdrawStatus === 'planned')
       .map(it => it.x)
-    const returnDates = displayData
+    const returnDates = baseData
       .filter(it => it.meta && (it.meta.returns || 0) > 0)
       .map(it => it.x)
 
@@ -35,7 +35,7 @@ export const ChartManager = {
         const bottomY = chartArea.bottom
         const xScale = scales.x
         const drawLineAt = (dateStr, color) => {
-          const xPos = xScale.getPixelForValue(dateStr)
+          const xPos = xScale.getPixelForValue(new Date(dateStr))
           if (!isFinite(xPos)) return
           ctx.save()
           ctx.strokeStyle = color
@@ -49,6 +49,11 @@ export const ChartManager = {
         plannedDates.forEach(d => drawLineAt(d, '#f59e0b'))
         returnDates.forEach(d => drawLineAt(d, '#8b5cf6'))
       }
+    }
+
+    // Ensure plugin is registered
+    if (typeof Chart !== 'undefined' && Chart.register) {
+      Chart.register(markerPlugin)
     }
 
     chartInstance = new Chart(ctx, {
@@ -193,8 +198,7 @@ export const ChartManager = {
             }
           }
         }
-      },
-      plugins: [markerPlugin]
+      }
     })
   }
 }
