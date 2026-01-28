@@ -327,13 +327,26 @@ export const Calculator = {
       const stepReturnProfit = dayProfit
       const stepReturnPrincipal = stepReturns - dayProfit
 
+      // Lógica inteligente de recomendação
+      let recWallet = 'revenue'
+      if (availableTier > 0) {
+        if (currentRevenueWallet >= availableTier) {
+          recWallet = 'revenue'
+        } else if (currentPersonalWallet >= availableTier) {
+          recWallet = 'personal'
+        } else {
+          recWallet = currentRevenueWallet >= currentPersonalWallet ? 'revenue' : 'personal'
+        }
+      } else {
+        recWallet = currentRevenueWallet >= currentPersonalWallet ? 'revenue' : 'personal'
+      }
+
       dailyData[currentDayStr] = {
         startBal: startBalCents,
         endBal: totalPool,
         endPersonal: currentPersonalWallet,
         endRevenue: currentRevenueWallet,
-        recommendedWallet:
-          currentRevenueWallet >= withdrawTargetCents ? 'revenue' : 'personal',
+        recommendedWallet: recWallet,
         inIncome: stepIncome,
         inIncomeTask: stepTaskIncome,
         inIncomeRecurring: stepRecurringIncome,
