@@ -110,6 +110,10 @@ export const Calculator = {
             )
           )
         : 0
+    const simEndDate =
+      futureToggle === 'true' && simStartStr != null
+        ? Formatter.addDays(simStartStr, totalReps * cycleDays)
+        : null
 
     let cycleEnds = []
     let nextWithdrawCents = 0
@@ -463,7 +467,8 @@ export const Calculator = {
         simProfit: simCapitalPure - initialSimCapital,
         simCycles: totalReps,
         simCycleDays: cycleDays,
-        simTotalDays: totalReps * cycleDays
+        simTotalDays: totalReps * cycleDays,
+        simEndDate
       },
       dailyData,
       cycleEnds

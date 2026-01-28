@@ -167,6 +167,7 @@ export const Renderer = {
     const finalEl = document.getElementById('simSummaryFinal')
     const profitEl = document.getElementById('simSummaryProfit')
     const metaEl = document.getElementById('simSummaryMeta')
+    const periodEl = document.getElementById('simSummaryPeriod')
 
     const simInitial = results.simInitial
     const simFinal = results.simFinal
@@ -184,6 +185,15 @@ export const Renderer = {
       const reps = inputs.repeticoesCiclo || '0'
       const taxa = inputs.taxaDiaria || '0'
       metaEl.innerText = `${dias}d • ${reps}x ciclos • ${taxa}% ao dia`
+    }
+    if (periodEl) {
+      const startStr = inputs.simStartDate || ''
+      const endStr = results.simEndDate || ''
+      if (startStr && endStr) {
+        periodEl.innerText = `${Formatter.dateDisplay(startStr)} → ${Formatter.dateDisplay(endStr)}`
+      } else {
+        periodEl.innerText = ''
+      }
     }
     const listEl = document.getElementById('simSummaryCycleEnds')
     if (listEl) {
