@@ -513,20 +513,28 @@ class App {
       matSec.classList.add('hidden')
     }
 
-    // Withdraw Action Section (Strictly for Withdrawal Day)
+    // Withdraw Action & Balance Info Section
     const wSec = document.getElementById('modalWithdrawSection')
     const targetDay = parseInt(store.state.inputs.withdrawalDaySelect)
     const isWithdrawalDay = Formatter.getDayOfWeek(dateStr) === targetDay
     const isRealized = data.status === 'realized'
+    const hasBalance = (data.endPersonal || 0) > 0 || (data.endRevenue || 0) > 0
 
-    if (isRealized || (isWithdrawalDay && data.tier > 0)) {
+    if (isRealized || isWithdrawalDay || hasBalance) {
       wSec.classList.remove('hidden')
       
-      const amountToDisplay = data.status === 'realized'
+      const amountToDisplay = isRealized
         ? data.outWithdraw
         : (data.recommendedWallet === 'personal' ? data.tier : Math.floor(data.tier * 0.9))
 
-      document.getElementById('modalWithdrawVal').innerText = Formatter.currency(amountToDisplay)
+      // Only show the big withdrawal value if it's a withdrawal day or already realized
+      const valEl = document.getElementById('modalWithdrawVal')
+      if (isRealized || (isWithdrawalDay && data.tier > 0)) {
+        valEl.innerText = Formatter.currency(amountToDisplay)
+        valEl.classList.remove('hidden')
+      } else {
+        valEl.classList.add('hidden')
+      }
 
       const status = document.getElementById('modalWithdrawStatus')
       if (isRealized) {
@@ -542,28 +550,29 @@ class App {
         `
         status.className = ''
       } else {
-        const label = data.status === 'planned' ? 'SAQUE PLANEJADO' : 'DISPONÍVEL'
+        const isActionDay = isWithdrawalDay && data.tier > 0
+        const label = isActionDay ? (data.status === 'planned' ? 'SAQUE PLANEJADO' : 'DISPONÍVEL') : 'SALDOS EM CARTEIRA'
         const rec = data.recommendedWallet
         const walletName = rec === 'personal' ? 'Carteira Pessoal' : 'Carteira de Receita'
-        const amountStr = Formatter.fromCents(amountToDisplay)
 
         status.innerHTML = `
-                      <div class="text-emerald-500 font-bold uppercase mt-1">${label}</div>
-                      <div class="text-[9px] text-slate-500 uppercase mb-2">Fonte Projetada: ${walletName}</div>
+                      <div class="${isActionDay ? 'text-emerald-500' : 'text-slate-400'} font-bold uppercase mt-1">${label}</div>
+                      ${isActionDay ? `<div class="text-[9px] text-slate-500 uppercase mb-2">Fonte Projetada: ${walletName}</div>` : ''}
                       
-                      <div class="grid grid-cols-2 gap-2 mb-3">
-                        <div class="bg-slate-900/80 p-2 rounded border ${rec === 'personal' ? 'border-indigo-500' : 'border-slate-700'} relative">
+                      <div class="grid grid-cols-2 gap-2 mt-3 mb-3">
+                        <div class="bg-slate-900/80 p-2 rounded border ${isActionDay && rec === 'personal' ? 'border-indigo-500' : 'border-slate-700'} relative">
                             <span class="text-[8px] text-slate-500 block">PESSOAL</span>
                             <span class="text-[10px] font-bold text-white">${Formatter.currency(data.endPersonal)}</span>
-                            ${rec === 'personal' ? '<span class="absolute -top-2 -right-1 bg-indigo-600 text-[7px] px-1 rounded text-white font-bold">SUGERIDO</span>' : ''}
+                            ${isActionDay && rec === 'personal' ? '<span class="absolute -top-2 -right-1 bg-indigo-600 text-[7px] px-1 rounded text-white font-bold">SUGERIDO</span>' : ''}
                         </div>
-                        <div class="bg-slate-900/80 p-2 rounded border ${rec === 'revenue' ? 'border-emerald-500' : 'border-slate-700'} relative">
+                        <div class="bg-slate-900/80 p-2 rounded border ${isActionDay && rec === 'revenue' ? 'border-emerald-500' : 'border-slate-700'} relative">
                             <span class="text-[8px] text-slate-500 block">RECEITA</span>
                             <span class="text-[10px] font-bold text-white">${Formatter.currency(data.endRevenue)}</span>
-                            ${rec === 'revenue' ? '<span class="absolute -top-2 -right-1 bg-emerald-600 text-[7px] px-1 rounded text-white font-bold">SUGERIDO</span>' : ''}
+                            ${isActionDay && rec === 'revenue' ? '<span class="absolute -top-2 -right-1 bg-emerald-600 text-[7px] px-1 rounded text-white font-bold">SUGERIDO</span>' : ''}
                         </div>
                       </div>
 
+                      ${isActionDay ? `
                       <div class="flex flex-col gap-2">
                         <button onclick="app.executeWithdrawal('${dateStr}', ${Formatter.fromCents(data.tier)}, 'revenue')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
                             <i class="fas fa-hand-holding-usd mr-1"></i> Sacar da Receita
@@ -572,6 +581,9 @@ class App {
                             <i class="fas fa-wallet mr-1"></i> Sacar da Pessoal
                         </button>
                       </div>
+                      ` : `
+                      <div class="text-[9px] text-slate-500 italic text-center">Saques disponíveis apenas aos domingos (ou no dia configurado).</div>
+                      `}
                   `
         status.className = ''
       }
