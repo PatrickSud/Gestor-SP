@@ -278,10 +278,6 @@ export const Calculator = {
 
       // Subtract from balance
       if (amountToWithdrawCents > 0) {
-        const net = Math.floor(amountToWithdrawCents * 0.9)
-        stepWithdraw = net
-        totalWithdrawnCents += net
-
         const walletPreference = realizedOnDay?.wallet
         const firstWallet = walletPreference === 'personal' ? 'personal' : 'revenue'
 
@@ -325,6 +321,16 @@ export const Calculator = {
             }
           }
         }
+
+        // Calculate Net after knowing the source
+        // Personal = 0% fee, Revenue/Inventory = 10% fee
+        const fromInventory = Math.max(0, amountToWithdrawCents - stepWithdrawRevenue - stepWithdrawPersonal)
+        const net = Math.floor(stepWithdrawRevenue * 0.9) + 
+                    stepWithdrawPersonal + 
+                    Math.floor(fromInventory * 0.9)
+        
+        stepWithdraw = net
+        totalWithdrawnCents += net
 
         totalPool -= amountToWithdrawCents
         withdrawalHistory.push({

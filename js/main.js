@@ -562,10 +562,10 @@ class App {
                       </div>
 
                       <div class="flex flex-col gap-2">
-                        <button onclick="app.executeWithdrawal('${dateStr}', ${amountStr}, 'revenue')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
+                        <button onclick="app.executeWithdrawal('${dateStr}', ${Formatter.fromCents(data.tier)}, 'revenue')" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
                             <i class="fas fa-hand-holding-usd mr-1"></i> Sacar da Receita
                         </button>
-                        <button onclick="app.executeWithdrawal('${dateStr}', ${amountStr}, 'personal')" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
+                        <button onclick="app.executeWithdrawal('${dateStr}', ${Formatter.fromCents(data.tier)}, 'personal')" class="w-full bg-slate-700 hover:bg-slate-600 text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
                             <i class="fas fa-wallet mr-1"></i> Sacar da Pessoal
                         </button>
                       </div>
