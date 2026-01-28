@@ -126,15 +126,9 @@ export const Renderer = {
     if (resNextValue)
       resNextValue.innerText = `Est: ${Formatter.currency(results.nextWithdraw)}`
 
-    this.els.navTotalBalance().innerText = `Pessoal: ${Formatter.currency(results.currentPersonalToday || 0)} • Receita: ${Formatter.currency(results.currentRevenueToday || 0)}`
-    const sbPersonal = document.getElementById('sidebarPersonalBalance')
-    const sbRevenue = document.getElementById('sidebarRevenueBalance')
-    if (sbPersonal)
-      sbPersonal.innerText = Formatter.currency(
-        results.currentPersonalToday || 0
-      )
-    if (sbRevenue)
-      sbRevenue.innerText = Formatter.currency(results.currentRevenueToday || 0)
+    this.els.navTotalBalance().innerText = Formatter.currency(
+      results.currentWalletNow ?? results.finalBalance
+    )
 
     // Remove references to deleted elements (Advanced Performance Row)
     // If elements don't exist, getElementById returns null, so we should check before accessing properties if we kept the cache.
@@ -148,7 +142,7 @@ export const Renderer = {
     }
   },
 
-  renderSimulationSummary(results, inputs, cycleEnds = []) {
+  renderSimulationSummary(results, inputs) {
     const card = document.getElementById('simSummaryCard')
     if (!card) return
     const futureOn = inputs.futureToggle === 'true'
@@ -167,7 +161,6 @@ export const Renderer = {
     const finalEl = document.getElementById('simSummaryFinal')
     const profitEl = document.getElementById('simSummaryProfit')
     const metaEl = document.getElementById('simSummaryMeta')
-    const periodEl = document.getElementById('simSummaryPeriod')
 
     const simInitial = results.simInitial
     const simFinal = results.simFinal
@@ -185,30 +178,6 @@ export const Renderer = {
       const reps = inputs.repeticoesCiclo || '0'
       const taxa = inputs.taxaDiaria || '0'
       metaEl.innerText = `${dias}d • ${reps}x ciclos • ${taxa}% ao dia`
-    }
-    if (periodEl) {
-      const startStr = inputs.simStartDate || ''
-      const endStr = results.simEndDate || ''
-      if (startStr && endStr) {
-        periodEl.innerText = `${Formatter.dateDisplay(startStr)} → ${Formatter.dateDisplay(endStr)}`
-      } else {
-        periodEl.innerText = ''
-      }
-    }
-    const listEl = document.getElementById('simSummaryCycleEnds')
-    if (listEl) {
-      const ends = Array.isArray(cycleEnds) ? cycleEnds : []
-      listEl.innerHTML =
-        ends.length > 0
-          ? ends
-              .map(
-                d =>
-                  `<span class="px-2 py-1 text-[10px] rounded bg-violet-900/30 border border-violet-500/30 text-violet-300">${Formatter.dateDisplay(
-                    d
-                  )}</span>`
-              )
-              .join(' ')
-          : '<span class="text-[10px] text-slate-500 italic">Sem ciclos concluídos</span>'
     }
   },
 
@@ -345,17 +314,6 @@ export const Renderer = {
               )}</div>`
             : ''
         cell.innerHTML = `<span class="z-10">${day}</span>${dotsHtml}`
-        if (data && typeof data.endBal === 'number') {
-          const rec =
-            data.recommendedWallet === 'personal'
-              ? 'Pessoal'
-              : data.recommendedWallet === 'revenue'
-                ? 'Receita'
-                : '—'
-          cell.title = `Saldo: ${Formatter.currency(
-            data.endBal
-          )} • Carteira sugerida: ${rec}`
-        }
         cell.onclick = () => app.openDayDetails(dayStr)
         grid.appendChild(cell)
       }
@@ -448,33 +406,6 @@ export const Renderer = {
         })
       }
 
-      if ((d.manualAdjPersonal || 0) !== 0) {
-        subItems.push({
-          label: 'Ajuste Manual (Pessoal)',
-          sub: d.manualAdjPersonal > 0 ? 'Entrada manual' : 'Saída manual',
-          val: Math.abs(d.manualAdjPersonal),
-          type: 'manual-personal',
-          dot: '#10b981',
-          tag: d.manualAdjPersonal > 0 ? 'AJUSTE +' : 'AJUSTE -'
-        })
-        totalIncome += d.manualAdjPersonal > 0 ? d.manualAdjPersonal : 0
-        totalExpense +=
-          d.manualAdjPersonal < 0 ? Math.abs(d.manualAdjPersonal) : 0
-      }
-      if ((d.manualAdjRevenue || 0) !== 0) {
-        subItems.push({
-          label: 'Ajuste Manual (Receita)',
-          sub: d.manualAdjRevenue > 0 ? 'Entrada manual' : 'Saída manual',
-          val: Math.abs(d.manualAdjRevenue),
-          type: 'manual-revenue',
-          dot: '#6366f1',
-          tag: d.manualAdjRevenue > 0 ? 'AJUSTE +' : 'AJUSTE -'
-        })
-        totalIncome += d.manualAdjRevenue > 0 ? d.manualAdjRevenue : 0
-        totalExpense +=
-          d.manualAdjRevenue < 0 ? Math.abs(d.manualAdjRevenue) : 0
-      }
-
       if (d.status !== 'none') {
         const realized = d.status === 'realized'
         const label = realized ? 'Saque Realizado' : 'Saque Planejado'
@@ -527,10 +458,6 @@ export const Renderer = {
             item.type === 'withdraw-planned'
           const sign = isWithdraw ? '-' : '+'
           const showValue = item.val > 0
-          const actionBtn =
-            item.type === 'withdraw-planned'
-              ? `<button class="ml-2 text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-0.5 rounded" onclick="app.executeWithdrawal('${dateStr}', ${Formatter.fromCents(d.tier)})">Sacar</button>`
-              : ''
 
           html += `
                         <div class="timeline-item">
@@ -541,7 +468,7 @@ export const Renderer = {
                             <div class="timeline-content">
                                 <div><div class="timeline-label">${item.label}</div><div class="timeline-sublabel">${item.sub}</div></div>
                                 <div class="text-right">
-                                    <div class="timeline-value ${item.type}">${showValue ? sign + Formatter.currency(item.val) : item.tag}${actionBtn}</div>
+                                    <div class="timeline-value ${item.type}">${showValue ? sign + Formatter.currency(item.val) : item.tag}</div>
                                     <div class="efetivar-badge">${item.tag}</div>
                                 </div>
                             </div>
