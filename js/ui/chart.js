@@ -25,6 +25,9 @@ export const ChartManager = {
     const returnDates = baseData
       .filter(it => it.meta && (it.meta.returns || 0) > 0)
       .map(it => it.x)
+    const realizedDates = baseData
+      .filter(it => it.meta && it.meta.withdrawStatus === 'realized')
+      .map(it => it.x)
 
     const markerPlugin = {
       id: 'markerPlugin',
@@ -48,6 +51,7 @@ export const ChartManager = {
         }
         plannedDates.forEach(d => drawLineAt(d, '#f59e0b'))
         returnDates.forEach(d => drawLineAt(d, '#8b5cf6'))
+        realizedDates.forEach(d => drawLineAt(d, '#3b82f6'))
       }
     }
 
@@ -150,6 +154,9 @@ export const ChartManager = {
                 }
                 if (meta && (meta.returns || 0) > 0) {
                   return { borderColor: '#8b5cf6', backgroundColor: '#8b5cf6' }
+                }
+                if (meta && meta.withdrawStatus === 'realized') {
+                  return { borderColor: '#3b82f6', backgroundColor: '#3b82f6' }
                 }
                 return { borderColor: '#3b82f6', backgroundColor: '#3b82f6' }
               },
