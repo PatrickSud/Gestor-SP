@@ -603,6 +603,14 @@ class App {
       store.state.inputs.dataInicio
     )
     this.openModal('timelineModal')
+
+    // Auto-scroll to current day
+    setTimeout(() => {
+      const todayEl = document.querySelector('.timeline-day-header.today')
+      if (todayEl) {
+        todayEl.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      }
+    }, 100)
   }
 
   openCardDetails(type) {

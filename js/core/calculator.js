@@ -259,6 +259,9 @@ export const Calculator = {
         amountToWithdrawCents = availableTier
       }
 
+      let stepWithdrawPersonal = 0
+      let stepWithdrawRevenue = 0
+
       // Subtract from balance
       if (amountToWithdrawCents > 0) {
         const net = Math.floor(amountToWithdrawCents * 0.9)
@@ -271,12 +274,16 @@ export const Calculator = {
         if (firstWallet === 'personal') {
           if (currentPersonalWallet >= amountToWithdrawCents) {
             currentPersonalWallet -= amountToWithdrawCents
+            stepWithdrawPersonal = amountToWithdrawCents
           } else {
+            stepWithdrawPersonal = currentPersonalWallet
             const remaining = amountToWithdrawCents - currentPersonalWallet
             currentPersonalWallet = 0
             if (currentRevenueWallet >= remaining) {
               currentRevenueWallet -= remaining
+              stepWithdrawRevenue = remaining
             } else {
+              stepWithdrawRevenue = currentRevenueWallet
               const stillRemaining = remaining - currentRevenueWallet
               currentRevenueWallet = 0
               currentInv -= stillRemaining
@@ -287,12 +294,16 @@ export const Calculator = {
           // Default: Revenue first
           if (currentRevenueWallet >= amountToWithdrawCents) {
             currentRevenueWallet -= amountToWithdrawCents
+            stepWithdrawRevenue = amountToWithdrawCents
           } else {
+            stepWithdrawRevenue = currentRevenueWallet
             const remaining = amountToWithdrawCents - currentRevenueWallet
             currentRevenueWallet = 0
             if (currentPersonalWallet >= remaining) {
               currentPersonalWallet -= remaining
+              stepWithdrawPersonal = remaining
             } else {
+              stepWithdrawPersonal = currentPersonalWallet
               const stillRemaining = remaining - currentPersonalWallet
               currentPersonalWallet = 0
               currentInv -= stillRemaining
@@ -322,6 +333,9 @@ export const Calculator = {
         }
       }
 
+      const stepReturnProfit = dayProfit
+      const stepReturnPrincipal = stepReturns - dayProfit
+
       dailyData[currentDayStr] = {
         startBal: startBalCents,
         endBal: totalPool,
@@ -333,8 +347,12 @@ export const Calculator = {
         inIncomeTask: stepTaskIncome,
         inIncomeRecurring: stepRecurringIncome,
         inReturn: stepReturns,
+        inReturnPrincipal: stepReturnPrincipal,
+        inReturnProfit: stepReturnProfit,
         outReinvest: stepSimReinvest,
         outWithdraw: stepWithdraw,
+        outWithdrawPersonal: stepWithdrawPersonal,
+        outWithdrawRevenue: stepWithdrawRevenue,
         maturing: stepMaturingList,
         tier: availableTier,
         isCycleEnd,

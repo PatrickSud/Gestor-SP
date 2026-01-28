@@ -358,11 +358,27 @@ export const Renderer = {
     if (!container) return
 
     let html = ''
-    let totalIncome = 0
-    let totalExpense = 0
+    let creditoPessoal = 0
+    let creditoReceita = 0
+    let debitoPessoal = 0
+    let debitoReceita = 0
+
     const limitDateStr = Formatter.addDays(startDateStr, viewDays)
     const todayStr = new Date().toISOString().split('T')[0]
     const sortedDates = Object.keys(dailyData).sort()
+
+    // Get initial values for the first day (Day 0 Adjustments)
+    // We assume the simulation starts with these values in the wallets.
+    const initialPersonal = Formatter.toCents(
+      (dailyData[sortedDates[0]] ? sortedDates[0] : null) === startDateStr 
+        ? (window.store?.state.inputs.personalWalletStart || 0) 
+        : 0
+    )
+    const initialRevenue = Formatter.toCents(
+      (dailyData[sortedDates[0]] ? sortedDates[0] : null) === startDateStr 
+        ? (window.store?.state.inputs.revenueWalletStart || 0) 
+        : 0
+    )
 
     sortedDates.forEach((dateStr, index) => {
       if (dateStr > limitDateStr) return
@@ -372,12 +388,14 @@ export const Renderer = {
       if (index === 0) {
         subItems.push({
           label: 'Saldo de Abertura',
-          sub: 'Valor adicionado manualmente',
-          val: d.startBal,
+          sub: 'Configuração inicial da gestão',
+          val: d.startBal, // showing total in the list
           type: 'manual',
           dot: '#f97316',
           tag: 'INÍCIO'
         })
+        creditoPessoal += initialPersonal
+        creditoReceita += initialRevenue
       }
 
       const taskIncome = d.inIncomeTask ?? d.inIncome
@@ -392,7 +410,7 @@ export const Renderer = {
           dot: '#22c55e',
           tag: 'RECEBIDO'
         })
-        totalIncome += taskIncome
+        creditoReceita += taskIncome
       }
 
       if (recurringIncome > 0) {
@@ -404,7 +422,7 @@ export const Renderer = {
           dot: '#0ea5e9',
           tag: 'RECEBIDO'
         })
-        totalIncome += recurringIncome
+        creditoReceita += recurringIncome
       }
 
       if (d.inReturn > 0) {
@@ -421,7 +439,9 @@ export const Renderer = {
           dot: '#a855f7',
           tag: 'RECEBIDO'
         })
-        totalIncome += d.inReturn
+        
+        creditoPessoal += (d.inReturnPrincipal || 0)
+        creditoReceita += (d.inReturnProfit || 0)
       }
 
       if (d.isCycleEnd) {
@@ -451,7 +471,10 @@ export const Renderer = {
           tag: d.status.toUpperCase()
         })
 
-        if (realized) totalExpense += d.outWithdraw
+        if (realized) {
+            debitoPessoal += (d.outWithdrawPersonal || 0)
+            debitoReceita += (d.outWithdrawRevenue || 0)
+        }
       }
 
       if (subItems.length > 0) {
@@ -534,10 +557,51 @@ export const Renderer = {
     container.innerHTML =
       html ||
       '<p class="text-center text-slate-500 py-10">Sem eventos no período.</p>'
-    document.getElementById('timelineTotalEntries').innerText =
-      Formatter.currency(totalIncome)
-    document.getElementById('timelineTotalExits').innerText =
-      Formatter.currency(totalExpense)
+
+    const lastDateInPeriod = sortedDates.reverse().find(d => d <= limitDateStr)
+    const lastDayData = dailyData[lastDateInPeriod] || { endPersonal: 0, endRevenue: 0 }
+
+    const footerHtml = `
+      <div class="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-slate-700">
+        <div class="space-y-1">
+          <span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Entradas (Período)</span>
+          <div class="text-[10px] flex justify-between">
+            <span class="text-indigo-400">Pessoal:</span>
+            <span class="text-slate-200 font-bold font-mono">${Formatter.currency(creditoPessoal)}</span>
+          </div>
+          <div class="text-[10px] flex justify-between">
+            <span class="text-emerald-400">Receita:</span>
+            <span class="text-slate-200 font-bold font-mono">${Formatter.currency(creditoReceita)}</span>
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Saídas (Período)</span>
+          <div class="text-[10px] flex justify-between">
+            <span class="text-indigo-400">Pessoal:</span>
+            <span class="text-slate-200 font-bold font-mono">${Formatter.currency(debitoPessoal)}</span>
+          </div>
+          <div class="text-[10px] flex justify-between">
+            <span class="text-emerald-400">Receita:</span>
+            <span class="text-slate-200 font-bold font-mono">${Formatter.currency(debitoReceita)}</span>
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Saldo Final (Período)</span>
+          <div class="text-[10px] flex justify-between">
+            <span class="text-indigo-400 font-bold uppercase text-[8px]">Pessoal:</span>
+            <span class="text-indigo-400 font-bold font-mono">${Formatter.currency(lastDayData.endPersonal)}</span>
+          </div>
+          <div class="text-[10px] flex justify-between">
+            <span class="text-emerald-400 font-bold uppercase text-[8px]">Receita:</span>
+            <span class="text-emerald-400 font-bold font-mono">${Formatter.currency(lastDayData.endRevenue)}</span>
+          </div>
+        </div>
+      </div>
+    `
+    const footerContainer = document.getElementById('timelineFooter')
+    if (footerContainer) footerContainer.innerHTML = footerHtml
   },
 
   renderGoals(goals, dailyData, onRemove) {
