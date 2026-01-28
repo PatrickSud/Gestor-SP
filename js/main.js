@@ -100,7 +100,7 @@ class App {
         'commitBase',
         'search'
       ]
-      if (skip.some(s => el.id.startsWith(s))) return
+      if (skip.some(s => el.id.startsWith(s)) || el.type === 'file') return
 
       el.addEventListener('change', e => {
         const val =
@@ -176,7 +176,7 @@ class App {
       if (!el) continue
 
       if (el.type === 'checkbox') el.checked = value
-      else el.value = value
+      else if (el.type !== 'file') el.value = value
     }
 
     // Restore Toggles
