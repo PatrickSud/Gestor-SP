@@ -127,7 +127,6 @@ export const Calculator = {
     let nextWithdrawDate = '-'
     let withdrawalHistory = []
 
-    let simCycleTimer = cycleDays
     let completedReps = 0
 
     for (let d = 0; d <= simulationDays; d++) {
@@ -210,15 +209,13 @@ export const Calculator = {
         })
       }
 
-      // 4. Simulated Cycle Logic
-      if (
-        futureToggle === 'true' &&
-        completedReps < totalReps &&
-        d > 0 &&
-        d >= simStartIndex
-      ) {
-        simCycleTimer--
-        if (simCycleTimer === 0) {
+      // 4. Simulated Cycle Logic (absolute date based on simStartDate)
+      if (futureToggle === 'true' && totalReps > 0 && simStartStr != null) {
+        const expectedEndStr = Formatter.addDays(
+          simStartStr,
+          (completedReps + 1) * cycleDays
+        )
+        if (currentDayStr === expectedEndStr && completedReps < totalReps) {
           let bonusPercCur = 0
           if (currentInv >= mT1 && currentInv <= lT1) bonusPercCur = bT1
           else if (currentInv > lT1) bonusPercCur = bT2
@@ -238,9 +235,8 @@ export const Calculator = {
           simCapitalPure = activeCapPure + profitPure
 
           isCycleEnd = true
-          cycleEnds.push(currentDayStr)
+          cycleEnds.push(expectedEndStr)
           completedReps++
-          simCycleTimer = cycleDays
         }
       }
 
