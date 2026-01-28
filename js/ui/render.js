@@ -334,7 +334,7 @@ export const Renderer = {
         }
         if (isCycle)
           markers.push(
-            '<div class="w-1.5 h-1.5 rounded-full bg-violet-500"></div>'
+            '<div class="w-1.5 h-1.5 rounded-full bg-white"></div>'
           )
 
         const cell = document.createElement('div')
@@ -464,13 +464,25 @@ export const Renderer = {
       if (d.status !== 'none') {
         const realized = d.status === 'realized'
         const label = realized ? 'Saque Realizado' : 'Saque Planejado'
-        const val = realized ? d.outWithdraw : Math.floor(d.tier * 0.9)
+        const val = realized ? d.outWithdraw : (d.recommendedWallet === 'personal' ? d.tier : Math.floor(d.tier * 0.9))
         const itemType = realized ? 'withdraw-realized' : 'withdraw-planned'
         const dotColor = realized ? '#3b82f6' : '#eab308'
 
+        // Identificar Carteira
+        let walletName = ''
+        if (realized) {
+          walletName = (d.outWithdrawPersonal > 0) ? 'Carteira Pessoal' : 'Carteira de Receita'
+        } else {
+          walletName = (d.recommendedWallet === 'personal') ? 'Carteira Pessoal' : 'Carteira de Receita'
+        }
+
+        const subLabel = realized 
+          ? `Transferência concluída • ${walletName}` 
+          : `Projeção de saque • ${walletName}`
+
         subItems.push({
           label,
-          sub: realized ? 'Transferência concluída' : 'Projeção de saque',
+          sub: subLabel,
           val,
           type: itemType,
           dot: dotColor,
@@ -554,28 +566,43 @@ export const Renderer = {
                         </div>`
         })
 
-        const dayCredit =
-          (taskIncome || 0) + (recurringIncome || 0) + (d.inReturn || 0)
-        const dayDebit = d.outWithdraw || 0
-        const creditText =
-          dayCredit > 0 ? '+' + Formatter.currency(dayCredit) : '-'
-        const debitText =
-          dayDebit > 0 ? '-' + Formatter.currency(dayDebit) : '-'
-        const balanceText = Formatter.currency(d.endBal)
+        const dayCreditoPessoal = (d.inReturnPrincipal || 0) + (index === 0 ? initialPersonal : 0) + (adjPersonal > 0 ? adjPersonal : 0)
+        const dayCreditoReceita = (taskIncome || 0) + (recurringIncome || 0) + (d.inReturnProfit || 0) + (index === 0 ? initialRevenue : 0) + (adjRevenue > 0 ? adjRevenue : 0)
+        const dayDebitoPessoal = (d.outWithdrawPersonal || 0) + (adjPersonal < 0 ? Math.abs(adjPersonal) : 0)
+        const dayDebitoReceita = (d.outWithdrawRevenue || 0) + (adjRevenue < 0 ? Math.abs(adjRevenue) : 0)
+        
+        const dayTotalCredito = dayCreditoPessoal + dayCreditoReceita
+        const dayTotalDebito = dayDebitoPessoal + dayDebitoReceita
 
         html += `
-          <div class="flex justify-end gap-4 text-[10px] text-slate-400 mt-1 mb-4">
-            <div class="text-right">
-              <div class="uppercase tracking-wide text-[9px] text-emerald-400">Total Crédito</div>
-              <div class="font-mono">${creditText}</div>
+          <div class="bg-slate-800/30 border border-slate-700/50 rounded-lg p-2 mt-2 mb-4">
+            <!-- Resumo Geral -->
+            <div class="flex justify-between items-center text-[10px] pb-2 border-b border-slate-700/30 mb-2">
+              <span class="text-slate-500 font-bold uppercase tracking-wider">Fechamento do Dia</span>
+              <div class="flex gap-3">
+                <span class="text-emerald-400 font-bold font-mono">+${Formatter.currency(dayTotalCredito)}</span>
+                <span class="text-red-400 font-bold font-mono">-${Formatter.currency(dayTotalDebito)}</span>
+                <span class="text-white font-bold font-mono">${Formatter.currency(d.endBal)}</span>
+              </div>
             </div>
-            <div class="text-right">
-              <div class="uppercase tracking-wide text-[9px] text-red-400">Total Débito</div>
-              <div class="font-mono">${debitText}</div>
-            </div>
-            <div class="text-right">
-              <div class="uppercase tracking-wide text-[9px] text-slate-400">Saldo</div>
-              <div class="font-mono text-slate-100">${balanceText}</div>
+            
+            <!-- Detalhamento por Carteira -->
+            <div class="grid grid-cols-3 gap-3 text-[9px]">
+              <div class="space-y-1">
+                <div class="text-slate-500 uppercase font-bold text-[8px] mb-1">Entradas</div>
+                <div class="flex justify-between text-indigo-400"><span>Pes:</span><span class="font-mono">+${Formatter.currency(dayCreditoPessoal)}</span></div>
+                <div class="flex justify-between text-emerald-400"><span>Rec:</span><span class="font-mono">+${Formatter.currency(dayCreditoReceita)}</span></div>
+              </div>
+              <div class="space-y-1">
+                <div class="text-slate-500 uppercase font-bold text-[8px] mb-1">Saídas</div>
+                <div class="flex justify-between text-indigo-400"><span>Pes:</span><span class="font-mono">-${Formatter.currency(dayDebitoPessoal)}</span></div>
+                <div class="flex justify-between text-emerald-400"><span>Rec:</span><span class="font-mono">-${Formatter.currency(dayDebitoReceita)}</span></div>
+              </div>
+              <div class="space-y-1 border-l border-slate-700/30 pl-2">
+                <div class="text-slate-500 uppercase font-bold text-[8px] mb-1">Saldo Final</div>
+                <div class="flex justify-between text-indigo-400"><span>Pes:</span><span class="font-mono">${Formatter.currency(d.endPersonal)}</span></div>
+                <div class="flex justify-between text-emerald-400"><span>Rec:</span><span class="font-mono">${Formatter.currency(d.endRevenue)}</span></div>
+              </div>
             </div>
           </div>`
       }
