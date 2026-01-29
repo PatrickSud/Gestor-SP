@@ -676,7 +676,13 @@
                 <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-lg flex flex-col max-h-[400px]">
                     <div class="p-3 border-b border-slate-700 bg-slate-800 flex justify-between items-center">
                         <h4 class="text-xs font-bold text-slate-300 uppercase">Detalhamento Financeiro</h4>
-                        <div class="flex gap-2">
+                        <div class="flex gap-2 items-center">
+                            <button onclick="app.openExportPeriodModal()"
+                                class="text-[10px] bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded transition-colors border border-indigo-500 font-bold flex items-center gap-1"
+                                title="Configurar período de exportação">
+                                <i class="fas fa-calendar-alt"></i> Período
+                            </button>
+                            <div class="h-6 w-px bg-slate-600"></div>
                             <button onclick="app.exportToPDF()"
                                 class="text-[10px] bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded transition-colors border border-red-500 font-bold flex items-center gap-1">
                                 <i class="fas fa-file-pdf"></i> PDF
@@ -817,6 +823,80 @@
                 Sistema</h3>
             <div id="alertsList" class="space-y-3 mt-4 max-h-[300px] overflow-y-auto custom-scrollbar">
                 <p class="text-xs text-slate-500 text-center italic">Nenhum alerta pendente</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Period Modal -->
+    <div id="exportPeriodModal" class="fixed inset-0 z-[70] hidden modal-overlay flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl max-w-md w-full p-6 relative">
+            <button onclick="app.closeModal('exportPeriodModal')"
+                class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
+            
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 bg-indigo-500/20 text-indigo-400 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-calendar-alt text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Período de Exportação</h3>
+                    <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Selecione o intervalo de dados</p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <!-- Opções Rápidas -->
+                <div>
+                    <label class="text-[10px] text-slate-400 font-bold uppercase mb-2 block">Períodos Rápidos</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="app.setExportPeriod('all')" 
+                            class="export-period-btn py-2 px-3 bg-slate-700 hover:bg-slate-600 text-white text-xs rounded-lg transition-colors border border-slate-600">
+                            <i class="fas fa-infinity mr-1"></i> Tudo
+                        </button>
+                        <button onclick="app.setExportPeriod('7')" 
+                            class="export-period-btn py-2 px-3 bg-slate-700 hover:bg-slate-600 text-white text-xs rounded-lg transition-colors border border-slate-600">
+                            <i class="fas fa-calendar-week mr-1"></i> 7 Dias
+                        </button>
+                        <button onclick="app.setExportPeriod('30')" 
+                            class="export-period-btn py-2 px-3 bg-slate-700 hover:bg-slate-600 text-white text-xs rounded-lg transition-colors border border-slate-600">
+                            <i class="fas fa-calendar-day mr-1"></i> 30 Dias
+                        </button>
+                        <button onclick="app.setExportPeriod('90')" 
+                            class="export-period-btn py-2 px-3 bg-slate-700 hover:bg-slate-600 text-white text-xs rounded-lg transition-colors border border-slate-600">
+                            <i class="fas fa-calendar mr-1"></i> 90 Dias
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Período Personalizado -->
+                <div class="border-t border-slate-700 pt-4">
+                    <label class="text-[10px] text-slate-400 font-bold uppercase mb-2 block">
+                        <i class="fas fa-sliders-h mr-1"></i> Período Personalizado
+                    </label>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-[9px] text-slate-500 font-bold uppercase mb-1 block">Data Inicial</label>
+                            <input type="date" id="exportStartDate"
+                                class="custom-input w-full rounded-lg py-2 px-3 text-xs font-bold text-slate-200 border border-slate-700 bg-slate-900/50">
+                        </div>
+                        <div>
+                            <label class="text-[9px] text-slate-500 font-bold uppercase mb-1 block">Data Final</label>
+                            <input type="date" id="exportEndDate"
+                                class="custom-input w-full rounded-lg py-2 px-3 text-xs font-bold text-slate-200 border border-slate-700 bg-slate-900/50">
+                        </div>
+                        <button onclick="app.setExportPeriod('custom')"
+                            class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition-colors">
+                            <i class="fas fa-check mr-1"></i> Aplicar Período Personalizado
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status Atual -->
+                <div class="bg-slate-900/50 rounded-lg p-3 border border-slate-700">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] text-slate-500 font-bold uppercase">Período Atual:</span>
+                        <span id="currentExportPeriod" class="text-xs font-bold text-indigo-400">Tudo</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

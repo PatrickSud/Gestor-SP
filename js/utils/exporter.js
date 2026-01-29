@@ -56,15 +56,44 @@ export const Exporter = {
       
       yPos += 10
 
-      // Summary boxes
-      const summaryData = [
+      // Summary boxes - Primeira linha (3 cards)
+      const summaryDataRow1 = [
         { label: 'Lucro Líquido', value: results.netProfit, color: accentColor },
+        { label: 'Renda / Extras', value: results.totalIncomeCents || 0, color: [14, 165, 233] }, // Sky blue
+        { label: 'Lucro Invest.', value: results.totalInvProfitCents || 0, color: [168, 85, 247] } // Purple
+      ]
+
+      summaryDataRow1.forEach((item, index) => {
+        const xPos = 15 + (index * 63)
+        
+        // Box background
+        doc.setFillColor(248, 250, 252)
+        doc.roundedRect(xPos, yPos, 60, 25, 3, 3, 'F')
+        
+        // Label
+        doc.setFontSize(8)
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(100, 116, 139)
+        doc.text(item.label, xPos + 30, yPos + 7, { align: 'center' })
+        
+        // Value
+        doc.setFontSize(12)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(...item.color)
+        const displayValue = this.formatCurrency(item.value)
+        doc.text(displayValue, xPos + 30, yPos + 18, { align: 'center' })
+      })
+
+      yPos += 30
+
+      // Summary boxes - Segunda linha (2 cards)
+      const summaryDataRow2 = [
         { label: 'ROI', value: `${results.roi.toFixed(1)}%`, color: primaryColor, isPercentage: true },
         { label: 'Total Sacado', value: results.totalWithdrawn, color: [59, 130, 246] }
       ]
 
-      summaryData.forEach((item, index) => {
-        const xPos = 15 + (index * 63)
+      summaryDataRow2.forEach((item, index) => {
+        const xPos = 15 + (index * 63) + 31.5 // Centralizar 2 cards
         
         // Box background
         doc.setFillColor(248, 250, 252)
@@ -96,45 +125,86 @@ export const Exporter = {
       
       yPos += 5
 
-      // Prepare table data
+      // Prepare table data and check if there are any investments
       const tableData = []
       const sortedDates = Object.keys(dailyData).sort()
+      let hasInvestments = false
       
       sortedDates.forEach(date => {
         const d = dailyData[date]
-        tableData.push([
-          Formatter.dateDisplay(date),
-          this.formatCurrency(d.startBal),
-          this.formatCurrency(d.inReturn + d.inIncome),
-          this.formatCurrency(d.outWithdraw),
-          this.formatCurrency(d.endBal)
-        ])
+        // Check if there are any investments in the period
+        if (d.outInvest && d.outInvest > 0) {
+          hasInvestments = true
+        }
       })
+      
+      // Build table rows
+      sortedDates.forEach(date => {
+        const d = dailyData[date]
+        const row = [
+          Formatter.dateDisplay(date),
+          this.formatCurrency(d.inReturn || 0),
+          this.formatCurrency(d.inIncome || 0)
+        ]
+        
+        // Add investment column only if there are investments
+        if (hasInvestments) {
+          row.push(this.formatCurrency(d.outInvest || 0))
+        }
+        
+        row.push(
+          this.formatCurrency(d.outWithdraw || 0),
+          this.formatCurrency(d.endPersonal || 0),
+          this.formatCurrency(d.endRevenue || 0)
+        )
+        
+        tableData.push(row)
+      })
+
+      // Build headers dynamically
+      const headers = ['Data', 'Retornos', 'Renda']
+      
+      if (hasInvestments) {
+        headers.push('Aportes')
+      }
+      
+      headers.push('Saques', 'Saldo Pessoal', 'Saldo Receita')
+
+      // Build column styles dynamically
+      const columnStyles = {
+        0: { halign: 'center', cellWidth: 22 } // Data
+      }
+      
+      let colIndex = 1
+      columnStyles[colIndex++] = { halign: 'right', cellWidth: hasInvestments ? 20 : 25 } // Retornos
+      columnStyles[colIndex++] = { halign: 'right', cellWidth: hasInvestments ? 20 : 25 } // Renda
+      
+      if (hasInvestments) {
+        columnStyles[colIndex++] = { halign: 'right', cellWidth: 20 } // Aportes
+      }
+      
+      columnStyles[colIndex++] = { halign: 'right', cellWidth: hasInvestments ? 20 : 25 } // Saques
+      columnStyles[colIndex++] = { halign: 'right', cellWidth: hasInvestments ? 25 : 30, fontStyle: 'bold' } // Saldo Pessoal
+      columnStyles[colIndex] = { halign: 'right', cellWidth: hasInvestments ? 25 : 30, fontStyle: 'bold' } // Saldo Receita
 
       // Generate table using autoTable
       doc.autoTable({
         startY: yPos,
-        head: [['Data', 'Saldo Inicial', 'Entradas', 'Saídas', 'Saldo Final']],
+        head: [headers],
         body: tableData,
         theme: 'striped',
         headStyles: {
           fillColor: [59, 130, 246],
           textColor: [255, 255, 255],
           fontStyle: 'bold',
-          fontSize: 9,
+          fontSize: 8,
           halign: 'center'
         },
         bodyStyles: {
-          fontSize: 8,
+          fontSize: 7,
           textColor: [51, 65, 85]
         },
-        columnStyles: {
-          0: { halign: 'center', cellWidth: 30 },
-          1: { halign: 'right', cellWidth: 35 },
-          2: { halign: 'right', cellWidth: 35 },
-          3: { halign: 'right', cellWidth: 35 },
-          4: { halign: 'right', cellWidth: 35, fontStyle: 'bold' }
-        },
+        columnStyles: columnStyles,
         alternateRowStyles: {
           fillColor: [248, 250, 252]
         },
@@ -182,33 +252,56 @@ export const Exporter = {
       // Prepare data for Excel
       const excelData = []
       const sortedDates = Object.keys(dailyData).sort()
+      
+      // Check if there are any investments
+      let hasInvestments = false
+      sortedDates.forEach(date => {
+        const d = dailyData[date]
+        if (d.outInvest && d.outInvest > 0) {
+          hasInvestments = true
+        }
+      })
 
       sortedDates.forEach(date => {
         const d = dailyData[date]
-        excelData.push({
+        const row = {
           'Data': Formatter.dateDisplay(date),
-          'Saldo Inicial': this.formatCurrencyForExcel(d.startBal),
-          'Retornos': this.formatCurrencyForExcel(d.inReturn),
-          'Renda': this.formatCurrencyForExcel(d.inIncome),
-          'Entradas Total': this.formatCurrencyForExcel(d.inReturn + d.inIncome),
-          'Saques': this.formatCurrencyForExcel(d.outWithdraw),
-          'Saldo Final': this.formatCurrencyForExcel(d.endBal)
-        })
+          'Retornos': this.formatCurrencyForExcel(d.inReturn || 0),
+          'Renda': this.formatCurrencyForExcel(d.inIncome || 0)
+        }
+        
+        // Add investment column only if there are investments
+        if (hasInvestments) {
+          row['Aportes'] = this.formatCurrencyForExcel(d.outInvest || 0)
+        }
+        
+        row['Saques'] = this.formatCurrencyForExcel(d.outWithdraw || 0)
+        row['Saldo Pessoal'] = this.formatCurrencyForExcel(d.endPersonal || 0)
+        row['Saldo Receita'] = this.formatCurrencyForExcel(d.endRevenue || 0)
+        
+        excelData.push(row)
       })
 
       // Create worksheet from data
       const ws = XLSX.utils.json_to_sheet(excelData)
 
-      // Set column widths
+      // Set column widths dynamically
       const colWidths = [
         { wch: 12 }, // Data
-        { wch: 15 }, // Saldo Inicial
         { wch: 12 }, // Retornos
-        { wch: 12 }, // Renda
-        { wch: 15 }, // Entradas Total
-        { wch: 12 }, // Saques
-        { wch: 15 }  // Saldo Final
+        { wch: 12 }  // Renda
       ]
+      
+      if (hasInvestments) {
+        colWidths.push({ wch: 12 }) // Aportes
+      }
+      
+      colWidths.push(
+        { wch: 12 }, // Saques
+        { wch: 15 }, // Saldo Pessoal
+        { wch: 15 }  // Saldo Receita
+      )
+      
       ws['!cols'] = colWidths
 
       // Create workbook
