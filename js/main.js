@@ -4,6 +4,7 @@ import { Calculator } from './core/calculator.js'
 import { Renderer } from './ui/render.js'
 import { ChartManager } from './ui/chart.js'
 import { authService } from './auth-service.js'
+import { Exporter } from './utils/exporter.js'
 
 /**
  * Main Application Controller
@@ -1200,6 +1201,37 @@ class App {
     )
   }
 
+  exportToPDF() {
+    const results = store.state.results
+    const dailyData = store.state.dailyData
+    
+    if (!results || !dailyData) {
+      return Renderer.toast('Nenhum dado disponível para exportação', 'error')
+    }
+
+    const success = Exporter.generatePDF(results, dailyData)
+    if (success) {
+      Renderer.toast('Relatório PDF gerado com sucesso!', 'success')
+    } else {
+      Renderer.toast('Erro ao gerar PDF. Verifique o console.', 'error')
+    }
+  }
+
+  exportToExcel() {
+    const dailyData = store.state.dailyData
+    
+    if (!dailyData || Object.keys(dailyData).length === 0) {
+      return Renderer.toast('Nenhum dado disponível para exportação', 'error')
+    }
+
+    const success = Exporter.generateExcel(dailyData)
+    if (success) {
+      Renderer.toast('Planilha Excel gerada com sucesso!', 'success')
+    } else {
+      Renderer.toast('Erro ao gerar Excel. Verifique o console.', 'error')
+    }
+  }
+
   exportToCSV() {
     const dailyData = store.state.dailyData
     let csv = 'Data,Saldo Inicial,Retorno,Renda,Aporte,Saque,Saldo Final\n'
@@ -1220,6 +1252,7 @@ class App {
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
+    Renderer.toast('Arquivo CSV exportado com sucesso!', 'success')
   }
 }
 

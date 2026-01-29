@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Exportação - Gestor SP</title>
+    
+    <!-- Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+        .test-section {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        .success {
+            background: #10b981;
+            color: white;
+        }
+        .error {
+            background: #ef4444;
+            color: white;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .pdf-btn { background: #dc2626; }
+        .pdf-btn:hover { background: #b91c1c; }
+        .excel-btn { background: #10b981; }
+        .excel-btn:hover { background: #059669; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Teste de Bibliotecas de Exportação</h1>
+    
+    <div class="test-section">
+        <h2>Status das Bibliotecas</h2>
+        <p>jsPDF: <span id="jspdf-status" class="status">Verificando...</span></p>
+        <p>jsPDF-AutoTable: <span id="autotable-status" class="status">Verificando...</span></p>
+        <p>SheetJS (XLSX): <span id="xlsx-status" class="status">Verificando...</span></p>
+    </div>
+    
+    <div class="test-section">
+        <h2>Testes de Exportação</h2>
+        <p>Clique nos botões abaixo para testar a geração de arquivos:</p>
+        <button class="pdf-btn" onclick="testPDF()">📄 Testar PDF</button>
+        <button class="excel-btn" onclick="testExcel()">📊 Testar Excel</button>
+        <div id="test-result" style="margin-top: 15px; padding: 10px; border-radius: 4px;"></div>
+    </div>
+
+    <script>
+        // Check library loading
+        window.addEventListener('load', () => {
+            // Check jsPDF
+            const jspdfEl = document.getElementById('jspdf-status');
+            if (typeof window.jspdf !== 'undefined') {
+                jspdfEl.textContent = '✓ Carregado';
+                jspdfEl.className = 'status success';
+            } else {
+                jspdfEl.textContent = '✗ Não carregado';
+                jspdfEl.className = 'status error';
+            }
+
+            // Check AutoTable
+            const autotableEl = document.getElementById('autotable-status');
+            if (typeof window.jspdf !== 'undefined' && window.jspdf.jsPDF.prototype.autoTable) {
+                autotableEl.textContent = '✓ Carregado';
+                autotableEl.className = 'status success';
+            } else {
+                autotableEl.textContent = '✗ Não carregado';
+                autotableEl.className = 'status error';
+            }
+
+            // Check XLSX
+            const xlsxEl = document.getElementById('xlsx-status');
+            if (typeof XLSX !== 'undefined') {
+                xlsxEl.textContent = '✓ Carregado';
+                xlsxEl.className = 'status success';
+            } else {
+                xlsxEl.textContent = '✗ Não carregado';
+                xlsxEl.className = 'status error';
+            }
+        });
+
+        function testPDF() {
+            const resultEl = document.getElementById('test-result');
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                // Add title
+                doc.setFontSize(20);
+                doc.text('Teste de PDF - Gestor SP', 105, 20, { align: 'center' });
+
+                // Add date
+                doc.setFontSize(12);
+                doc.text(`Data: ${new Date().toLocaleString('pt-BR')}`, 105, 35, { align: 'center' });
+
+                // Add sample data
+                doc.setFontSize(14);
+                doc.text('Dados de Teste', 20, 50);
+
+                // Create table
+                doc.autoTable({
+                    startY: 60,
+                    head: [['Data', 'Saldo Inicial', 'Entradas', 'Saídas', 'Saldo Final']],
+                    body: [
+                        ['01/01/2026', 'R$ 1.000,00', 'R$ 500,00', 'R$ 200,00', 'R$ 1.300,00'],
+                        ['02/01/2026', 'R$ 1.300,00', 'R$ 300,00', 'R$ 100,00', 'R$ 1.500,00'],
+                        ['03/01/2026', 'R$ 1.500,00', 'R$ 400,00', 'R$ 150,00', 'R$ 1.750,00']
+                    ],
+                    theme: 'striped',
+                    headStyles: {
+                        fillColor: [59, 130, 246],
+                        textColor: [255, 255, 255],
+                        fontStyle: 'bold'
+                    }
+                });
+
+                // Save
+                doc.save('teste_gestor_sp.pdf');
+
+                resultEl.style.background = '#10b981';
+                resultEl.style.color = 'white';
+                resultEl.textContent = '✓ PDF gerado com sucesso! Verifique seus downloads.';
+            } catch (error) {
+                resultEl.style.background = '#ef4444';
+                resultEl.style.color = 'white';
+                resultEl.textContent = `✗ Erro ao gerar PDF: ${error.message}`;
+                console.error(error);
+            }
+        }
+
+        function testExcel() {
+            const resultEl = document.getElementById('test-result');
+            try {
+                // Sample data
+                const data = [
+                    { 'Data': '01/01/2026', 'Saldo Inicial': 'R$ 1.000,00', 'Entradas': 'R$ 500,00', 'Saídas': 'R$ 200,00', 'Saldo Final': 'R$ 1.300,00' },
+                    { 'Data': '02/01/2026', 'Saldo Inicial': 'R$ 1.300,00', 'Entradas': 'R$ 300,00', 'Saídas': 'R$ 100,00', 'Saldo Final': 'R$ 1.500,00' },
+                    { 'Data': '03/01/2026', 'Saldo Inicial': 'R$ 1.500,00', 'Entradas': 'R$ 400,00', 'Saídas': 'R$ 150,00', 'Saldo Final': 'R$ 1.750,00' }
+                ];
+
+                // Create worksheet
+                const ws = XLSX.utils.json_to_sheet(data);
+
+                // Set column widths
+                ws['!cols'] = [
+                    { wch: 12 },
+                    { wch: 15 },
+                    { wch: 12 },
+                    { wch: 12 },
+                    { wch: 15 }
+                ];
+
+                // Create workbook
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Teste');
+
+                // Save
+                XLSX.writeFile(wb, 'teste_gestor_sp.xlsx');
+
+                resultEl.style.background = '#10b981';
+                resultEl.style.color = 'white';
+                resultEl.textContent = '✓ Excel gerado com sucesso! Verifique seus downloads.';
+            } catch (error) {
+                resultEl.style.background = '#ef4444';
+                resultEl.style.color = 'white';
+                resultEl.textContent = `✗ Erro ao gerar Excel: ${error.message}`;
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
