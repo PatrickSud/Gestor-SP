@@ -35,6 +35,9 @@ class App {
       // Set up event listeners
       this.setupEventListeners()
 
+      // Check notification permission
+      this.checkNotificationPermission()
+
       Renderer.toast('Sistema inicializado com sucesso', 'success')
     } catch (error) {
       console.error('Erro na inicialização do App:', error)
@@ -91,6 +94,9 @@ class App {
       Renderer.renderAlerts(store.state.portfolio)
 
       Renderer.renderSimulationSummary(results.results, store.state.inputs, results.cycleEnds)
+
+      // Local Notification for Withdrawal Day
+      this.checkWithdrawalNotification(results.results)
 
       if (save) store.saveToStorage()
     }
@@ -176,6 +182,51 @@ class App {
     const importInp = document.getElementById('importFile')
     if (importInp) {
       importInp.onchange = e => this.importBackup(e.target.files[0])
+    }
+  }
+
+  // --- Push Notification Methods ---
+  checkNotificationPermission() {
+    const btn = document.getElementById('pushNotificationBtn')
+    if (!btn) return
+
+    if (Notification.permission === 'granted') {
+      btn.classList.add('hidden')
+    } else {
+      btn.classList.remove('hidden')
+    }
+  }
+
+  async requestNotificationPermission() {
+    try {
+      const permission = await Notification.requestPermission()
+      if (permission === 'granted') {
+        const btn = document.getElementById('pushNotificationBtn')
+        if (btn) btn.classList.add('hidden')
+        Renderer.toast('Notificações ativadas com sucesso!', 'success')
+      } else {
+        Renderer.toast('Permissão de notificação negada.', 'warning')
+      }
+    } catch (error) {
+      console.error('Erro ao pedir permissão:', error)
+      Renderer.toast('Erro ao configurar notificações.', 'error')
+    }
+  }
+
+  checkWithdrawalNotification(results) {
+    if (Notification.permission !== 'granted' || !results.nextWithdrawDate) return
+
+    const today = new Date().toISOString().split('T')[0]
+    if (results.nextWithdrawDate === today) {
+      // Check if we already notified today to avoid spam
+      const lastNotify = localStorage.getItem('lastWithdrawNotify')
+      if (lastNotify !== today) {
+        new Notification('💰 Gestor SP: Dia de Saque!', {
+          body: `Hoje é dia de saque estimado de ${Formatter.currency(results.nextWithdraw)}. Acesse o app para confirmar!`,
+          icon: 'assets/icons/icon-192x192.png'
+        })
+        localStorage.setItem('lastWithdrawNotify', today)
+      }
     }
   }
 
