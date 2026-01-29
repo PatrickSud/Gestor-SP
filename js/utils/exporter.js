@@ -204,22 +204,22 @@ export const Exporter = {
       
       headers.push('Saques', 'Saldo Pessoal', 'Saldo Receita')
 
-      // Build column styles dynamically
+      // Build column styles with semantic colors for each category
       const columnStyles = {
-        0: { halign: 'center', cellWidth: 22 } // Data
+        0: { halign: 'center', cellWidth: 22, textColor: [100, 116, 139] } // Data (Slate)
       }
       
       let colIndex = 1
-      columnStyles[colIndex++] = { halign: 'right', cellWidth: hasInvestments ? 20 : 25 } // Retornos
-      columnStyles[colIndex++] = { halign: 'right', cellWidth: hasInvestments ? 20 : 25 } // Renda
+      columnStyles[colIndex++] = { halign: 'right', cellWidth: hasInvestments ? 20 : 25, textColor: [79, 70, 229] } // Retornos (Indigo)
+      columnStyles[colIndex++] = { halign: 'right', cellWidth: hasInvestments ? 20 : 25, textColor: [2, 132, 199] } // Renda (Sky)
       
       if (hasInvestments) {
-        columnStyles[colIndex++] = { halign: 'right', cellWidth: 20 } // Aportes
+        columnStyles[colIndex++] = { halign: 'right', cellWidth: 20, textColor: [71, 85, 105] } // Aportes (Slate)
       }
       
-      columnStyles[colIndex++] = { halign: 'right', cellWidth: hasInvestments ? 20 : 25 } // Saques
-      columnStyles[colIndex++] = { halign: 'right', cellWidth: hasInvestments ? 25 : 30, fontStyle: 'bold' } // Saldo Pessoal
-      columnStyles[colIndex] = { halign: 'right', cellWidth: hasInvestments ? 25 : 30, fontStyle: 'bold' } // Saldo Receita
+      columnStyles[colIndex++] = { halign: 'right', cellWidth: hasInvestments ? 20 : 25, textColor: [185, 28, 28] } // Saques (Red)
+      columnStyles[colIndex++] = { halign: 'right', cellWidth: hasInvestments ? 25 : 30, fontStyle: 'bold', textColor: [5, 150, 105] } // Saldo Pessoal (Emerald)
+      columnStyles[colIndex] = { halign: 'right', cellWidth: hasInvestments ? 25 : 30, fontStyle: 'bold', textColor: [37, 99, 235] } // Saldo Receita (Blue)
 
       // Generate table using autoTable
       doc.autoTable({
@@ -228,21 +228,37 @@ export const Exporter = {
         body: tableData,
         theme: 'striped',
         headStyles: {
-          fillColor: [59, 130, 246],
+          fillColor: [30, 41, 59], // Slate 800 for headers base
           textColor: [255, 255, 255],
           fontStyle: 'bold',
           fontSize: 8,
           halign: 'center'
         },
         bodyStyles: {
-          fontSize: 7,
-          textColor: [51, 65, 85]
+          fontSize: 7
+          // textColor is defined per column in columnStyles
         },
         columnStyles: columnStyles,
         alternateRowStyles: {
           fillColor: [248, 250, 252]
         },
-        margin: { left: 15, right: 15 }
+        margin: { left: 15, right: 15 },
+        didParseCell: function(data) {
+          // Color text for dashes (-) to keep them subtle
+          if (data.cell.text[0] === '-') {
+            data.cell.styles.textColor = [203, 213, 225]; // Slate 300
+          }
+          
+          // Apply category specific background to headers (optional but professional)
+          if (data.section === 'head' && data.column.index > 0) {
+            const colStyle = columnStyles[data.column.index];
+            if (colStyle && colStyle.textColor) {
+              // Apply a subtle background or thicker border could work, 
+              // but let's try styling the header text color specifically
+              // data.cell.styles.textColor = colStyle.textColor;
+            }
+          }
+        }
       })
 
       // Footer
