@@ -47,6 +47,7 @@ export const Exporter = {
       doc.text(`Gerado em: ${currentDate}`, 105, 30, { align: 'center' })
 
       // Summary Section
+      // Summary Section
       let yPos = 55
       
       doc.setTextColor(0, 0, 0)
@@ -56,64 +57,74 @@ export const Exporter = {
       
       yPos += 10
 
-      // Summary boxes - Primeira linha (3 cards)
-      const summaryDataRow1 = [
-        { label: 'Lucro Líquido', value: results.netProfit, color: accentColor },
-        { label: 'Renda / Extras', value: results.totalIncomeCents || 0, color: [14, 165, 233] }, // Sky blue
-        { label: 'Lucro Invest.', value: results.totalInvProfitCents || 0, color: [168, 85, 247] } // Purple
-      ]
+      // Calculate summary for the selected period
+      const dates = Object.keys(dailyData).sort()
+      const filteredRes = {
+        income: dates.reduce((acc, d) => acc + (dailyData[d].inIncome || 0), 0),
+        invest: dates.reduce((acc, d) => acc + (dailyData[d].inReturnProfit || 0) + (dailyData[d].outReinvest || 0), 0),
+        withdraw: dates.reduce((acc, d) => acc + (dailyData[d].outWithdraw || 0), 0)
+      }
+      filteredRes.net = filteredRes.income + filteredRes.invest
 
-      summaryDataRow1.forEach((item, index) => {
-        const xPos = 15 + (index * 63)
-        
-        // Box background
-        doc.setFillColor(248, 250, 252)
-        doc.roundedRect(xPos, yPos, 60, 25, 3, 3, 'F')
-        
-        // Label
-        doc.setFontSize(8)
-        doc.setFont('helvetica', 'normal')
-        doc.setTextColor(100, 116, 139)
-        doc.text(item.label, xPos + 30, yPos + 7, { align: 'center' })
-        
-        // Value
-        doc.setFontSize(12)
-        doc.setFont('helvetica', 'bold')
-        doc.setTextColor(...item.color)
-        const displayValue = this.formatCurrency(item.value)
-        doc.text(displayValue, xPos + 30, yPos + 18, { align: 'center' })
-      })
+      // Summary boxes config - 3 columns perfectly centered (10mm margins, 5mm spacing)
+      const boxWidth = 60
+      const spacing = 5
+      const startX = 10
 
-      yPos += 30
+      // 1. Lucro Líquido Block
+      doc.setFillColor(248, 250, 252)
+      doc.roundedRect(startX, yPos, boxWidth, 25, 3, 3, 'F')
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(100, 116, 139)
+      doc.text('Lucro Líquido', startX + boxWidth/2, yPos + 7, { align: 'center' })
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(...accentColor)
+      doc.text(this.formatCurrency(filteredRes.net), startX + boxWidth/2, yPos + 18, { align: 'center' })
 
-      // Summary boxes - Segunda linha (2 cards)
-      const summaryDataRow2 = [
-        { label: 'ROI', value: `${results.roi.toFixed(1)}%`, color: primaryColor, isPercentage: true },
-        { label: 'Total Sacado', value: results.totalWithdrawn, color: [59, 130, 246] }
-      ]
+      // 2. Composição Block (Renda + Invest)
+      const x2 = startX + boxWidth + spacing
+      doc.setFillColor(248, 250, 252)
+      doc.roundedRect(x2, yPos, boxWidth, 25, 3, 3, 'F')
+      
+      // Renda Part
+      doc.setFontSize(7)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(100, 116, 139)
+      doc.text('Renda / Extras', x2 + boxWidth/2, yPos + 5.5, { align: 'center' })
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(14, 165, 233)
+      doc.text(this.formatCurrency(filteredRes.income), x2 + boxWidth/2, yPos + 10.5, { align: 'center' })
 
-      summaryDataRow2.forEach((item, index) => {
-        const xPos = 15 + (index * 63) + 31.5 // Centralizar 2 cards
-        
-        // Box background
-        doc.setFillColor(248, 250, 252)
-        doc.roundedRect(xPos, yPos, 60, 25, 3, 3, 'F')
-        
-        // Label
-        doc.setFontSize(8)
-        doc.setFont('helvetica', 'normal')
-        doc.setTextColor(100, 116, 139)
-        doc.text(item.label, xPos + 30, yPos + 7, { align: 'center' })
-        
-        // Value
-        doc.setFontSize(12)
-        doc.setFont('helvetica', 'bold')
-        doc.setTextColor(...item.color)
-        const displayValue = item.isPercentage 
-          ? item.value 
-          : this.formatCurrency(item.value)
-        doc.text(displayValue, xPos + 30, yPos + 18, { align: 'center' })
-      })
+      // Divider Line
+      doc.setDrawColor(226, 232, 240)
+      doc.setLineWidth(0.1)
+      doc.line(x2 + 10, yPos + 12.5, x2 + 50, yPos + 12.5)
+
+      // Invest Part
+      doc.setFontSize(7)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(100, 116, 139)
+      doc.text('Lucro Invest.', x2 + boxWidth/2, yPos + 17.5, { align: 'center' })
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(168, 85, 247)
+      doc.text(this.formatCurrency(filteredRes.invest), x2 + boxWidth/2, yPos + 22.5, { align: 'center' })
+
+      // 3. Total Sacado Block
+      const x3 = startX + (boxWidth + spacing) * 2
+      doc.setFillColor(248, 250, 252)
+      doc.roundedRect(x3, yPos, boxWidth, 25, 3, 3, 'F')
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(100, 116, 139)
+      doc.text('Total Sacado', x3 + boxWidth/2, yPos + 7, { align: 'center' })
+      doc.setFontSize(14)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(59, 130, 246)
+      doc.text(this.formatCurrency(filteredRes.withdraw), x3 + boxWidth/2, yPos + 18, { align: 'center' })
 
       yPos += 35
 

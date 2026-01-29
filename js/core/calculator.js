@@ -223,8 +223,16 @@ export const Calculator = {
       // 4. Manual Adjustments (Corrections/Transactions)
       let stepAdjustmentPersonal = 0
       let stepAdjustmentRevenue = 0
+      let stepOutInvest = 0 // Track positive adjustments as "Aportes"
+
       manualAdjustments.filter(a => a.date === currentDayStr).forEach(a => {
         const valCents = Formatter.toCents(a.amount || 0)
+        
+        // If it's a positive adjustment/transaction, count as investment/aporte
+        if (valCents > 0) {
+          stepOutInvest += valCents
+        }
+
         if (a.wallet === 'personal') {
           currentPersonalWallet += valCents
           stepAdjustmentPersonal += valCents
@@ -378,6 +386,7 @@ export const Calculator = {
         inAdjustmentPersonal: stepAdjustmentPersonal,
         inAdjustmentRevenue: stepAdjustmentRevenue,
         outReinvest: stepSimReinvest,
+        outInvest: stepOutInvest,
         outWithdraw: stepWithdraw,
         outWithdrawPersonal: stepWithdrawPersonal,
         outWithdrawRevenue: stepWithdrawRevenue,
