@@ -150,23 +150,46 @@ export const Exporter = {
       })
       
       // Build table rows
-      sortedDates.forEach(date => {
+      const lastValues = {}
+
+      sortedDates.forEach((date, rowIndex) => {
         const d = dailyData[date]
+        
+        // Valores brutos para comparação
+        const currentValues = {
+          returns: d.inReturn || 0,
+          income: d.inIncome || 0,
+          invest: d.outInvest || 0,
+          withdraw: d.outWithdraw || 0,
+          personal: d.endPersonal || 0,
+          revenue: d.endRevenue || 0
+        }
+
+        // Função auxiliar para formatar seguindo as regras do usuário
+        const formatF = (val, key) => {
+          const isZero = val === 0
+          const isRepeated = rowIndex > 0 && val === lastValues[key]
+          lastValues[key] = val // Atualiza para a próxima comparação
+          
+          if (isZero || isRepeated) return '-'
+          return this.formatCurrency(val)
+        }
+
         const row = [
           Formatter.dateDisplay(date),
-          this.formatCurrency(d.inReturn || 0),
-          this.formatCurrency(d.inIncome || 0)
+          formatF(currentValues.returns, 'returns'),
+          formatF(currentValues.income, 'income')
         ]
         
         // Add investment column only if there are investments
         if (hasInvestments) {
-          row.push(this.formatCurrency(d.outInvest || 0))
+          row.push(formatF(currentValues.invest, 'invest'))
         }
         
         row.push(
-          this.formatCurrency(d.outWithdraw || 0),
-          this.formatCurrency(d.endPersonal || 0),
-          this.formatCurrency(d.endRevenue || 0)
+          formatF(currentValues.withdraw, 'withdraw'),
+          formatF(currentValues.personal, 'personal'),
+          formatF(currentValues.revenue, 'revenue')
         )
         
         tableData.push(row)
@@ -273,22 +296,45 @@ export const Exporter = {
         }
       })
 
-      sortedDates.forEach(date => {
+      const lastValues = {}
+
+      sortedDates.forEach((date, rowIndex) => {
         const d = dailyData[date]
+
+        // Valores brutos para comparação
+        const currentValues = {
+          returns: d.inReturn || 0,
+          income: d.inIncome || 0,
+          invest: d.outInvest || 0,
+          withdraw: d.outWithdraw || 0,
+          personal: d.endPersonal || 0,
+          revenue: d.endRevenue || 0
+        }
+
+        // Função auxiliar para Excel
+        const formatExcel = (val, key) => {
+          const isZero = val === 0
+          const isRepeated = rowIndex > 0 && val === lastValues[key]
+          lastValues[key] = val
+          
+          if (isZero || isRepeated) return '-'
+          return this.formatCurrencyForExcel(val)
+        }
+
         const row = {
           'Data': Formatter.dateDisplay(date),
-          'Retornos': this.formatCurrencyForExcel(d.inReturn || 0),
-          'Renda': this.formatCurrencyForExcel(d.inIncome || 0)
+          'Retornos': formatExcel(currentValues.returns, 'returns'),
+          'Renda': formatExcel(currentValues.income, 'income')
         }
         
         // Add investment column only if there are investments
         if (hasInvestments) {
-          row['Aportes'] = this.formatCurrencyForExcel(d.outInvest || 0)
+          row['Aportes'] = formatExcel(currentValues.invest, 'invest')
         }
         
-        row['Saques'] = this.formatCurrencyForExcel(d.outWithdraw || 0)
-        row['Saldo Pessoal'] = this.formatCurrencyForExcel(d.endPersonal || 0)
-        row['Saldo Receita'] = this.formatCurrencyForExcel(d.endRevenue || 0)
+        row['Saques'] = formatExcel(currentValues.withdraw, 'withdraw')
+        row['Saldo Pessoal'] = formatExcel(currentValues.personal, 'personal')
+        row['Saldo Receita'] = formatExcel(currentValues.revenue, 'revenue')
         
         excelData.push(row)
       })
