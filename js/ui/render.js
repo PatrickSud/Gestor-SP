@@ -251,13 +251,13 @@ export const Renderer = {
         if (isSignificant) {
           html += `
                     <tr class="hover:bg-slate-700/50 border-b border-slate-700/50 transition-colors cursor-pointer" onclick="app.openDayDetails('${dateStr}')">
-                        <td class="p-2 text-slate-300 border-r border-slate-700/50 whitespace-nowrap">${Formatter.dateDisplay(dateStr)}</td>
-                        <td class="p-2 text-right text-slate-500 hidden md:table-cell col-money">${Formatter.currency(d.startBal)}</td>
+                        <td class="p-2 text-slate-200 font-bold border-r border-slate-700/50 whitespace-nowrap">${Formatter.dateDisplay(dateStr)}</td>
+                        <td class="p-2 text-right text-slate-400 hidden md:table-cell col-money font-medium">${Formatter.currency(d.startBal)}</td>
                         <td class="p-2 text-right text-emerald-400 font-bold col-money">${d.inReturn > 0 ? '+' + Formatter.currency(d.inReturn) : '-'}</td>
-                        <td class="p-2 text-right text-indigo-400 col-money">${d.inIncome > 0 ? '+' + Formatter.currency(d.inIncome) : '-'}</td>
-                        <td class="p-2 text-right text-blue-400 col-money">${d.outReinvest > d.startBal ? '-' + Formatter.currency(d.outReinvest - d.startBal) : '-'}</td>
-                        <td class="p-2 text-right text-yellow-500 col-money">${d.outWithdraw > 0 ? '-' + Formatter.currency(d.outWithdraw) : '-'}</td>
-                        <td class="p-2 text-right text-white font-bold bg-slate-800/30 border-l border-slate-700/50 col-money">${Formatter.currency(d.endBal)}</td>
+                        <td class="p-2 text-right text-indigo-400 font-bold col-money">${d.inIncome > 0 ? '+' + Formatter.currency(d.inIncome) : '-'}</td>
+                        <td class="p-2 text-right text-blue-400 font-bold col-money">${d.outReinvest > d.startBal ? '-' + Formatter.currency(d.outReinvest - d.startBal) : '-'}</td>
+                        <td class="p-2 text-right text-yellow-500 font-bold col-money">${d.outWithdraw > 0 ? '-' + Formatter.currency(d.outWithdraw) : '-'}</td>
+                        <td class="p-2 text-right text-white font-bold bg-slate-800/30 border-l border-slate-700/50 col-money text-[12px]">${Formatter.currency(d.endBal)}</td>
                     </tr>
                 `
         }

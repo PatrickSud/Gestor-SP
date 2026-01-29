@@ -440,7 +440,7 @@
                                 class="p-4 bg-slate-900/50 cursor-pointer hover:bg-slate-800 transition-colors border-b border-slate-700 group">
                                 <div class="flex justify-between items-center">
                                     <div class="flex items-center gap-2">
-                                        <i class="fas fa-chevron-down text-slate-500 transition-transform duration-300"
+                                        <i class="fas fa-chevron-down text-slate-500 transition-transform duration-300 -rotate-90"
                                             id="invChevron"></i>
                                         <h3 class="text-xs font-bold text-white uppercase tracking-wider">Carteira Ativa
                                         </h3>
@@ -459,7 +459,7 @@
                             </div>
 
                             <div id="portfolioDetails"
-                                class="p-5 space-y-4 animate-fade-in border-b border-slate-700">
+                                class="p-5 space-y-4 animate-fade-in border-b border-slate-700 hidden">
                                 <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3 shadow-inner">
                                     <input type="text" id="newInvName" placeholder="Nome do Ativo"
                                         class="custom-input w-full rounded px-3 py-2 text-xs">
@@ -696,7 +696,7 @@
                     </div>
                     <div class="overflow-auto custom-scrollbar flex-1">
                         <table class="w-full text-left border-collapse">
-                            <thead class="text-[9px] text-slate-400 bg-slate-900 uppercase font-bold sticky top-0 z-10">
+                            <thead class="text-[10px] text-slate-300 bg-slate-900 uppercase font-bold sticky top-0 z-10">
                                 <tr>
                                     <th class="p-2 border-b border-slate-700">Data</th>
                                     <th class="p-2 border-b border-slate-700 text-right hidden md:table-cell">Ant.</th>
@@ -708,7 +708,7 @@
                                 </tr>
                             </thead>
                             <tbody id="tabelaBody"
-                                class="text-[10px] font-mono text-slate-300 divide-y divide-slate-700/50"></tbody>
+                                class="text-[11px] font-medium text-slate-200 divide-y divide-slate-700/50"></tbody>
                         </table>
                     </div>
                 </div>

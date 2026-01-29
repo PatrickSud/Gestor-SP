@@ -340,7 +340,7 @@ class App {
     const chevron = document.getElementById('invChevron')
     const isHidden = content.classList.contains('hidden')
     content.classList.toggle('hidden')
-    chevron.classList.toggle('rotate-180', isHidden)
+    chevron.classList.toggle('-rotate-90', !isHidden)
   }
 
   adjustInput(id, delta) {
