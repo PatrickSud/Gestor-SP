@@ -1201,6 +1201,23 @@ class App {
     )
   }
 
+  toggleExpandSection() {
+    const section = document.getElementById('financialDetailSection')
+    const icon = document.getElementById('expandIcon')
+    
+    if (section.classList.contains('expanded-view')) {
+      section.classList.remove('expanded-view')
+      icon.classList.remove('fa-compress-alt')
+      icon.classList.add('fa-expand-alt')
+      document.body.style.overflow = '' // Restore scroll
+    } else {
+      section.classList.add('expanded-view')
+      icon.classList.remove('fa-expand-alt')
+      icon.classList.add('fa-compress-alt')
+      document.body.style.overflow = 'hidden' // Lock scroll
+    }
+  }
+
   exportToPDF() {
     const results = store.state.results
     const dailyData = store.state.dailyData

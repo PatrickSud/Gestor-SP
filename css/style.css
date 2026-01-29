@@ -401,3 +401,34 @@ select:focus {
   border-radius: 4px;
   text-transform: uppercase;
 }
+
+/* Expanded Detail View */
+.expanded-view {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-height: none !important;
+  z-index: 1000 !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  animation: modalEnter 0.3s ease-out;
+}
+
+.expanded-view .overflow-auto {
+  max-height: none !important;
+  height: calc(100vh - 60px) !important;
+}
+
+@keyframes modalEnter {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
