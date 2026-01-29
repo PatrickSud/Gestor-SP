@@ -12,12 +12,6 @@ import { Exporter } from './utils/exporter.js'
 
 class App {
   constructor() {
-    // Export period configuration
-    this.exportPeriod = {
-      type: 'all', // 'all', '7', '30', '90', 'custom'
-      startDate: null,
-      endDate: null
-    }
     this.init()
   }
 
@@ -1207,99 +1201,15 @@ class App {
     )
   }
 
-  // --- Export Period Management ---
-  openExportPeriodModal() {
-    // Set default dates
-    const today = new Date().toISOString().split('T')[0]
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-    
-    document.getElementById('exportStartDate').value = this.exportPeriod.startDate || thirtyDaysAgo
-    document.getElementById('exportEndDate').value = this.exportPeriod.endDate || today
-    
-    this.updateExportPeriodDisplay()
-    this.openModal('exportPeriodModal')
-  }
-
-  setExportPeriod(type) {
-    const today = new Date()
-    let startDate, endDate
-
-    if (type === 'all') {
-      this.exportPeriod = { type: 'all', startDate: null, endDate: null }
-      Renderer.toast('Período configurado: Todos os dados', 'success')
-    } else if (type === 'custom') {
-      startDate = document.getElementById('exportStartDate').value
-      endDate = document.getElementById('exportEndDate').value
-      
-      if (!startDate || !endDate) {
-        return Renderer.toast('Selecione as datas inicial e final', 'error')
-      }
-      
-      if (startDate > endDate) {
-        return Renderer.toast('Data inicial não pode ser maior que a final', 'error')
-      }
-      
-      this.exportPeriod = { type: 'custom', startDate, endDate }
-      Renderer.toast(`Período: ${Formatter.dateDisplay(startDate)} a ${Formatter.dateDisplay(endDate)}`, 'success')
-    } else {
-      // Quick periods (7, 30, 90 days)
-      const days = parseInt(type)
-      endDate = today.toISOString().split('T')[0]
-      startDate = new Date(today.getTime() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      
-      this.exportPeriod = { type, startDate, endDate }
-      Renderer.toast(`Período configurado: Últimos ${days} dias`, 'success')
-    }
-    
-    this.updateExportPeriodDisplay()
-    this.closeModal('exportPeriodModal')
-  }
-
-  updateExportPeriodDisplay() {
-    const display = document.getElementById('currentExportPeriod')
-    if (!display) return
-    
-    if (this.exportPeriod.type === 'all') {
-      display.textContent = 'Tudo'
-    } else if (this.exportPeriod.type === 'custom') {
-      display.textContent = `${Formatter.dateDisplay(this.exportPeriod.startDate)} a ${Formatter.dateDisplay(this.exportPeriod.endDate)}`
-    } else {
-      display.textContent = `Últimos ${this.exportPeriod.type} dias`
-    }
-  }
-
-  getFilteredDailyData() {
-    const dailyData = store.state.dailyData
-    
-    if (this.exportPeriod.type === 'all') {
-      return dailyData
-    }
-    
-    const filtered = {}
-    const { startDate, endDate } = this.exportPeriod
-    
-    Object.keys(dailyData).forEach(date => {
-      if (date >= startDate && date <= endDate) {
-        filtered[date] = dailyData[date]
-      }
-    })
-    
-    return filtered
-  }
-
   exportToPDF() {
     const results = store.state.results
-    const filteredData = this.getFilteredDailyData()
+    const dailyData = store.state.dailyData
     
-    if (!results || !filteredData) {
+    if (!results || !dailyData) {
       return Renderer.toast('Nenhum dado disponível para exportação', 'error')
     }
-    
-    if (Object.keys(filteredData).length === 0) {
-      return Renderer.toast('Nenhum dado no período selecionado', 'error')
-    }
 
-    const success = Exporter.generatePDF(results, filteredData)
+    const success = Exporter.generatePDF(results, dailyData)
     if (success) {
       Renderer.toast('Relatório PDF gerado com sucesso!', 'success')
     } else {
@@ -1308,46 +1218,18 @@ class App {
   }
 
   exportToExcel() {
-    const filteredData = this.getFilteredDailyData()
+    const dailyData = store.state.dailyData
     
-    if (!filteredData || Object.keys(filteredData).length === 0) {
+    if (!dailyData || Object.keys(dailyData).length === 0) {
       return Renderer.toast('Nenhum dado disponível para exportação', 'error')
     }
 
-    const success = Exporter.generateExcel(filteredData)
+    const success = Exporter.generateExcel(dailyData)
     if (success) {
       Renderer.toast('Planilha Excel gerada com sucesso!', 'success')
     } else {
       Renderer.toast('Erro ao gerar Excel. Verifique o console.', 'error')
     }
-  }
-
-  exportToCSV() {
-    const filteredData = this.getFilteredDailyData()
-    
-    if (!filteredData || Object.keys(filteredData).length === 0) {
-      return Renderer.toast('Nenhum dado disponível para exportação', 'error')
-    }
-    
-    let csv = 'Data,Saldo Inicial,Retorno,Renda,Aporte,Saque,Saldo Final\n'
-
-    Object.keys(filteredData)
-      .sort()
-      .forEach(date => {
-        const d = filteredData[date]
-        csv += `${date},${Formatter.fromCents(d.startBal)},${Formatter.fromCents(d.inReturn)},${Formatter.fromCents(d.inIncome)},0,${Formatter.fromCents(d.outWithdraw)},${Formatter.fromCents(d.endBal)}\n`
-      })
-
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.setAttribute('hidden', '')
-    a.setAttribute('href', url)
-    a.setAttribute('download', `gestor_sp_${store.state.currentProfileId}.csv`)
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    Renderer.toast('Arquivo CSV exportado com sucesso!', 'success')
   }
 }
 
