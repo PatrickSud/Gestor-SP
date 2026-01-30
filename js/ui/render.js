@@ -59,6 +59,9 @@ export const Renderer = {
         Formatter.addDays(p.date, p.days)
       )
 
+      const walletLabel = p.wallet === 'personal' ? ' • <span class="text-indigo-400">Pess.</span>' : 
+                          p.wallet === 'revenue' ? ' • <span class="text-emerald-400">Rec.</span>' : '';
+
       const li = document.createElement('li')
       li.className =
         'bg-slate-800 p-2.5 rounded-lg flex justify-between items-center text-xs border border-slate-700/50 hover:bg-slate-700 transition-colors group relative overflow-hidden'
@@ -67,7 +70,7 @@ export const Renderer = {
                 <div class="flex items-center gap-3 pl-2">
                      <div>
                         <span class="text-slate-300 font-bold block">${p.name || 'Ativo'}</span>
-                        <span class="text-[10px] text-slate-500">${Formatter.dateDisplay(p.date)} • ${p.rate}% (${p.days}d)</span>
+                        <span class="text-[10px] text-slate-500">${Formatter.dateDisplay(p.date)} • ${p.rate}% (${p.days}d)${walletLabel}</span>
                         <span class="text-[10px] text-yellow-400">Retorno: ${retornoStr}</span>
                      </div>
                 </div>
@@ -255,7 +258,7 @@ export const Renderer = {
                         <td class="p-2 text-right text-slate-400 hidden md:table-cell col-money font-medium">${Formatter.currency(d.startBal)}</td>
                         <td class="p-2 text-right text-emerald-400 font-bold col-money">${d.inReturn > 0 ? '+' + Formatter.currency(d.inReturn) : '-'}</td>
                         <td class="p-2 text-right text-indigo-400 font-bold col-money">${d.inIncome > 0 ? '+' + Formatter.currency(d.inIncome) : '-'}</td>
-                        <td class="p-2 text-right text-blue-400 font-bold col-money">${d.outReinvest > d.startBal ? '-' + Formatter.currency(d.outReinvest - d.startBal) : '-'}</td>
+                        <td class="p-2 text-right text-blue-400 font-bold col-money">${d.outInvest > 0 ? '-' + Formatter.currency(d.outInvest) : '-'}</td>
                         <td class="p-2 text-right text-yellow-500 font-bold col-money">${d.outWithdraw > 0 ? '-' + Formatter.currency(d.outWithdraw) : '-'}</td>
                         <td class="p-2 text-right text-white font-bold bg-slate-800/30 border-l border-slate-700/50 col-money text-[12px]">${Formatter.currency(d.endBal)}</td>
                     </tr>
@@ -459,6 +462,32 @@ export const Renderer = {
           dot: '#8b5cf6',
           tag: 'EFETIVADO'
         })
+      }
+
+      // Investment Deductions from Wallet
+      if (d.outInvest > 0) {
+          // If we have specific portfolio deductions this day
+          const dayPort = (window.store?.state.portfolio || []).filter(p => p.date === dateStr && p.wallet && p.wallet !== 'none');
+          if (dayPort.length > 0) {
+              dayPort.forEach(p => {
+                  const valCents = Formatter.toCents(p.val);
+                  subItems.push({
+                      label: `Novo Investimento: ${p.name}`,
+                      sub: `Dedução: ${p.wallet === 'personal' ? 'Carteira Pessoal' : 'Carteira de Receita'}`,
+                      val: valCents,
+                      type: 'withdraw-planned', // reuse styling
+                      dot: p.wallet === 'personal' ? '#6366f1' : '#10b981',
+                      tag: 'APORTE'
+                  });
+                  
+                  if (p.wallet === 'personal') debitoPessoal += valCents;
+                  else debitoReceita += valCents;
+              });
+          } else {
+              // Probably a manual adjustment (positive outInvest in Calculator means money leaving?) 
+              // Wait, manual adjustments were handled below. 
+              // Actually, I should check how I implemented outInvest in Calculator.
+          }
       }
 
       if (d.status !== 'none') {

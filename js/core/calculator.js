@@ -79,7 +79,12 @@ export const Calculator = {
         profit: profitCents,
         total: totalCents
       })
-      totalPortfolioVal += valCents
+
+      // Only add to initial portfolio value if it doesn't deduct from a wallet during the simulation
+      const isNewDeduction = p.wallet && p.wallet !== 'none' && p.date >= startDateStr
+      if (!isNewDeduction) {
+        totalPortfolioVal += valCents
+      }
     })
 
     const totalCentsInvested =
@@ -132,6 +137,19 @@ export const Calculator = {
       let stepTaskIncome = 0
       let stepRecurringIncome = 0
       let stepSimReinvest = 0
+      
+      // Handle investments deductions from wallet
+      let stepPortfolioDeduction = 0
+      portfolio.filter(p => p.date === currentDayStr && p.wallet && p.wallet !== 'none').forEach(p => {
+        const valCents = Formatter.toCents(p.val)
+        if (p.wallet === 'personal') {
+          currentPersonalWallet -= valCents
+        } else if (p.wallet === 'revenue') {
+          currentRevenueWallet -= valCents
+        }
+        stepPortfolioDeduction += valCents
+      })
+
       if (
         futureToggle === 'true' &&
         d === simStartIndex &&
@@ -223,7 +241,7 @@ export const Calculator = {
       // 4. Manual Adjustments (Corrections/Transactions)
       let stepAdjustmentPersonal = 0
       let stepAdjustmentRevenue = 0
-      let stepOutInvest = 0 // Track positive adjustments as "Aportes"
+      let stepOutInvest = stepPortfolioDeduction // Track portfolio deductions as well as manual "Aportes"
 
       manualAdjustments.filter(a => a.date === currentDayStr).forEach(a => {
         const valCents = Formatter.toCents(a.amount || 0)

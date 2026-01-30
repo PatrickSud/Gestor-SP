@@ -113,7 +113,7 @@ class App {
         'newInv',
         'newProfile',
         'editCurrentProfile',
-        'commitBase',
+        'commit',
         'search'
       ]
       if (skip.some(s => el.id.startsWith(s)) || el.type === 'file') return
@@ -302,12 +302,13 @@ class App {
     const date = document.getElementById('newInvDate').value
     const days = parseInt(document.getElementById('newInvDays').value)
     const rate = parseFloat(document.getElementById('newInvRate').value)
+    const wallet = document.getElementById('newInvWallet').value
 
     if (!name || isNaN(val) || !date || isNaN(days) || isNaN(rate)) {
       return Renderer.toast('Preencha todos os campos do investimento', 'error')
     }
 
-    const newInv = { id: Date.now(), name, val, date, days, rate }
+    const newInv = { id: Date.now(), name, val, date, days, rate, wallet }
     store.setState({ portfolio: [...store.state.portfolio, newInv] })
 
     // Clear inputs
@@ -986,6 +987,7 @@ class App {
     const days = parseInt(inputs.diasCiclo)
     const rate = parseFloat(inputs.taxaDiaria)
     const reps = parseInt(inputs.repeticoesCiclo)
+    const wallet = document.getElementById('commitWallet').value
 
     let portfolio = [...store.state.portfolio]
     let currentVal = capIni
@@ -998,7 +1000,8 @@ class App {
         val: parseFloat(currentVal.toFixed(2)),
         date: currentDateStr,
         days: days,
-        rate: rate
+        rate: rate,
+        wallet: wallet
       })
       const profit = currentVal * (rate / 100) * days
       currentVal += profit
