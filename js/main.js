@@ -791,14 +791,28 @@ class App {
   openTimelineModal() {
     let viewDays = parseInt(store.state.inputs.viewPeriodSelect)
     let viewStartDate = Formatter.getTodayDate()
+    const sel = store.state.inputs.viewPeriodSelect
 
-    if (store.state.inputs.viewPeriodSelect === 'custom') {
+    if (sel === 'custom') {
       viewStartDate = store.state.inputs.customViewStartDate
       const viewEndDate = store.state.inputs.customViewEndDate
       if (viewStartDate && viewEndDate) {
         viewDays = Formatter.daysBetween(viewStartDate, viewEndDate)
         if (viewDays < 1) viewDays = 1
+      } else {
+        viewDays = 30
       }
+    } else if (sel === 'month') {
+      const today = Formatter.getTodayDate()
+      const [y, m] = today.split('-').map(Number)
+      const start = `${y}-${String(m).padStart(2, '0')}-01`
+      const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate()
+      const end = `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+      viewStartDate = start
+      viewDays = Formatter.daysBetween(start, end)
+      if (viewDays < 1) viewDays = 1
+    } else if (isNaN(viewDays)) {
+      viewDays = 30
     }
 
     Renderer.renderTimeline(store.state.dailyData, viewDays, viewStartDate)

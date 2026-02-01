@@ -254,11 +254,12 @@ export const Renderer = {
 
     let html = ''
     const limitDateStr = Formatter.addDays(startDateStr, viewDays)
+    const includePast = startDateStr.endsWith('-01') && viewDays >= 28
 
     Object.keys(dailyData)
       .sort()
       .forEach(dateStr => {
-        if (dateStr < startDateStr || dateStr > limitDateStr) return
+        if ((!includePast && dateStr < startDateStr) || dateStr > limitDateStr) return
         const d = dailyData[dateStr]
         const isSignificant =
           d.status !== 'none' || d.inReturn > 0 || dateStr === limitDateStr
@@ -387,7 +388,7 @@ export const Renderer = {
     const sortedDates = Object.keys(dailyData).sort()
 
     // Filter dates to view range
-    const visibleDates = sortedDates.filter(d => d >= startDateStr && d <= limitDateStr)
+    const visibleDates = sortedDates.filter(d => d <= limitDateStr)
     
     // Calculate initial balances relative to the VIEW start date, not necessarily Data Inicio
     // If startDateStr == Data Inicio, it uses initial inputs.
