@@ -67,11 +67,11 @@ class App {
       let viewDays = parseInt(store.state.inputs.viewPeriodSelect)
 
       if (store.state.inputs.viewPeriodSelect === 'custom') {
-        viewStartDate = store.state.inputs.customViewStartDate
-        const viewEndDate = store.state.inputs.customViewEndDate
-        if (viewStartDate && viewEndDate) {
-          viewDays = Formatter.daysBetween(viewStartDate, viewEndDate)
-          // Ensure at least 1 day
+        const start = store.state.inputs.customViewStartDate || Formatter.getTodayDate()
+        const end = store.state.inputs.customViewEndDate
+        viewStartDate = start
+        if (end) {
+          viewDays = Formatter.daysBetween(start, end)
           if (viewDays < 1) viewDays = 1
         }
       }
@@ -171,7 +171,15 @@ class App {
         if (el.id === 'viewPeriodSelect') {
           const isCustom = val === 'custom'
           const customRange = document.getElementById('customDateRange')
-          if (customRange) customRange.classList.toggle('hidden', !isCustom)
+          if (customRange) {
+            if (isCustom) {
+              customRange.classList.remove('hidden')
+              customRange.classList.add('flex')
+            } else {
+              customRange.classList.add('hidden')
+              customRange.classList.remove('flex')
+            }
+          }
         }
 
         this.runCalculation() // Force immediate calculation on change
@@ -281,10 +289,14 @@ class App {
     // Restore Custom View Period Toggle
     const customRange = document.getElementById('customDateRange')
     if (customRange) {
-      customRange.classList.toggle(
-        'hidden',
-        inputs.viewPeriodSelect !== 'custom'
-      )
+      const isCustom = inputs.viewPeriodSelect === 'custom'
+      if (isCustom) {
+        customRange.classList.remove('hidden')
+        customRange.classList.add('flex')
+      } else {
+        customRange.classList.add('hidden')
+        customRange.classList.remove('flex')
+      }
     }
 
     // Restore Future Toggle Visuals

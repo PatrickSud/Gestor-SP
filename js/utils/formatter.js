@@ -46,6 +46,9 @@ export const Formatter = {
      * @param {number} days 
      */
     addDays(dateStr, days) {
+        if (!dateStr || typeof dateStr !== 'string') {
+            dateStr = Formatter.getTodayDate()
+        }
         const [y, m, d] = dateStr.split('-').map(Number);
         const date = new Date(Date.UTC(y, m - 1, d));
         date.setUTCDate(date.getUTCDate() + days);

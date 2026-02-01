@@ -122,8 +122,9 @@ class Store {
 
     this.state.currentProfileId = id
     const profile = this.state.profiles[id].data
+    const defaults = this.getInitialData().inputs
 
-    this.state.inputs = { ...profile.inputs }
+    this.state.inputs = { ...defaults, ...profile.inputs }
     this.state.portfolio = [...profile.portfolio]
     this.state.selectedWeeks = [...profile.selectedWeeks]
     this.state.goals = [...(profile.goals || [])]
@@ -205,7 +206,8 @@ class Store {
     this.state.profiles = migratedData.profiles
 
     const current = this.state.profiles[this.state.currentProfileId].data
-    this.state.inputs = { ...current.inputs }
+    const defaults = this.getInitialData().inputs
+    this.state.inputs = { ...defaults, ...current.inputs }
     this.state.portfolio = [...current.portfolio]
     this.state.selectedWeeks = [...current.selectedWeeks]
     this.state.goals = [...(current.goals || [])]
@@ -256,7 +258,8 @@ class Store {
       this.state.profiles = parsed.profiles
 
       const current = this.state.profiles[this.state.currentProfileId].data
-      this.state.inputs = { ...current.inputs }
+      const defaults = this.getInitialData().inputs
+      this.state.inputs = { ...defaults, ...current.inputs }
       this.state.portfolio = [...current.portfolio]
       this.state.selectedWeeks = [...current.selectedWeeks]
       this.state.goals = [...(current.goals || [])]
@@ -296,7 +299,8 @@ class Store {
 
       // Reload current profile
       const current = this.state.profiles[this.state.currentProfileId].data
-      this.state.inputs = { ...current.inputs }
+      const defaults = this.getInitialData().inputs
+      this.state.inputs = { ...defaults, ...current.inputs }
       this.state.portfolio = [...current.portfolio]
       this.state.selectedWeeks = [...current.selectedWeeks]
       this.state.goals = [...(current.goals || [])]
