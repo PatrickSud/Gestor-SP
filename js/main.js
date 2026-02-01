@@ -35,6 +35,9 @@ class App {
       // Set up event listeners
       this.setupEventListeners()
 
+      // Orientation handling (mobile landscape)
+      this.setupOrientationMode()
+
       // Check notification permission
       this.checkNotificationPermission()
 
@@ -223,6 +226,25 @@ class App {
     if (importInp) {
       importInp.onchange = e => this.importBackup(e.target.files[0])
     }
+  }
+
+  // --- Orientation Mode ---
+  setupOrientationMode() {
+    const mq = window.matchMedia('(orientation: landscape)')
+    const apply = () => {
+      const isLandscape =
+        typeof mq.matches === 'boolean'
+          ? mq.matches
+          : window.innerWidth > window.innerHeight
+      document.body.classList.toggle('landscape-mode', isLandscape)
+    }
+    apply()
+    if (typeof mq.addEventListener === 'function') {
+      mq.addEventListener('change', apply)
+    } else if (typeof mq.addListener === 'function') {
+      mq.addListener(apply)
+    }
+    window.addEventListener('resize', apply)
   }
 
   // --- Push Notification Methods ---

@@ -185,6 +185,17 @@
                         <i class="fas fa-sign-out-alt"></i>
                     </button>
                 </div>
+                
+                <div class="md:hidden bg-slate-800 p-3 rounded-xl border border-slate-700 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-user-circle text-slate-400"></i>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase">Perfil Atual</span>
+                        <span id="mobileCurrentProfileName" class="text-xs font-bold text-white">Padrão</span>
+                    </div>
+                    <button onclick="app.openProfileModal()" class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg">
+                        Gerenciar
+                    </button>
+                </div>
             </div>
 
 
@@ -427,7 +438,6 @@
                 <div class="flex items-center gap-2">
                     <h3 class="font-bold text-white flex items-center gap-2"><i
                             class="fas fa-chart-area text-blue-500"></i> Evolução Patrimonial</h3>
-                    <span class="text-[10px] text-slate-500 uppercase font-bold">Projeção 365 dias</span>
                 </div>
                 <button onclick="app.openTimelineModal()"
                     class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-[10px] font-bold uppercase rounded-lg border border-blue-500/30 transition-all shadow-sm">

@@ -824,6 +824,8 @@ export const Renderer = {
       })
       .join('')
     this.els.currentProfileName().innerText = profiles[currentId].name
+    const mobileNameEl = document.getElementById('mobileCurrentProfileName')
+    if (mobileNameEl) mobileNameEl.innerText = profiles[currentId].name
   },
 
   toast(message, type = 'info') {

@@ -187,6 +187,7 @@ select:focus {
 .modal-overlay {
   background-color: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(4px);
+  z-index: 1101;
 }
 
 .dashboard-card {
@@ -432,3 +433,10 @@ select:focus {
   }
 }
 
+body.landscape-mode #profileBtn {
+  display: flex !important;
+}
+
+body.landscape-mode .grid-cols-1 {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
