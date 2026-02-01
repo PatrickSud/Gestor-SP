@@ -74,6 +74,15 @@ class App {
           viewDays = Formatter.daysBetween(start, end)
           if (viewDays < 1) viewDays = 1
         }
+      } else if (store.state.inputs.viewPeriodSelect === 'month') {
+        const today = Formatter.getTodayDate()
+        const [y, m] = today.split('-').map(Number)
+        const start = `${y}-${String(m).padStart(2, '0')}-01`
+        const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate()
+        const end = `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+        viewStartDate = start
+        viewDays = Formatter.daysBetween(start, end)
+        if (viewDays < 1) viewDays = 1
       }
 
       // Update UI components
