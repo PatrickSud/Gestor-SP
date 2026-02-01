@@ -1181,12 +1181,13 @@ class App {
     const newTotal = parseFloat(newTotalStr)
     if (isNaN(newTotal)) return Renderer.toast('Valor inválido', 'error')
 
-    const currentTotal =
+    const currentTotalCents =
       walletType === 'personal'
         ? store.state.results.todayPersonalBalance || 0
         : store.state.results.todayRevenueBalance || 0
 
-    // Calculate delta
+    const currentTotal = Formatter.fromCents(currentTotalCents)
+
     const delta = parseFloat((newTotal - currentTotal).toFixed(2))
 
     if (Math.abs(delta) < 0.01)
@@ -1210,8 +1211,8 @@ class App {
   }
 
   openBalanceAdjustmentModal() {
-    const todayPersonal = store.state.results.todayPersonalBalance || 0
-    const todayRevenue = store.state.results.todayRevenueBalance || 0
+    const todayPersonal = Formatter.fromCents(store.state.results.todayPersonalBalance || 0)
+    const todayRevenue = Formatter.fromCents(store.state.results.todayRevenueBalance || 0)
 
     const html = `
       <div class="space-y-6">
