@@ -258,7 +258,7 @@ export const Renderer = {
     Object.keys(dailyData)
       .sort()
       .forEach(dateStr => {
-        if (dateStr > limitDateStr) return
+        if (dateStr < startDateStr || dateStr > limitDateStr) return
         const d = dailyData[dateStr]
         const isSignificant =
           d.status !== 'none' || d.inReturn > 0 || dateStr === limitDateStr

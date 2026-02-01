@@ -8,11 +8,16 @@ export const Exporter = {
    * Generate PDF report with financial data
    * @param {Object} results - Calculation results
    * @param {Object} dailyData - Daily financial data
+   * @param {string} startDate - Start date YYYY-MM-DD
+   * @param {string} endDate - End date YYYY-MM-DD (optional)
    */
-  generatePDF(results, dailyData) {
+  generatePDF(results, dailyData, startDate, endDate) {
     try {
       // Access jsPDF from global scope
       const { jsPDF } = window.jspdf
+
+      // Default start to today if not provided
+      if (!startDate) startDate = Formatter.getTodayDate()
 
       // Create new PDF document (A4, portrait)
       const doc = new jsPDF('p', 'mm', 'a4')
@@ -44,9 +49,13 @@ export const Exporter = {
         hour: '2-digit',
         minute: '2-digit'
       })
-      doc.text(`Gerado em: ${currentDate}`, 105, 30, { align: 'center' })
+      const periodStr = endDate
+        ? `Período: ${Formatter.dateDisplay(startDate)} a ${Formatter.dateDisplay(endDate)}`
+        : `A partir de: ${Formatter.dateDisplay(startDate)}`
 
-      // Summary Section
+      doc.text(`Gerado em: ${currentDate}`, 105, 30, { align: 'center' })
+      doc.text(periodStr, 105, 35, { align: 'center' })
+
       // Summary Section
       let yPos = 55
 
@@ -58,7 +67,11 @@ export const Exporter = {
       yPos += 10
 
       // Calculate summary for the selected period
-      const dates = Object.keys(dailyData).sort()
+      const allDates = Object.keys(dailyData).sort()
+      const dates = allDates.filter(
+        d => d >= startDate && (!endDate || d <= endDate)
+      )
+
       const filteredRes = {
         income: dates.reduce((acc, d) => acc + (dailyData[d].inIncome || 0), 0),
         invest: dates.reduce(
@@ -173,10 +186,9 @@ export const Exporter = {
 
       // Prepare table data and check if there are any investments
       const tableData = []
-      const todayStrTable = Formatter.getTodayDate()
       const sortedDates = Object.keys(dailyData)
         .sort()
-        .filter(d => d >= todayStrTable)
+        .filter(d => d >= startDate && (!endDate || d <= endDate))
       let hasInvestments = false
 
       sortedDates.forEach(date => {
@@ -360,17 +372,20 @@ export const Exporter = {
   /**
    * Generate Excel file with financial data
    * @param {Object} dailyData - Daily financial data
+   * @param {string} startDate - Start date YYYY-MM-DD
+   * @param {string} endDate - End date YYYY-MM-DD (optional)
    */
-  generateExcel(dailyData) {
+  generateExcel(dailyData, startDate, endDate) {
     try {
+      // Default start to today if not provided
+      if (!startDate) startDate = Formatter.getTodayDate()
+
       // Prepare data for Excel
       const excelData = []
-      // Start export from Today (or start of management if later)
-      const todayStr = Formatter.getTodayDate()
-      // Filter dates starting from today
+      // Filter dates starting from startDate
       const sortedDates = Object.keys(dailyData)
         .sort()
-        .filter(d => d >= todayStr)
+        .filter(d => d >= startDate && (!endDate || d <= endDate))
 
       // Check if there are any investments
       let hasInvestments = false
@@ -451,7 +466,11 @@ export const Exporter = {
       XLSX.utils.book_append_sheet(wb, ws, 'Detalhamento Financeiro')
 
       // Add summary sheet
-      const summaryData = this.prepareSummarySheet(dailyData)
+      const summaryData = this.prepareSummarySheet(
+        dailyData,
+        startDate,
+        endDate
+      )
       const wsSummary = XLSX.utils.json_to_sheet(summaryData)
       wsSummary['!cols'] = [{ wch: 25 }, { wch: 20 }]
       XLSX.utils.book_append_sheet(wb, wsSummary, 'Resumo')
@@ -472,13 +491,15 @@ export const Exporter = {
   /**
    * Prepare summary data for Excel
    * @param {Object} dailyData - Daily financial data
+   * @param {string} startDate - Start date YYYY-MM-DD
+   * @param {string} endDate - End date YYYY-MM-DD (optional)
    * @returns {Array} Summary data array
    */
-  prepareSummarySheet(dailyData) {
-    const todayStr = Formatter.getTodayDate()
+  prepareSummarySheet(dailyData, startDate, endDate) {
+    if (!startDate) startDate = Formatter.getTodayDate()
     const dates = Object.keys(dailyData)
       .sort()
-      .filter(d => d >= todayStr)
+      .filter(d => d >= startDate && (!endDate || d <= endDate))
     if (dates.length === 0) return []
 
     const firstDay = dailyData[dates[0]]

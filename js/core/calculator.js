@@ -21,6 +21,8 @@ export const Calculator = {
       dataInicio: startDateStr,
       withdrawalDaySelect,
       viewPeriodSelect,
+      customViewStartDate,
+      customViewEndDate,
       monthlyIncomeToggle,
       fixedIncomes,
       taskDailyValue,
@@ -39,7 +41,19 @@ export const Calculator = {
     if (!startDateStr) return null
 
     const targetDay = parseInt(withdrawalDaySelect)
-    const viewDays = parseInt(viewPeriodSelect)
+    let viewDays = parseInt(viewPeriodSelect)
+
+    if (
+      viewPeriodSelect === 'custom' &&
+      customViewStartDate &&
+      customViewEndDate
+    ) {
+      viewDays = Formatter.daysBetween(customViewStartDate, customViewEndDate)
+      if (viewDays < 1) viewDays = 1
+    }
+    // Fallback
+    if (isNaN(viewDays)) viewDays = 30
+
     const todayStr = Formatter.getTodayDate()
 
     // Convert to cents
@@ -111,13 +125,17 @@ export const Calculator = {
     let simCapitalPure = 0
 
     // Ensure simulation covers history up to Today + viewDays
-    const daysSinceStart = Math.max(0, Formatter.daysBetween(startDateStr, todayStr))
-    const simulationDays = Math.max(daysSinceStart + viewDays, totalReps * cycleDays + 30)
+    const daysSinceStart = Math.max(
+      0,
+      Formatter.daysBetween(startDateStr, todayStr)
+    )
+    const simulationDays = Math.max(
+      daysSinceStart + viewDays,
+      totalReps * cycleDays + 30
+    )
 
     const simStartStr =
-      futureToggle === 'true'
-        ? simStartDate || Formatter.getTodayDate()
-        : null
+      futureToggle === 'true' ? simStartDate || Formatter.getTodayDate() : null
     const simStartIndex =
       simStartStr != null
         ? Math.max(

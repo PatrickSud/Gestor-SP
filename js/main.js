@@ -62,27 +62,30 @@ class App {
       store.setResults(results.results)
       store.setDailyData(results.dailyData)
 
-      // Determine View Start Date (Default to Today for Daily Management focus)
-      const viewStartDate = Formatter.getTodayDate()
+      // Determine View Start Date
+      let viewStartDate = Formatter.getTodayDate()
+      let viewDays = parseInt(store.state.inputs.viewPeriodSelect)
+
+      if (store.state.inputs.viewPeriodSelect === 'custom') {
+        viewStartDate = store.state.inputs.customViewStartDate
+        const viewEndDate = store.state.inputs.customViewEndDate
+        if (viewStartDate && viewEndDate) {
+          viewDays = Formatter.daysBetween(viewStartDate, viewEndDate)
+          // Ensure at least 1 day
+          if (viewDays < 1) viewDays = 1
+        }
+      }
 
       // Update UI components
       Renderer.renderResults(results.results)
-      Renderer.renderTable(
-        results.dailyData,
-        parseInt(store.state.inputs.viewPeriodSelect),
-        viewStartDate
-      )
+      Renderer.renderTable(results.dailyData, viewDays, viewStartDate)
       Renderer.renderCalendar(
         viewStartDate,
         results.dailyData,
         results.cycleEnds
       )
       // Optional: Render Timeline if container exists
-      Renderer.renderTimeline(
-        results.dailyData,
-        parseInt(store.state.inputs.viewPeriodSelect),
-        viewStartDate
-      )
+      Renderer.renderTimeline(results.dailyData, viewDays, viewStartDate)
 
       Renderer.renderPortfolio(store.state.portfolio, id =>
         this.removeInvestment(id)
@@ -163,6 +166,12 @@ class App {
           document
             .getElementById('withdrawWeeklyOptions')
             .classList.toggle('hidden', val !== 'weekly')
+        }
+
+        if (el.id === 'viewPeriodSelect') {
+          const isCustom = val === 'custom'
+          const customRange = document.getElementById('customDateRange')
+          if (customRange) customRange.classList.toggle('hidden', !isCustom)
         }
 
         this.runCalculation() // Force immediate calculation on change
@@ -268,6 +277,15 @@ class App {
     document
       .getElementById('withdrawWeeklyOptions')
       .classList.toggle('hidden', inputs.withdrawStrategy !== 'weekly')
+
+    // Restore Custom View Period Toggle
+    const customRange = document.getElementById('customDateRange')
+    if (customRange) {
+      customRange.classList.toggle(
+        'hidden',
+        inputs.viewPeriodSelect !== 'custom'
+      )
+    }
 
     // Restore Future Toggle Visuals
     const futureOn = inputs.futureToggle === 'true'
@@ -728,11 +746,19 @@ class App {
   }
 
   openTimelineModal() {
-    Renderer.renderTimeline(
-      store.state.dailyData,
-      parseInt(store.state.inputs.viewPeriodSelect),
-      Formatter.getTodayDate()
-    )
+    let viewDays = parseInt(store.state.inputs.viewPeriodSelect)
+    let viewStartDate = Formatter.getTodayDate()
+
+    if (store.state.inputs.viewPeriodSelect === 'custom') {
+      viewStartDate = store.state.inputs.customViewStartDate
+      const viewEndDate = store.state.inputs.customViewEndDate
+      if (viewStartDate && viewEndDate) {
+        viewDays = Formatter.daysBetween(viewStartDate, viewEndDate)
+        if (viewDays < 1) viewDays = 1
+      }
+    }
+
+    Renderer.renderTimeline(store.state.dailyData, viewDays, viewStartDate)
     this.openModal('timelineModal')
 
     // Auto-scroll to current day
@@ -1319,7 +1345,19 @@ class App {
       return Renderer.toast('Nenhum dado disponível para exportação', 'error')
     }
 
-    const success = Exporter.generatePDF(results, dailyData)
+    // Determine Date Range
+    let startDate = Formatter.getTodayDate()
+    let endDate = null
+
+    if (store.state.inputs.viewPeriodSelect === 'custom') {
+      startDate = store.state.inputs.customViewStartDate
+      endDate = store.state.inputs.customViewEndDate
+    } else {
+      const days = parseInt(store.state.inputs.viewPeriodSelect) || 30
+      endDate = Formatter.addDays(startDate, days)
+    }
+
+    const success = Exporter.generatePDF(results, dailyData, startDate, endDate)
     if (success) {
       Renderer.toast('Relatório PDF gerado com sucesso!', 'success')
     } else {
@@ -1334,7 +1372,19 @@ class App {
       return Renderer.toast('Nenhum dado disponível para exportação', 'error')
     }
 
-    const success = Exporter.generateExcel(dailyData)
+    // Determine Date Range
+    let startDate = Formatter.getTodayDate()
+    let endDate = null
+
+    if (store.state.inputs.viewPeriodSelect === 'custom') {
+      startDate = store.state.inputs.customViewStartDate
+      endDate = store.state.inputs.customViewEndDate
+    } else {
+      const days = parseInt(store.state.inputs.viewPeriodSelect) || 30
+      endDate = Formatter.addDays(startDate, days)
+    }
+
+    const success = Exporter.generateExcel(dailyData, startDate, endDate)
     if (success) {
       Renderer.toast('Planilha Excel gerada com sucesso!', 'success')
     } else {
