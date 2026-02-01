@@ -386,35 +386,39 @@ export const Renderer = {
     const todayStr = Formatter.getTodayDate()
     const sortedDates = Object.keys(dailyData).sort()
 
-    // Get initial values for the first day (Day 0 Adjustments)
-    // We assume the simulation starts with these values in the wallets.
-    const initialPersonal = Formatter.toCents(
-      (dailyData[sortedDates[0]] ? sortedDates[0] : null) === startDateStr
-        ? window.store?.state.inputs.personalWalletStart || 0
-        : 0
-    )
-    const initialRevenue = Formatter.toCents(
-      (dailyData[sortedDates[0]] ? sortedDates[0] : null) === startDateStr
-        ? window.store?.state.inputs.revenueWalletStart || 0
-        : 0
-    )
+    // Filter dates to view range
+    const visibleDates = sortedDates.filter(d => d >= startDateStr && d <= limitDateStr)
+    
+    // Calculate initial balances relative to the VIEW start date, not necessarily Data Inicio
+    // If startDateStr == Data Inicio, it uses initial inputs.
+    // If startDateStr > Data Inicio (e.g. Today), it uses the calculated startBal of that day.
+    
+    const startData = dailyData[startDateStr] || dailyData[sortedDates[0]]
+    const isStartOfManagement = (dailyData[sortedDates[0]] ? sortedDates[0] : null) === startDateStr
+    
+    // We only show "Initial Setup" values if we are at the very beginning of the management history
+    const initialPersonal = isStartOfManagement ? Formatter.toCents(window.store?.state.inputs.personalWalletStart || 0) : 0
+    const initialRevenue = isStartOfManagement ? Formatter.toCents(window.store?.state.inputs.revenueWalletStart || 0) : 0
 
-    sortedDates.forEach((dateStr, index) => {
-      if (dateStr > limitDateStr) return
+    visibleDates.forEach((dateStr, index) => {
       const d = dailyData[dateStr]
       const subItems = []
 
       if (index === 0) {
+        // Show opening balance for the view period
         subItems.push({
-          label: 'Saldo de Abertura',
-          sub: 'Configuração inicial da gestão',
+          label: isStartOfManagement ? 'Saldo de Abertura' : 'Saldo do Dia',
+          sub: isStartOfManagement ? 'Configuração inicial da gestão' : 'Saldo acumulado anterior',
           val: d.startBal, // showing total in the list
           type: 'manual',
           dot: '#f97316',
-          tag: 'INÍCIO'
+          tag: 'SALDO'
         })
-        creditoPessoal += initialPersonal
-        creditoReceita += initialRevenue
+        
+        if (isStartOfManagement) {
+             creditoPessoal += initialPersonal
+             creditoReceita += initialRevenue
+        }
       }
 
       const taskIncome = d.inIncomeTask ?? d.inIncome

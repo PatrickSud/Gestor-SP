@@ -41,6 +41,8 @@ class Store {
         dataInicio: today,
         withdrawalDaySelect: '1',
         viewPeriodSelect: '30',
+        customViewStartDate: today,
+        customViewEndDate: Formatter.addDays(today, 30),
         personalWalletStart: '0',
         revenueWalletStart: '0',
         monthlyExtraIncome: '0',

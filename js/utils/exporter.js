@@ -16,7 +16,7 @@ export const Exporter = {
 
       // Create new PDF document (A4, portrait)
       const doc = new jsPDF('p', 'mm', 'a4')
-      
+
       // Define colors
       const primaryColor = [59, 130, 246] // Blue
       const accentColor = [16, 185, 129] // Emerald
@@ -26,13 +26,13 @@ export const Exporter = {
       // Header Section
       doc.setFillColor(...darkBg)
       doc.rect(0, 0, 210, 45, 'F')
-      
+
       // Title
       doc.setTextColor(...primaryColor)
       doc.setFontSize(24)
       doc.setFont('helvetica', 'bold')
       doc.text('Relatório Gestor Estratégico Pro', 105, 20, { align: 'center' })
-      
+
       // Date
       doc.setTextColor(...textColor)
       doc.setFontSize(10)
@@ -49,20 +49,29 @@ export const Exporter = {
       // Summary Section
       // Summary Section
       let yPos = 55
-      
+
       doc.setTextColor(0, 0, 0)
       doc.setFontSize(14)
       doc.setFont('helvetica', 'bold')
       doc.text('Resumo Financeiro', 15, yPos)
-      
+
       yPos += 10
 
       // Calculate summary for the selected period
       const dates = Object.keys(dailyData).sort()
       const filteredRes = {
         income: dates.reduce((acc, d) => acc + (dailyData[d].inIncome || 0), 0),
-        invest: dates.reduce((acc, d) => acc + (dailyData[d].inReturnProfit || 0) + (dailyData[d].outReinvest || 0), 0),
-        withdraw: dates.reduce((acc, d) => acc + (dailyData[d].outWithdraw || 0), 0)
+        invest: dates.reduce(
+          (acc, d) =>
+            acc +
+            (dailyData[d].inReturnProfit || 0) +
+            (dailyData[d].outReinvest || 0),
+          0
+        ),
+        withdraw: dates.reduce(
+          (acc, d) => acc + (dailyData[d].outWithdraw || 0),
+          0
+        )
       }
       filteredRes.net = filteredRes.income + filteredRes.invest
 
@@ -77,26 +86,40 @@ export const Exporter = {
       doc.setFontSize(8)
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(100, 116, 139)
-      doc.text('Lucro Líquido', startX + boxWidth/2, yPos + 7, { align: 'center' })
+      doc.text('Lucro Líquido', startX + boxWidth / 2, yPos + 7, {
+        align: 'center'
+      })
       doc.setFontSize(14)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(...accentColor)
-      doc.text(this.formatCurrency(filteredRes.net), startX + boxWidth/2, yPos + 18, { align: 'center' })
+      doc.text(
+        this.formatCurrency(filteredRes.net),
+        startX + boxWidth / 2,
+        yPos + 18,
+        { align: 'center' }
+      )
 
       // 2. Composição Block (Renda + Invest)
       const x2 = startX + boxWidth + spacing
       doc.setFillColor(248, 250, 252)
       doc.roundedRect(x2, yPos, boxWidth, 25, 3, 3, 'F')
-      
+
       // Renda Part
       doc.setFontSize(7)
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(100, 116, 139)
-      doc.text('Renda / Extras', x2 + boxWidth/2, yPos + 5.5, { align: 'center' })
+      doc.text('Renda / Extras', x2 + boxWidth / 2, yPos + 5.5, {
+        align: 'center'
+      })
       doc.setFontSize(10)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(14, 165, 233)
-      doc.text(this.formatCurrency(filteredRes.income), x2 + boxWidth/2, yPos + 10.5, { align: 'center' })
+      doc.text(
+        this.formatCurrency(filteredRes.income),
+        x2 + boxWidth / 2,
+        yPos + 10.5,
+        { align: 'center' }
+      )
 
       // Divider Line
       doc.setDrawColor(226, 232, 240)
@@ -107,11 +130,18 @@ export const Exporter = {
       doc.setFontSize(7)
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(100, 116, 139)
-      doc.text('Lucro Invest.', x2 + boxWidth/2, yPos + 17.5, { align: 'center' })
+      doc.text('Lucro Invest.', x2 + boxWidth / 2, yPos + 17.5, {
+        align: 'center'
+      })
       doc.setFontSize(10)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(168, 85, 247)
-      doc.text(this.formatCurrency(filteredRes.invest), x2 + boxWidth/2, yPos + 22.5, { align: 'center' })
+      doc.text(
+        this.formatCurrency(filteredRes.invest),
+        x2 + boxWidth / 2,
+        yPos + 22.5,
+        { align: 'center' }
+      )
 
       // 3. Total Sacado Block
       const x3 = startX + (boxWidth + spacing) * 2
@@ -120,11 +150,16 @@ export const Exporter = {
       doc.setFontSize(8)
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(100, 116, 139)
-      doc.text('Total Sacado', x3 + boxWidth/2, yPos + 7, { align: 'center' })
+      doc.text('Total Sacado', x3 + boxWidth / 2, yPos + 7, { align: 'center' })
       doc.setFontSize(14)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(59, 130, 246)
-      doc.text(this.formatCurrency(filteredRes.withdraw), x3 + boxWidth/2, yPos + 18, { align: 'center' })
+      doc.text(
+        this.formatCurrency(filteredRes.withdraw),
+        x3 + boxWidth / 2,
+        yPos + 18,
+        { align: 'center' }
+      )
 
       yPos += 35
 
@@ -133,14 +168,17 @@ export const Exporter = {
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(0, 0, 0)
       doc.text('Detalhamento Financeiro', 15, yPos)
-      
+
       yPos += 5
 
       // Prepare table data and check if there are any investments
       const tableData = []
-      const sortedDates = Object.keys(dailyData).sort()
+      const todayStrTable = Formatter.getTodayDate()
+      const sortedDates = Object.keys(dailyData)
+        .sort()
+        .filter(d => d >= todayStrTable)
       let hasInvestments = false
-      
+
       sortedDates.forEach(date => {
         const d = dailyData[date]
         // Check if there are any investments in the period
@@ -148,13 +186,13 @@ export const Exporter = {
           hasInvestments = true
         }
       })
-      
+
       // Build table rows
       const lastValues = {}
 
       sortedDates.forEach((date, rowIndex) => {
         const d = dailyData[date]
-        
+
         // Valores brutos para comparação
         const currentValues = {
           returns: d.inReturn || 0,
@@ -170,7 +208,7 @@ export const Exporter = {
           const isZero = val === 0
           const isRepeated = rowIndex > 0 && val === lastValues[key]
           lastValues[key] = val // Atualiza para a próxima comparação
-          
+
           if (isZero || isRepeated) return '-'
           return this.formatCurrency(val)
         }
@@ -180,46 +218,72 @@ export const Exporter = {
           formatF(currentValues.returns, 'returns'),
           formatF(currentValues.income, 'income')
         ]
-        
+
         // Add investment column only if there are investments
         if (hasInvestments) {
           row.push(formatF(currentValues.invest, 'invest'))
         }
-        
+
         row.push(
           formatF(currentValues.withdraw, 'withdraw'),
           formatF(currentValues.personal, 'personal'),
           formatF(currentValues.revenue, 'revenue')
         )
-        
+
         tableData.push(row)
       })
 
       // Build headers dynamically
       const headers = ['Data', 'Retornos', 'Renda']
-      
+
       if (hasInvestments) {
         headers.push('Aportes')
       }
-      
+
       headers.push('Saques', 'Saldo Pessoal', 'Saldo Receita')
 
       // Build column styles with semantic colors for each category
       const columnStyles = {
         0: { halign: 'center', cellWidth: 22, textColor: [100, 116, 139] } // Data (Slate)
       }
-      
+
       let colIndex = 1
-      columnStyles[colIndex++] = { halign: 'right', cellWidth: hasInvestments ? 20 : 25, textColor: [79, 70, 229] } // Retornos (Indigo)
-      columnStyles[colIndex++] = { halign: 'right', cellWidth: hasInvestments ? 20 : 25, textColor: [2, 132, 199] } // Renda (Sky)
-      
+      columnStyles[colIndex++] = {
+        halign: 'right',
+        cellWidth: hasInvestments ? 20 : 25,
+        textColor: [79, 70, 229]
+      } // Retornos (Indigo)
+      columnStyles[colIndex++] = {
+        halign: 'right',
+        cellWidth: hasInvestments ? 20 : 25,
+        textColor: [2, 132, 199]
+      } // Renda (Sky)
+
       if (hasInvestments) {
-        columnStyles[colIndex++] = { halign: 'right', cellWidth: 20, textColor: [71, 85, 105] } // Aportes (Slate)
+        columnStyles[colIndex++] = {
+          halign: 'right',
+          cellWidth: 20,
+          textColor: [71, 85, 105]
+        } // Aportes (Slate)
       }
-      
-      columnStyles[colIndex++] = { halign: 'right', cellWidth: hasInvestments ? 20 : 25, textColor: [185, 28, 28] } // Saques (Red)
-      columnStyles[colIndex++] = { halign: 'right', cellWidth: hasInvestments ? 25 : 30, fontStyle: 'bold', textColor: [5, 150, 105] } // Saldo Pessoal (Emerald)
-      columnStyles[colIndex] = { halign: 'right', cellWidth: hasInvestments ? 25 : 30, fontStyle: 'bold', textColor: [37, 99, 235] } // Saldo Receita (Blue)
+
+      columnStyles[colIndex++] = {
+        halign: 'right',
+        cellWidth: hasInvestments ? 20 : 25,
+        textColor: [185, 28, 28]
+      } // Saques (Red)
+      columnStyles[colIndex++] = {
+        halign: 'right',
+        cellWidth: hasInvestments ? 25 : 30,
+        fontStyle: 'bold',
+        textColor: [5, 150, 105]
+      } // Saldo Pessoal (Emerald)
+      columnStyles[colIndex] = {
+        halign: 'right',
+        cellWidth: hasInvestments ? 25 : 30,
+        fontStyle: 'bold',
+        textColor: [37, 99, 235]
+      } // Saldo Receita (Blue)
 
       // Generate table using autoTable
       doc.autoTable({
@@ -243,17 +307,17 @@ export const Exporter = {
           fillColor: [248, 250, 252]
         },
         margin: { left: 15, right: 15 },
-        didParseCell: function(data) {
+        didParseCell: function (data) {
           // Color text for dashes (-) to keep them subtle
           if (data.cell.text[0] === '-') {
-            data.cell.styles.textColor = [203, 213, 225]; // Slate 300
+            data.cell.styles.textColor = [203, 213, 225] // Slate 300
           }
-          
+
           // Apply category specific background to headers (optional but professional)
           if (data.section === 'head' && data.column.index > 0) {
-            const colStyle = columnStyles[data.column.index];
+            const colStyle = columnStyles[data.column.index]
             if (colStyle && colStyle.textColor) {
-              // Apply a subtle background or thicker border could work, 
+              // Apply a subtle background or thicker border could work,
               // but let's try styling the header text color specifically
               // data.cell.styles.textColor = colStyle.textColor;
             }
@@ -283,7 +347,7 @@ export const Exporter = {
       }
 
       // Save the PDF
-      const fileName = `relatorio_gestor_sp_${new Date().toISOString().split('T')[0]}.pdf`
+      const fileName = `relatorio_gestor_sp_${Formatter.getTodayDate()}.pdf`
       doc.save(fileName)
 
       return true
@@ -301,8 +365,13 @@ export const Exporter = {
     try {
       // Prepare data for Excel
       const excelData = []
-      const sortedDates = Object.keys(dailyData).sort()
-      
+      // Start export from Today (or start of management if later)
+      const todayStr = Formatter.getTodayDate()
+      // Filter dates starting from today
+      const sortedDates = Object.keys(dailyData)
+        .sort()
+        .filter(d => d >= todayStr)
+
       // Check if there are any investments
       let hasInvestments = false
       sortedDates.forEach(date => {
@@ -332,26 +401,26 @@ export const Exporter = {
           const isZero = val === 0
           const isRepeated = rowIndex > 0 && val === lastValues[key]
           lastValues[key] = val
-          
+
           if (isZero || isRepeated) return '-'
           return this.formatCurrencyForExcel(val)
         }
 
         const row = {
-          'Data': Formatter.dateDisplay(date),
-          'Retornos': formatExcel(currentValues.returns, 'returns'),
-          'Renda': formatExcel(currentValues.income, 'income')
+          Data: Formatter.dateDisplay(date),
+          Retornos: formatExcel(currentValues.returns, 'returns'),
+          Renda: formatExcel(currentValues.income, 'income')
         }
-        
+
         // Add investment column only if there are investments
         if (hasInvestments) {
           row['Aportes'] = formatExcel(currentValues.invest, 'invest')
         }
-        
+
         row['Saques'] = formatExcel(currentValues.withdraw, 'withdraw')
         row['Saldo Pessoal'] = formatExcel(currentValues.personal, 'personal')
         row['Saldo Receita'] = formatExcel(currentValues.revenue, 'revenue')
-        
+
         excelData.push(row)
       })
 
@@ -362,19 +431,19 @@ export const Exporter = {
       const colWidths = [
         { wch: 12 }, // Data
         { wch: 12 }, // Retornos
-        { wch: 12 }  // Renda
+        { wch: 12 } // Renda
       ]
-      
+
       if (hasInvestments) {
         colWidths.push({ wch: 12 }) // Aportes
       }
-      
+
       colWidths.push(
         { wch: 12 }, // Saques
         { wch: 15 }, // Saldo Pessoal
-        { wch: 15 }  // Saldo Receita
+        { wch: 15 } // Saldo Receita
       )
-      
+
       ws['!cols'] = colWidths
 
       // Create workbook
@@ -388,7 +457,7 @@ export const Exporter = {
       XLSX.utils.book_append_sheet(wb, wsSummary, 'Resumo')
 
       // Generate file name
-      const fileName = `gestor_sp_${new Date().toISOString().split('T')[0]}.xlsx`
+      const fileName = `gestor_sp_${Formatter.getTodayDate()}.xlsx`
 
       // Save file
       XLSX.writeFile(wb, fileName)
@@ -406,7 +475,10 @@ export const Exporter = {
    * @returns {Array} Summary data array
    */
   prepareSummarySheet(dailyData) {
-    const dates = Object.keys(dailyData).sort()
+    const todayStr = Formatter.getTodayDate()
+    const dates = Object.keys(dailyData)
+      .sort()
+      .filter(d => d >= todayStr)
     if (dates.length === 0) return []
 
     const firstDay = dailyData[dates[0]]
@@ -421,16 +493,34 @@ export const Exporter = {
     }, 0)
 
     return [
-      { 'Métrica': 'Período Analisado', 'Valor': `${dates.length} dias` },
-      { 'Métrica': 'Data Inicial', 'Valor': Formatter.dateDisplay(dates[0]) },
-      { 'Métrica': 'Data Final', 'Valor': Formatter.dateDisplay(dates[dates.length - 1]) },
-      { 'Métrica': '', 'Valor': '' },
-      { 'Métrica': 'Saldo Inicial', 'Valor': this.formatCurrencyForExcel(firstDay.startBal) },
-      { 'Métrica': 'Saldo Final', 'Valor': this.formatCurrencyForExcel(lastDay.endBal) },
-      { 'Métrica': '', 'Valor': '' },
-      { 'Métrica': 'Total de Entradas', 'Valor': this.formatCurrencyForExcel(totalEntries) },
-      { 'Métrica': 'Total de Saques', 'Valor': this.formatCurrencyForExcel(totalWithdrawals) },
-      { 'Métrica': 'Lucro Líquido', 'Valor': this.formatCurrencyForExcel(lastDay.endBal - firstDay.startBal) }
+      { Métrica: 'Período Analisado', Valor: `${dates.length} dias` },
+      { Métrica: 'Data Inicial', Valor: Formatter.dateDisplay(dates[0]) },
+      {
+        Métrica: 'Data Final',
+        Valor: Formatter.dateDisplay(dates[dates.length - 1])
+      },
+      { Métrica: '', Valor: '' },
+      {
+        Métrica: 'Saldo Inicial',
+        Valor: this.formatCurrencyForExcel(firstDay.startBal)
+      },
+      {
+        Métrica: 'Saldo Final',
+        Valor: this.formatCurrencyForExcel(lastDay.endBal)
+      },
+      { Métrica: '', Valor: '' },
+      {
+        Métrica: 'Total de Entradas',
+        Valor: this.formatCurrencyForExcel(totalEntries)
+      },
+      {
+        Métrica: 'Total de Saques',
+        Valor: this.formatCurrencyForExcel(totalWithdrawals)
+      },
+      {
+        Métrica: 'Lucro Líquido',
+        Valor: this.formatCurrencyForExcel(lastDay.endBal - firstDay.startBal)
+      }
     ]
   },
 

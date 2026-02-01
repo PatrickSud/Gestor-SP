@@ -664,14 +664,24 @@
                 <div class="flex items-center justify-between">
                     <h3 class="font-bold text-white flex items-center gap-2"><i
                             class="far fa-calendar-alt text-yellow-500"></i> Calendário e Detalhes</h3>
-                    <select id="viewPeriodSelect"
-                        class="bg-slate-800 border border-slate-600 text-xs rounded-lg px-2 py-1 text-slate-300">
-                        <option value="15">15 Dias</option>
-                        <option value="30" selected>30 Dias</option>
-                        <option value="60">60 Dias</option>
-                        <option value="90">90 Dias</option>
-                        <option value="365">1 Ano</option>
-                    </select>
+                    <div class="flex items-center gap-2">
+                        <div id="customDateRange" class="hidden flex items-center gap-1 animate-fade-in">
+                            <input type="date" id="customViewStartDate"
+                                class="bg-slate-800 border border-slate-600 text-[10px] rounded px-2 py-1 text-slate-300 w-24 focus:outline-none focus:border-blue-500 transition-colors">
+                            <span class="text-slate-500 text-[10px] font-bold">-</span>
+                            <input type="date" id="customViewEndDate"
+                                class="bg-slate-800 border border-slate-600 text-[10px] rounded px-2 py-1 text-slate-300 w-24 focus:outline-none focus:border-blue-500 transition-colors">
+                        </div>
+                        <select id="viewPeriodSelect"
+                            class="bg-slate-800 border border-slate-600 text-xs rounded-lg px-2 py-1 text-slate-300 focus:outline-none focus:border-blue-500 transition-colors">
+                            <option value="15">15 Dias</option>
+                            <option value="30" selected>30 Dias</option>
+                            <option value="60">60 Dias</option>
+                            <option value="90">90 Dias</option>
+                            <option value="365">1 Ano</option>
+                            <option value="custom">Personalizado</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Calendar -->

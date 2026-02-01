@@ -110,9 +110,14 @@ export const Calculator = {
     let graphData = []
     let simCapitalPure = 0
 
-    const simulationDays = Math.max(viewDays, totalReps * cycleDays + 30)
+    // Ensure simulation covers history up to Today + viewDays
+    const daysSinceStart = Math.max(0, Formatter.daysBetween(startDateStr, todayStr))
+    const simulationDays = Math.max(daysSinceStart + viewDays, totalReps * cycleDays + 30)
+
     const simStartStr =
-      futureToggle === 'true' ? simStartDate || Formatter.getTodayDate() : null
+      futureToggle === 'true'
+        ? simStartDate || Formatter.getTodayDate()
+        : null
     const simStartIndex =
       simStartStr != null
         ? Math.max(
@@ -452,7 +457,11 @@ export const Calculator = {
         status: isRealized ? 'realized' : isPlanned ? 'planned' : 'none'
       }
 
-      if (d <= viewDays || d % 5 === 0) {
+      if (
+        d <= 30 || // First month of history
+        (d >= daysSinceStart && d <= daysSinceStart + viewDays + 60) || // Today + View Period + Buffer
+        d % 5 === 0 // Long term sparse
+      ) {
         graphData.push({
           x: currentDayStr,
           y: Formatter.fromCents(totalPool),

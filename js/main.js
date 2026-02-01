@@ -62,18 +62,28 @@ class App {
       store.setResults(results.results)
       store.setDailyData(results.dailyData)
 
+      // Determine View Start Date (Default to Today for Daily Management focus)
+      const viewStartDate = Formatter.getTodayDate()
+
       // Update UI components
       Renderer.renderResults(results.results)
       Renderer.renderTable(
         results.dailyData,
         parseInt(store.state.inputs.viewPeriodSelect),
-        store.state.inputs.dataInicio
+        viewStartDate
       )
       Renderer.renderCalendar(
-        store.state.inputs.dataInicio,
+        viewStartDate,
         results.dailyData,
         results.cycleEnds
       )
+      // Optional: Render Timeline if container exists
+      Renderer.renderTimeline(
+        results.dailyData,
+        parseInt(store.state.inputs.viewPeriodSelect),
+        viewStartDate
+      )
+
       Renderer.renderPortfolio(store.state.portfolio, id =>
         this.removeInvestment(id)
       )
@@ -721,7 +731,7 @@ class App {
     Renderer.renderTimeline(
       store.state.dailyData,
       parseInt(store.state.inputs.viewPeriodSelect),
-      store.state.inputs.dataInicio
+      Formatter.getTodayDate()
     )
     this.openModal('timelineModal')
 
