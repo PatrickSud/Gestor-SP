@@ -81,15 +81,15 @@
         <div class="flex items-center gap-3">
             <!-- Auth & Alerts -->
             <div class="flex items-center gap-3">
-                <!-- Login Button -->
+                <!-- Login Button (Desktop Only) -->
                 <button id="loginBtn"
-                    class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-1.5 rounded-lg transition-colors shadow-lg shadow-blue-900/50">
+                    class="hidden md:flex bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-1.5 rounded-lg transition-colors shadow-lg shadow-blue-900/50">
                     <i class="fab fa-google mr-2"></i> Entrar
                 </button>
 
-                <!-- User Profile Area (Hidden by default) -->
+                <!-- User Profile Area (Desktop Only) -->
                 <div id="userProfileArea"
-                    class="hidden flex items-center gap-3 mr-2 bg-slate-800/50 py-1 px-2 rounded-full border border-slate-700">
+                    class="hidden items-center gap-3 mr-2 bg-slate-800/50 py-1 px-2 rounded-full border border-slate-700">
                     <img id="userAvatar" src="" alt="User" class="w-6 h-6 rounded-full border border-slate-600">
                     <span id="userNameDisplay"
                         class="text-[10px] font-bold text-slate-300 max-w-[80px] truncate hidden md:block">User</span>
@@ -117,14 +117,14 @@
                 </div>
 
                 <button onclick="app.openProfileModal()"
-                    class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 transition-colors text-xs font-bold"
+                    class="hidden md:flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 transition-colors text-xs font-bold"
                     id="profileBtn">
                     <i class="fas fa-user-circle"></i>
                     <span id="currentProfileName">Padrão</span>
                     <i class="fas fa-chevron-down text-[10px] ml-1 opacity-50"></i>
                 </button>
 
-                <div onclick="app.openBalanceAdjustmentModal()" class="hidden md:flex items-center gap-4 bg-slate-800 py-1.5 px-4 rounded-full border border-slate-700 cursor-pointer hover:bg-slate-700 transition-colors group">
+                <div onclick="app.openBalanceAdjustmentModal()" class="flex items-center gap-4 bg-slate-800 py-1.5 px-4 rounded-full border border-slate-700 cursor-pointer hover:bg-slate-700 transition-colors group">
                     <div class="flex flex-col items-end leading-none border-r border-slate-700 pr-3">
                         <span class="text-[8px] text-indigo-400 font-bold uppercase mb-0.5">Pessoal</span>
                         <span class="text-xs font-bold text-white" id="headerPersonalBalance">R$ 0,00</span>
@@ -148,15 +148,44 @@
         <!-- Sidebar Header -->
         <div class="h-16 flex items-center justify-between px-6 border-b border-slate-800 bg-slate-900">
             <h2 class="text-lg font-bold text-white">Configurações</h2>
-            <button onclick="app.resetData()"
-                class="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 border border-red-900/30 bg-red-900/10 px-2 py-1 rounded"
-                id="resetBtn">
-                <i class="fas fa-trash-alt"></i> Limpar Dados
-            </button>
+            <div class="flex items-center gap-2">
+                <button onclick="app.resetData()"
+                    class="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 border border-red-900/30 bg-red-900/10 px-2 py-1 rounded"
+                    id="resetBtn">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
         </div>
 
         <!-- Sidebar Content -->
         <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+
+            <!-- Mobile Auth Section (Moved from Header) -->
+            <div class="md:hidden space-y-3 pb-4 border-b border-slate-700/50">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-1">Conta & Sincronização</label>
+                
+                <!-- Login Button Mobile -->
+                <button id="loginBtnMobile"
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-colors shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2">
+                    <i class="fab fa-google"></i> Entrar com Google
+                </button>
+
+                <!-- User Profile Mobile -->
+                <div id="userProfileMobile" class="hidden bg-slate-800 p-3 rounded-xl border border-slate-700 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                         <img id="userAvatarMobile" src="" alt="User" class="w-10 h-10 rounded-full border border-slate-600">
+                         <div class="flex flex-col">
+                             <span id="userNameMobile" class="text-xs font-bold text-white">User</span>
+                             <span class="text-[10px] text-emerald-400 flex items-center gap-1">
+                                 <i class="fas fa-cloud-upload-alt"></i> Sincronizado
+                             </span>
+                         </div>
+                    </div>
+                    <button id="logoutBtnMobile" class="text-slate-400 hover:text-red-400 p-2" title="Sair">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
 
 
 

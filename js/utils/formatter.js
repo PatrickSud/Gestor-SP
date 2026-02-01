@@ -67,5 +67,17 @@ export const Formatter = {
     getDayOfWeek(dateStr) {
         const [y, m, d] = dateStr.split('-').map(Number);
         return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+    },
+
+    /**
+     * Returns today's date in YYYY-MM-DD format respecting local timezone
+     * Fixes issue where UTC dates advanced to next day before midnight local time
+     */
+    getTodayDate() {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 };

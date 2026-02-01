@@ -11,7 +11,7 @@ export const ChartManager = {
       chartInstance.destroy()
     }
 
-    const todayStr = new Date().toISOString().split('T')[0]
+    const todayStr = Formatter.getTodayDate()
     const futureData = (data || []).filter(d => d.x >= todayStr)
     const baseData = futureData.length > 0 ? futureData : data
     const displayData =

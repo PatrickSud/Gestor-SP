@@ -93,7 +93,11 @@ class App {
       )
       Renderer.renderAlerts(store.state.portfolio)
 
-      Renderer.renderSimulationSummary(results.results, store.state.inputs, results.cycleEnds)
+      Renderer.renderSimulationSummary(
+        results.results,
+        store.state.inputs,
+        results.cycleEnds
+      )
 
       // Local Notification for Withdrawal Day
       this.checkWithdrawalNotification(results.results)
@@ -214,9 +218,10 @@ class App {
   }
 
   checkWithdrawalNotification(results) {
-    if (Notification.permission !== 'granted' || !results.nextWithdrawDate) return
+    if (Notification.permission !== 'granted' || !results.nextWithdrawDate)
+      return
 
-    const today = new Date().toISOString().split('T')[0]
+    const today = Formatter.getTodayDate()
     if (results.nextWithdrawDate === today) {
       // Check if we already notified today to avoid spam
       const lastNotify = localStorage.getItem('lastWithdrawNotify')
@@ -481,9 +486,11 @@ class App {
     // Withdrawals
     if (data.status !== 'none') {
       const isRealized = data.status === 'realized'
-      const netVal = isRealized 
-        ? data.outWithdraw 
-        : (data.recommendedWallet === 'personal' ? data.tier : Math.floor(data.tier * 0.9))
+      const netVal = isRealized
+        ? data.outWithdraw
+        : data.recommendedWallet === 'personal'
+          ? data.tier
+          : Math.floor(data.tier * 0.9)
 
       items.push({
         label: isRealized ? 'Saque Realizado' : 'Saque Planejado',
@@ -579,10 +586,12 @@ class App {
 
     if (isRealized || isWithdrawalDay || hasBalance) {
       wSec.classList.remove('hidden')
-      
+
       const amountToDisplay = isRealized
         ? data.outWithdraw
-        : (data.recommendedWallet === 'personal' ? data.tier : Math.floor(data.tier * 0.9))
+        : data.recommendedWallet === 'personal'
+          ? data.tier
+          : Math.floor(data.tier * 0.9)
 
       // Only show the big withdrawal value if it's a withdrawal day or already realized
       const valEl = document.getElementById('modalWithdrawVal')
@@ -595,9 +604,14 @@ class App {
 
       const status = document.getElementById('modalWithdrawStatus')
       if (isRealized) {
-        const withdrawalIdx = (store.state.realizedWithdrawals || []).findIndex(w => w.date === dateStr)
+        const withdrawalIdx = (store.state.realizedWithdrawals || []).findIndex(
+          w => w.date === dateStr
+        )
         const withdrawal = store.state.realizedWithdrawals[withdrawalIdx]
-        const walletLabel = withdrawal?.wallet === 'personal' ? 'Carteira Pessoal' : 'Carteira de Receita'
+        const walletLabel =
+          withdrawal?.wallet === 'personal'
+            ? 'Carteira Pessoal'
+            : 'Carteira de Receita'
         status.innerHTML = `
             <div class="text-blue-400 font-bold uppercase mt-1">SAQUE CONFIRMADO</div>
             <div class="text-[9px] text-slate-500 uppercase mt-1 mb-2">Saca de: ${walletLabel}</div>
@@ -608,9 +622,10 @@ class App {
         status.className = ''
       } else {
         const isPlanned = data.status === 'planned'
-        const isOptional = data.status === 'none' && isWithdrawalDay && data.tier > 0
+        const isOptional =
+          data.status === 'none' && isWithdrawalDay && data.tier > 0
         const isActionDay = isPlanned || isOptional
-        
+
         let label = 'SALDOS EM CARTEIRA'
         let labelColor = 'text-slate-400'
         if (isPlanned) {
@@ -622,13 +637,16 @@ class App {
         }
 
         const rec = data.recommendedWallet
-        const walletName = rec === 'personal' ? 'Carteira Pessoal' : 'Carteira de Receita'
+        const walletName =
+          rec === 'personal' ? 'Carteira Pessoal' : 'Carteira de Receita'
         const note = data.withdrawalNote || ''
         const isPartial = data.isPartial
-        const showMetaWarning = isOptional && store.state.inputs.withdrawStrategy === 'fixed'
+        const showMetaWarning =
+          isOptional && store.state.inputs.withdrawStrategy === 'fixed'
 
         // Reconstrução do Saldo Anterior (Exibir disponível antes do saque)
-        const displayPersonal = data.endPersonal + (data.outWithdrawPersonal || 0)
+        const displayPersonal =
+          data.endPersonal + (data.outWithdrawPersonal || 0)
         const displayRevenue = data.endRevenue + (data.outWithdrawRevenue || 0)
 
         status.innerHTML = `
@@ -655,7 +673,9 @@ class App {
                         </div>
                       </div>
 
-                      ${isActionDay ? `
+                      ${
+                        isActionDay
+                          ? `
                       <div class="flex flex-col gap-2">
                         <button onclick="app.executeWithdrawal('${dateStr}', ${Formatter.fromCents(data.tier)}, 'revenue')" class="w-full ${isPlanned ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-slate-700 hover:bg-slate-600'} text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
                             <i class="fas fa-hand-holding-usd mr-1"></i> Sacar da Receita
@@ -664,9 +684,11 @@ class App {
                             <i class="fas fa-wallet mr-1"></i> Sacar da Pessoal
                         </button>
                       </div>
-                      ` : `
+                      `
+                          : `
                       <div class="text-[9px] text-slate-500 italic text-center">Saques disponíveis apenas no dia configurado.</div>
-                      `}
+                      `
+                      }
                   `
         status.className = ''
       }
@@ -745,7 +767,7 @@ class App {
         index: i
       }))
       history.sort((a, b) => b.date.localeCompare(a.date))
-      const currentMonthStr = new Date().toISOString().substring(0, 7)
+      const currentMonthStr = Formatter.getTodayDate().substring(0, 7)
       const grossMonthTotal = history
         .filter(w => w.date.startsWith(currentMonthStr))
         .reduce((acc, w) => acc + Formatter.toCents(w.amount), 0)
@@ -803,7 +825,7 @@ class App {
                 <div class="max-h-[200px] overflow-y-auto custom-scrollbar" id="historyList"></div>
             `
     } else if (type === 'balance_flow') {
-      const currentMonthStr = new Date().toISOString().substring(0, 7)
+      const currentMonthStr = Formatter.getTodayDate().substring(0, 7)
       const monthWithdrawals = (store.state.realizedWithdrawals || [])
         .filter(w => w.date.startsWith(currentMonthStr))
         .sort((a, b) => b.date.localeCompare(a.date))
@@ -991,7 +1013,7 @@ class App {
 
     let portfolio = [...store.state.portfolio]
     let currentVal = capIni
-    let currentDateStr = new Date().toISOString().split('T')[0]
+    let currentDateStr = Formatter.getTodayDate()
 
     for (let i = 0; i < reps; i++) {
       portfolio.push({
@@ -1080,15 +1102,21 @@ class App {
 
     if (amountCents > availableCents) {
       // Find highest tier covered by the wallet
-      const tiers = Calculator.WITHDRAWAL_TIERS || [4000, 13000, 40000, 130000, 420000, 850000, 1900000, 3800000]
+      const tiers = Calculator.WITHDRAWAL_TIERS || [
+        4000, 13000, 40000, 130000, 420000, 850000, 1900000, 3800000
+      ]
       const bestTierCents = tiers.filter(t => t <= availableCents).pop() || 0
-      
+
       if (bestTierCents === 0) {
-        return Renderer.toast(`Saldo insuficiente na ${walletType === 'revenue' ? 'Carteira de Receita' : 'Carteira Pessoal'} para qualquer nível de saque.`, 'error')
+        return Renderer.toast(
+          `Saldo insuficiente na ${walletType === 'revenue' ? 'Carteira de Receita' : 'Carteira Pessoal'} para qualquer nível de saque.`,
+          'error'
+        )
       }
 
       finalAmount = Formatter.fromCents(bestTierCents)
-      const walletName = walletType === 'revenue' ? 'Carteira de Receita' : 'Carteira Pessoal'
+      const walletName =
+        walletType === 'revenue' ? 'Carteira de Receita' : 'Carteira Pessoal'
       Renderer.toast(
         `Saldo insuficiente para R$ ${amount.toFixed(2)}. Ajustado para o maior nível possível na ${walletName}: R$ ${finalAmount.toFixed(2)}`,
         'warning'
@@ -1113,15 +1141,36 @@ class App {
     this.openDayDetails(date) // Refresh modal
   }
 
+  reconcileWallet(walletType, newTotalStr) {
+    const newTotal = parseFloat(newTotalStr)
+    if (isNaN(newTotal)) return Renderer.toast('Valor inválido', 'error')
+
+    const currentTotal =
+      walletType === 'personal'
+        ? store.state.results.todayPersonalBalance || 0
+        : store.state.results.todayRevenueBalance || 0
+
+    // Calculate delta
+    const delta = parseFloat((newTotal - currentTotal).toFixed(2))
+
+    if (Math.abs(delta) < 0.01)
+      return Renderer.toast('Saldo já está atualizado', 'info')
+
+    this.adjustWallet(walletType, delta)
+  }
+
   adjustWallet(walletType, delta) {
     if (isNaN(delta) || delta === 0) return
-    const today = new Date().toISOString().split('T')[0]
+    const today = Formatter.getTodayDate()
     const list = [...(store.state.manualAdjustments || [])]
     list.push({ date: today, amount: delta.toFixed(2), wallet: walletType })
     store.setState({ manualAdjustments: list })
     this.runCalculation()
     this.openBalanceAdjustmentModal()
-    Renderer.toast(`Carteira atualizada: ${delta > 0 ? '+' : ''}R$ ${delta.toFixed(2)}`, 'success')
+    Renderer.toast(
+      `Carteira atualizada: ${delta > 0 ? '+' : ''}R$ ${delta.toFixed(2)}`,
+      'success'
+    )
   }
 
   openBalanceAdjustmentModal() {
@@ -1136,7 +1185,7 @@ class App {
           </div>
           <div>
             <h3 class="text-lg font-bold text-white">Ajuste de Saldo (Hoje)</h3>
-            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Correção de saldo corrente</p>
+            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Edite o valor final para corrigir</p>
           </div>
         </div>
 
@@ -1146,28 +1195,19 @@ class App {
             <div class="flex justify-between items-center mb-2">
               <label class="text-[10px] text-indigo-300 font-bold uppercase">Carteira Pessoal</label>
             </div>
-            <div class="mb-3">
-               <span class="text-[10px] text-slate-500 block uppercase font-bold">Saldo Atual:</span>
-               <span class="text-2xl font-black text-white">${Formatter.currency(todayPersonal)}</span>
-            </div>
             
             <div class="flex gap-2 items-center">
                <div class="relative flex-1">
-                 <span class="absolute left-3 top-2 text-xs text-slate-500 font-bold">R$</span>
-                 <input type="number" id="manualAdjPersonal" step="0.01" value="0.00"
-                   class="custom-input w-full rounded-lg py-2 pl-8 text-xs text-white bg-slate-800 border-slate-700 outline-none">
+                 <span class="absolute left-3 top-3 text-sm text-slate-500 font-bold">R$</span>
+                 <input type="number" id="editPersonal" step="0.01" value="${todayPersonal.toFixed(2)}"
+                   class="custom-input w-full rounded-lg py-3 pl-10 text-lg font-bold text-white bg-slate-800 border-slate-700 outline-none focus:border-indigo-500 transition-colors">
                </div>
-               <button onclick="app.adjustWallet('personal', parseFloat(document.getElementById('manualAdjPersonal').value || 0))" 
-                 class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors">
-                 Ajustar
+               <button onclick="app.reconcileWallet('personal', document.getElementById('editPersonal').value)" 
+                 class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-lg text-sm font-bold transition-colors uppercase tracking-wide">
+                 Salvar
                </button>
             </div>
-
-            <div class="flex gap-1 mt-3">
-               <button onclick="app.adjustWallet('personal', -10)" class="flex-1 text-[10px] bg-slate-800 py-1.5 rounded border border-slate-700">-10</button>
-               <button onclick="app.adjustWallet('personal', 10)" class="flex-1 text-[10px] bg-slate-800 py-1.5 rounded border border-slate-700">+10</button>
-               <button onclick="app.adjustWallet('personal', 100)" class="flex-1 text-[10px] bg-indigo-800/40 py-1.5 rounded border border-indigo-500/30 font-bold text-indigo-300">+100</button>
-            </div>
+            <p class="text-[10px] text-slate-500 mt-2">O sistema calculará a diferença automaticamente.</p>
           </div>
 
           <!-- Receita -->
@@ -1175,38 +1215,27 @@ class App {
             <div class="flex justify-between items-center mb-2">
               <label class="text-[10px] text-emerald-300 font-bold uppercase">Carteira de Receita</label>
             </div>
-            <div class="mb-3">
-               <span class="text-[10px] text-slate-500 block uppercase font-bold">Saldo Atual:</span>
-               <span class="text-2xl font-black text-white">${Formatter.currency(todayRevenue)}</span>
-            </div>
 
             <div class="flex gap-2 items-center">
                <div class="relative flex-1">
-                 <span class="absolute left-3 top-2 text-xs text-slate-500 font-bold">R$</span>
-                 <input type="number" id="manualAdjRevenue" step="0.01" value="0.00"
-                   class="custom-input w-full rounded-lg py-2 pl-8 text-xs text-white bg-slate-800 border-slate-700 outline-none">
+                 <span class="absolute left-3 top-3 text-sm text-slate-500 font-bold">R$</span>
+                 <input type="number" id="editRevenue" step="0.01" value="${todayRevenue.toFixed(2)}"
+                   class="custom-input w-full rounded-lg py-3 pl-10 text-lg font-bold text-white bg-slate-800 border-slate-700 outline-none focus:border-emerald-500 transition-colors">
                </div>
-               <button onclick="app.adjustWallet('revenue', parseFloat(document.getElementById('manualAdjRevenue').value || 0))" 
-                 class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition-colors">
-                 Ajustar
+               <button onclick="app.reconcileWallet('revenue', document.getElementById('editRevenue').value)" 
+                 class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-lg text-sm font-bold transition-colors uppercase tracking-wide">
+                 Salvar
                </button>
             </div>
-
-            <div class="flex gap-1 mt-3">
-               <button onclick="app.adjustWallet('revenue', -10)" class="flex-1 text-[10px] bg-slate-800 py-1.5 rounded border border-slate-700">-10</button>
-               <button onclick="app.adjustWallet('revenue', 10)" class="flex-1 text-[10px] bg-slate-800 py-1.5 rounded border border-slate-700">+10</button>
-               <button onclick="app.adjustWallet('revenue', 100)" class="flex-1 text-[10px] bg-emerald-800/40 py-1.5 rounded border border-emerald-500/30 font-bold text-emerald-300">+100</button>
-            </div>
+            <p class="text-[10px] text-slate-500 mt-2">O sistema calculará a diferença automaticamente.</p>
           </div>
         </div>
         
-        <p class="text-[10px] text-slate-500 text-center italic px-4">
-          Este ajuste cria uma transação manual para corrigir o saldo de hoje, sem alterar o saldo inicial da gestão.
-        </p>
-
-        <button onclick="app.closeModal('cardModal')" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-colors text-xs uppercase tracking-widest">
-          Concluir Ajustes
-        </button>
+        <div class="border-t border-slate-700/50 pt-4 mt-2">
+           <button onclick="app.closeModal('cardModal')" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-colors text-xs uppercase tracking-widest">
+             Fechar
+           </button>
+        </div>
       </div>
     `
     document.getElementById('cardModalContent').innerHTML = html
@@ -1258,7 +1287,7 @@ class App {
   toggleExpandSection() {
     const section = document.getElementById('financialDetailSection')
     const icon = document.getElementById('expandIcon')
-    
+
     if (section.classList.contains('expanded-view')) {
       section.classList.remove('expanded-view')
       icon.classList.remove('fa-compress-alt')
@@ -1275,7 +1304,7 @@ class App {
   exportToPDF() {
     const results = store.state.results
     const dailyData = store.state.dailyData
-    
+
     if (!results || !dailyData) {
       return Renderer.toast('Nenhum dado disponível para exportação', 'error')
     }
@@ -1290,7 +1319,7 @@ class App {
 
   exportToExcel() {
     const dailyData = store.state.dailyData
-    
+
     if (!dailyData || Object.keys(dailyData).length === 0) {
       return Renderer.toast('Nenhum dado disponível para exportação', 'error')
     }

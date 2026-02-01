@@ -10,7 +10,13 @@ export const Calculator = {
     4000, 13000, 40000, 130000, 420000, 850000, 1900000, 3800000
   ], // Values in cents
 
-  calculate(inputs, portfolio, selectedWeeks, realizedWithdrawals = [], manualAdjustments = []) {
+  calculate(
+    inputs,
+    portfolio,
+    selectedWeeks,
+    realizedWithdrawals = [],
+    manualAdjustments = []
+  ) {
     const {
       dataInicio: startDateStr,
       withdrawalDaySelect,
@@ -34,7 +40,7 @@ export const Calculator = {
 
     const targetDay = parseInt(withdrawalDaySelect)
     const viewDays = parseInt(viewPeriodSelect)
-    const todayStr = new Date().toISOString().split('T')[0]
+    const todayStr = Formatter.getTodayDate()
 
     // Convert to cents
     const personalStart = Formatter.toCents(personalWalletStart || '0')
@@ -77,11 +83,13 @@ export const Calculator = {
         name: p.name,
         val: valCents,
         profit: profitCents,
-        total: totalCents
+        total: totalCents,
+        sourceWallet: p.wallet || 'personal' // Default to personal if undefined
       })
 
       // Only add to initial portfolio value if it doesn't deduct from a wallet during the simulation
-      const isNewDeduction = p.wallet && p.wallet !== 'none' && p.date >= startDateStr
+      const isNewDeduction =
+        p.wallet && p.wallet !== 'none' && p.date >= startDateStr
       if (!isNewDeduction) {
         totalPortfolioVal += valCents
       }
@@ -104,9 +112,7 @@ export const Calculator = {
 
     const simulationDays = Math.max(viewDays, totalReps * cycleDays + 30)
     const simStartStr =
-      futureToggle === 'true'
-        ? simStartDate || new Date().toISOString().split('T')[0]
-        : null
+      futureToggle === 'true' ? simStartDate || Formatter.getTodayDate() : null
     const simStartIndex =
       simStartStr != null
         ? Math.max(
@@ -127,7 +133,8 @@ export const Calculator = {
 
     for (let d = 0; d <= simulationDays; d++) {
       const currentDayStr = Formatter.addDays(startDateStr, d)
-      const startBalCents = currentInv + currentPersonalWallet + currentRevenueWallet
+      const startBalCents =
+        currentInv + currentPersonalWallet + currentRevenueWallet
 
       let stepIncome = 0
       let stepReturns = 0
@@ -137,18 +144,22 @@ export const Calculator = {
       let stepTaskIncome = 0
       let stepRecurringIncome = 0
       let stepSimReinvest = 0
-      
+
       // Handle investments deductions from wallet
       let stepPortfolioDeduction = 0
-      portfolio.filter(p => p.date === currentDayStr && p.wallet && p.wallet !== 'none').forEach(p => {
-        const valCents = Formatter.toCents(p.val)
-        if (p.wallet === 'personal') {
-          currentPersonalWallet -= valCents
-        } else if (p.wallet === 'revenue') {
-          currentRevenueWallet -= valCents
-        }
-        stepPortfolioDeduction += valCents
-      })
+      portfolio
+        .filter(
+          p => p.date === currentDayStr && p.wallet && p.wallet !== 'none'
+        )
+        .forEach(p => {
+          const valCents = Formatter.toCents(p.val)
+          if (p.wallet === 'personal') {
+            currentPersonalWallet -= valCents
+          } else if (p.wallet === 'revenue') {
+            currentRevenueWallet -= valCents
+          }
+          stepPortfolioDeduction += valCents
+        })
 
       if (
         futureToggle === 'true' &&
@@ -230,10 +241,18 @@ export const Calculator = {
         }
       }
 
-      // Split Returns: Principal to Personal, Profit to Revenue
+      // Split Returns: Principal to Personal/Revenue based on source, Profit always to Revenue
       if (stepMaturingList && stepMaturingList.length > 0) {
         stepMaturingList.forEach(m => {
-          currentPersonalWallet += m.val
+          // Principal Return Logic
+          if (m.sourceWallet === 'revenue') {
+            currentRevenueWallet += m.val
+          } else {
+            // Default/Personal goes back to Personal
+            currentPersonalWallet += m.val
+          }
+
+          // Profit always goes to Revenue
           currentRevenueWallet += m.profit
         })
       }
@@ -243,28 +262,33 @@ export const Calculator = {
       let stepAdjustmentRevenue = 0
       let stepOutInvest = stepPortfolioDeduction // Track portfolio deductions as well as manual "Aportes"
 
-      manualAdjustments.filter(a => a.date === currentDayStr).forEach(a => {
-        const valCents = Formatter.toCents(a.amount || 0)
-        
-        // If it's a positive adjustment/transaction, count as investment/aporte
-        if (valCents > 0) {
-          stepOutInvest += valCents
-        }
+      manualAdjustments
+        .filter(a => a.date === currentDayStr)
+        .forEach(a => {
+          const valCents = Formatter.toCents(a.amount || 0)
 
-        if (a.wallet === 'personal') {
-          currentPersonalWallet += valCents
-          stepAdjustmentPersonal += valCents
-        } else {
-          currentRevenueWallet += valCents
-          stepAdjustmentRevenue += valCents
-        }
-      })
+          // If it's a positive adjustment/transaction, count as investment/aporte
+          if (valCents > 0) {
+            stepOutInvest += valCents
+          }
+
+          if (a.wallet === 'personal') {
+            currentPersonalWallet += valCents
+            stepAdjustmentPersonal += valCents
+          } else {
+            currentRevenueWallet += valCents
+            stepAdjustmentRevenue += valCents
+          }
+        })
 
       let totalPool = currentInv + currentPersonalWallet + currentRevenueWallet
 
       // 5. Withdrawal Logic (Smart Decision)
-      const isWithdrawalDay = Formatter.getDayOfWeek(currentDayStr) === targetDay
-      const realizedOnDay = (realizedWithdrawals || []).find(w => w.date === currentDayStr)
+      const isWithdrawalDay =
+        Formatter.getDayOfWeek(currentDayStr) === targetDay
+      const realizedOnDay = (realizedWithdrawals || []).find(
+        w => w.date === currentDayStr
+      )
 
       let isRealized = false
       let isPlanned = false
@@ -279,8 +303,12 @@ export const Calculator = {
         amountToWithdrawCents = Formatter.toCents(realizedOnDay.amount)
         targetWallet = realizedOnDay.wallet || 'revenue'
       } else if (isWithdrawalDay && d > 0 && withdrawStrategy !== 'none') {
-        const revTier = this.WITHDRAWAL_TIERS.filter(t => t <= currentRevenueWallet).pop() || 0
-        const persTier = this.WITHDRAWAL_TIERS.filter(t => t <= currentPersonalWallet).pop() || 0
+        const revTier =
+          this.WITHDRAWAL_TIERS.filter(t => t <= currentRevenueWallet).pop() ||
+          0
+        const persTier =
+          this.WITHDRAWAL_TIERS.filter(t => t <= currentPersonalWallet).pop() ||
+          0
         const revNet = Math.floor(revTier * 0.9)
         const persNet = persTier
 
@@ -317,7 +345,10 @@ export const Calculator = {
             targetWallet = bestWallet
             amountToDisplayCents = bestTier // Usado apenas para o dailyData.tier
           }
-        } else if (withdrawStrategy === 'max' || withdrawStrategy === 'weekly') {
+        } else if (
+          withdrawStrategy === 'max' ||
+          withdrawStrategy === 'weekly'
+        ) {
           let shouldCheckWeekly = true
           if (withdrawStrategy === 'weekly') {
             const dayOfMonth = parseInt(currentDayStr.split('-')[2])
@@ -331,12 +362,12 @@ export const Calculator = {
             amountToWithdrawCents = bestTier
           }
         }
-        
+
         // Se isPlanned for falso na meta fixa, ainda guardamos o tier disponível para o UI
         if (withdrawStrategy === 'fixed' && !isPlanned) {
-           // Já configurado acima
+          // Já configurado acima
         } else {
-           amountToDisplayCents = amountToWithdrawCents
+          amountToDisplayCents = amountToWithdrawCents
         }
       }
 
@@ -345,14 +376,18 @@ export const Calculator = {
 
       if (amountToWithdrawCents > 0) {
         let grossWithdrawal = 0
-        const availableBalance = targetWallet === 'personal' ? currentPersonalWallet : currentRevenueWallet
-        
+        const availableBalance =
+          targetWallet === 'personal'
+            ? currentPersonalWallet
+            : currentRevenueWallet
+
         // Final sanity check on balance (mostly for realized/manual)
         if (availableBalance >= amountToWithdrawCents) {
           grossWithdrawal = amountToWithdrawCents
         } else {
           // Find max tier for manual overflow or realized error
-          grossWithdrawal = this.WITHDRAWAL_TIERS.filter(t => t <= availableBalance).pop() || 0
+          grossWithdrawal =
+            this.WITHDRAWAL_TIERS.filter(t => t <= availableBalance).pop() || 0
         }
 
         if (grossWithdrawal > 0) {
@@ -364,7 +399,10 @@ export const Calculator = {
             stepWithdrawRevenue = grossWithdrawal
           }
 
-          const net = targetWallet === 'personal' ? grossWithdrawal : Math.floor(grossWithdrawal * 0.9)
+          const net =
+            targetWallet === 'personal'
+              ? grossWithdrawal
+              : Math.floor(grossWithdrawal * 0.9)
           stepWithdraw = net
           totalWithdrawnCents += net
           totalPool -= grossWithdrawal

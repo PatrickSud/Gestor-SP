@@ -59,8 +59,12 @@ export const Renderer = {
         Formatter.addDays(p.date, p.days)
       )
 
-      const walletLabel = p.wallet === 'personal' ? ' • <span class="text-indigo-400">Pess.</span>' : 
-                          p.wallet === 'revenue' ? ' • <span class="text-emerald-400">Rec.</span>' : '';
+      const walletLabel =
+        p.wallet === 'personal'
+          ? ' • <span class="text-indigo-400">Pess.</span>'
+          : p.wallet === 'revenue'
+            ? ' • <span class="text-emerald-400">Rec.</span>'
+            : ''
 
       const li = document.createElement('li')
       li.className =
@@ -117,9 +121,13 @@ export const Renderer = {
     if (resProjectedMonthEnd)
       resProjectedMonthEnd.innerText = `Final Mês: ${Formatter.currency(results.projectedEndOfMonthBalance)}`
 
-    const projectedBalanceDisplay = document.getElementById('projectedBalanceDisplay')
+    const projectedBalanceDisplay = document.getElementById(
+      'projectedBalanceDisplay'
+    )
     if (projectedBalanceDisplay)
-        projectedBalanceDisplay.innerText = Formatter.currency(results.finalBalance)
+      projectedBalanceDisplay.innerText = Formatter.currency(
+        results.finalBalance
+      )
 
     // Card 4: Próximo Saque
     const resNextDate = document.getElementById('resNextDate')
@@ -135,8 +143,12 @@ export const Renderer = {
 
     const headerPersonal = document.getElementById('headerPersonalBalance')
     const headerRevenue = document.getElementById('headerRevenueBalance')
-    if (headerPersonal) headerPersonal.innerText = Formatter.currency(results.todayPersonalBalance)
-    if (headerRevenue) headerRevenue.innerText = Formatter.currency(results.todayRevenueBalance)
+    if (headerPersonal)
+      headerPersonal.innerText = Formatter.currency(
+        results.todayPersonalBalance
+      )
+    if (headerRevenue)
+      headerRevenue.innerText = Formatter.currency(results.todayRevenueBalance)
 
     // Remove references to deleted elements (Advanced Performance Row)
     // If elements don't exist, getElementById returns null, so we should check before accessing properties if we kept the cache.
@@ -199,7 +211,7 @@ export const Renderer = {
             return `<span class="px-2 py-0.5 text-[10px] rounded bg-violet-900/50 text-violet-200 font-bold border border-violet-700/50 shadow-sm">${day}/${m}</span>`
           })
           .join('')
-        
+
         listEl.innerHTML = `
           <div class="mt-3 pt-3 border-t border-slate-700/50">
             <div class="text-[9px] text-slate-500 uppercase font-bold mb-2 tracking-wider flex items-center gap-1.5">
@@ -275,7 +287,7 @@ export const Renderer = {
     container.innerHTML = ''
     const [y, m, dayOfMonth] = startDateStr.split('-').map(Number)
     const curDate = new Date(Date.UTC(y, m - 1, 1))
-    const todayStr = new Date().toISOString().split('T')[0]
+    const todayStr = Formatter.getTodayDate()
 
     for (let months = 0; months < 12; months++) {
       const monthName = curDate.toLocaleString('pt-BR', {
@@ -336,9 +348,7 @@ export const Renderer = {
           }
         }
         if (isCycle)
-          markers.push(
-            '<div class="w-1.5 h-1.5 rounded-full bg-white"></div>'
-          )
+          markers.push('<div class="w-1.5 h-1.5 rounded-full bg-white"></div>')
 
         const cell = document.createElement('div')
         cell.className = classes
@@ -373,19 +383,19 @@ export const Renderer = {
     let debitoReceita = 0
 
     const limitDateStr = Formatter.addDays(startDateStr, viewDays)
-    const todayStr = new Date().toISOString().split('T')[0]
+    const todayStr = Formatter.getTodayDate()
     const sortedDates = Object.keys(dailyData).sort()
 
     // Get initial values for the first day (Day 0 Adjustments)
     // We assume the simulation starts with these values in the wallets.
     const initialPersonal = Formatter.toCents(
-      (dailyData[sortedDates[0]] ? sortedDates[0] : null) === startDateStr 
-        ? (window.store?.state.inputs.personalWalletStart || 0) 
+      (dailyData[sortedDates[0]] ? sortedDates[0] : null) === startDateStr
+        ? window.store?.state.inputs.personalWalletStart || 0
         : 0
     )
     const initialRevenue = Formatter.toCents(
-      (dailyData[sortedDates[0]] ? sortedDates[0] : null) === startDateStr 
-        ? (window.store?.state.inputs.revenueWalletStart || 0) 
+      (dailyData[sortedDates[0]] ? sortedDates[0] : null) === startDateStr
+        ? window.store?.state.inputs.revenueWalletStart || 0
         : 0
     )
 
@@ -448,9 +458,9 @@ export const Renderer = {
           dot: '#a855f7',
           tag: 'RECEBIDO'
         })
-        
-        creditoPessoal += (d.inReturnPrincipal || 0)
-        creditoReceita += (d.inReturnProfit || 0)
+
+        creditoPessoal += d.inReturnPrincipal || 0
+        creditoReceita += d.inReturnProfit || 0
       }
 
       if (d.isCycleEnd) {
@@ -466,47 +476,59 @@ export const Renderer = {
 
       // Investment Deductions from Wallet
       if (d.outInvest > 0) {
-          // If we have specific portfolio deductions this day
-          const dayPort = (window.store?.state.portfolio || []).filter(p => p.date === dateStr && p.wallet && p.wallet !== 'none');
-          if (dayPort.length > 0) {
-              dayPort.forEach(p => {
-                  const valCents = Formatter.toCents(p.val);
-                  subItems.push({
-                      label: `Novo Investimento: ${p.name}`,
-                      sub: `Dedução: ${p.wallet === 'personal' ? 'Carteira Pessoal' : 'Carteira de Receita'}`,
-                      val: valCents,
-                      type: 'withdraw-planned', // reuse styling
-                      dot: p.wallet === 'personal' ? '#6366f1' : '#10b981',
-                      tag: 'APORTE'
-                  });
-                  
-                  if (p.wallet === 'personal') debitoPessoal += valCents;
-                  else debitoReceita += valCents;
-              });
-          } else {
-              // Probably a manual adjustment (positive outInvest in Calculator means money leaving?) 
-              // Wait, manual adjustments were handled below. 
-              // Actually, I should check how I implemented outInvest in Calculator.
-          }
+        // If we have specific portfolio deductions this day
+        const dayPort = (window.store?.state.portfolio || []).filter(
+          p => p.date === dateStr && p.wallet && p.wallet !== 'none'
+        )
+        if (dayPort.length > 0) {
+          dayPort.forEach(p => {
+            const valCents = Formatter.toCents(p.val)
+            subItems.push({
+              label: `Novo Investimento: ${p.name}`,
+              sub: `Dedução: ${p.wallet === 'personal' ? 'Carteira Pessoal' : 'Carteira de Receita'}`,
+              val: valCents,
+              type: 'withdraw-planned', // reuse styling
+              dot: p.wallet === 'personal' ? '#6366f1' : '#10b981',
+              tag: 'APORTE'
+            })
+
+            if (p.wallet === 'personal') debitoPessoal += valCents
+            else debitoReceita += valCents
+          })
+        } else {
+          // Probably a manual adjustment (positive outInvest in Calculator means money leaving?)
+          // Wait, manual adjustments were handled below.
+          // Actually, I should check how I implemented outInvest in Calculator.
+        }
       }
 
       if (d.status !== 'none') {
         const realized = d.status === 'realized'
         const label = realized ? 'Saque Realizado' : 'Saque Planejado'
-        const val = realized ? d.outWithdraw : (d.recommendedWallet === 'personal' ? d.tier : Math.floor(d.tier * 0.9))
+        const val = realized
+          ? d.outWithdraw
+          : d.recommendedWallet === 'personal'
+            ? d.tier
+            : Math.floor(d.tier * 0.9)
         const itemType = realized ? 'withdraw-realized' : 'withdraw-planned'
         const dotColor = realized ? '#3b82f6' : '#eab308'
 
         // Identificar Carteira
         let walletName = ''
         if (realized) {
-          walletName = (d.outWithdrawPersonal > 0) ? 'Carteira Pessoal' : 'Carteira de Receita'
+          walletName =
+            d.outWithdrawPersonal > 0
+              ? 'Carteira Pessoal'
+              : 'Carteira de Receita'
         } else {
-          walletName = (d.recommendedWallet === 'personal') ? 'Carteira Pessoal' : 'Carteira de Receita'
+          walletName =
+            d.recommendedWallet === 'personal'
+              ? 'Carteira Pessoal'
+              : 'Carteira de Receita'
         }
 
-        const subLabel = realized 
-          ? `Transferência concluída • ${walletName}` 
+        const subLabel = realized
+          ? `Transferência concluída • ${walletName}`
           : `Projeção de saque • ${walletName}`
 
         subItems.push({
@@ -595,11 +617,23 @@ export const Renderer = {
                         </div>`
         })
 
-        const dayCreditoPessoal = (d.inReturnPrincipal || 0) + (index === 0 ? initialPersonal : 0) + (adjPersonal > 0 ? adjPersonal : 0)
-        const dayCreditoReceita = (taskIncome || 0) + (recurringIncome || 0) + (d.inReturnProfit || 0) + (index === 0 ? initialRevenue : 0) + (adjRevenue > 0 ? adjRevenue : 0)
-        const dayDebitoPessoal = (d.outWithdrawPersonal || 0) + (adjPersonal < 0 ? Math.abs(adjPersonal) : 0)
-        const dayDebitoReceita = (d.outWithdrawRevenue || 0) + (adjRevenue < 0 ? Math.abs(adjRevenue) : 0)
-        
+        const dayCreditoPessoal =
+          (d.inReturnPrincipal || 0) +
+          (index === 0 ? initialPersonal : 0) +
+          (adjPersonal > 0 ? adjPersonal : 0)
+        const dayCreditoReceita =
+          (taskIncome || 0) +
+          (recurringIncome || 0) +
+          (d.inReturnProfit || 0) +
+          (index === 0 ? initialRevenue : 0) +
+          (adjRevenue > 0 ? adjRevenue : 0)
+        const dayDebitoPessoal =
+          (d.outWithdrawPersonal || 0) +
+          (adjPersonal < 0 ? Math.abs(adjPersonal) : 0)
+        const dayDebitoReceita =
+          (d.outWithdrawRevenue || 0) +
+          (adjRevenue < 0 ? Math.abs(adjRevenue) : 0)
+
         const dayTotalCredito = dayCreditoPessoal + dayCreditoReceita
         const dayTotalDebito = dayDebitoPessoal + dayDebitoReceita
 
@@ -642,7 +676,10 @@ export const Renderer = {
       '<p class="text-center text-slate-500 py-10">Sem eventos no período.</p>'
 
     const lastDateInPeriod = sortedDates.reverse().find(d => d <= limitDateStr)
-    const lastDayData = dailyData[lastDateInPeriod] || { endPersonal: 0, endRevenue: 0 }
+    const lastDayData = dailyData[lastDateInPeriod] || {
+      endPersonal: 0,
+      endRevenue: 0
+    }
 
     const footerHtml = `
       <div class="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-slate-700">

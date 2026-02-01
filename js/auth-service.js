@@ -30,13 +30,18 @@ class AuthService {
         const loginBtn = document.getElementById('loginBtn');
         const logoutBtn = document.getElementById('logoutBtn');
         const loginGoogleBtn = document.getElementById('loginGoogleBtn');
+        const loginBtnMobile = document.getElementById('loginBtnMobile');
+        const logoutBtnMobile = document.getElementById('logoutBtnMobile');
 
         if (loginBtn) loginBtn.addEventListener('click', () => {
             // Open Login Modal (implemented in UI)
             document.getElementById('authModal').classList.remove('hidden');
         });
+        
+        if (loginBtnMobile) loginBtnMobile.addEventListener('click', () => this.loginWithGoogle());
 
         if (logoutBtn) logoutBtn.addEventListener('click', () => this.logout());
+        if (logoutBtnMobile) logoutBtnMobile.addEventListener('click', () => this.logout());
 
         if (loginGoogleBtn) loginGoogleBtn.addEventListener('click', () => this.loginWithGoogle());
 
@@ -120,14 +125,34 @@ class AuthService {
         const userNameDisplay = document.getElementById('userNameDisplay');
         const userAvatar = document.getElementById('userAvatar');
 
+        // Mobile UI Elements
+        const loginBtnMobile = document.getElementById('loginBtnMobile');
+        const userProfileMobile = document.getElementById('userProfileMobile');
+        const userNameMobile = document.getElementById('userNameMobile');
+        const userAvatarMobile = document.getElementById('userAvatarMobile');
+
         if (user) {
-            if (loginBtn) loginBtn.classList.add('hidden');
-            if (userProfileArea) userProfileArea.classList.remove('hidden');
+            // Desktop: Toggle md:flex to show/hide while keeping 'hidden' for mobile
+            if (loginBtn) loginBtn.classList.remove('md:flex');
+            if (userProfileArea) userProfileArea.classList.add('md:flex');
+            
             if (userNameDisplay) userNameDisplay.textContent = user.displayName || user.email;
             if (userAvatar) userAvatar.src = user.photoURL || 'https://ui-avatars.com/api/?name=' + (user.displayName || 'User');
+
+            // Mobile: Toggle hidden
+            if (loginBtnMobile) loginBtnMobile.classList.add('hidden');
+            if (userProfileMobile) userProfileMobile.classList.remove('hidden');
+            if (userNameMobile) userNameMobile.textContent = user.displayName || user.email;
+            if (userAvatarMobile) userAvatarMobile.src = user.photoURL || 'https://ui-avatars.com/api/?name=' + (user.displayName || 'User');
+
         } else {
-            if (loginBtn) loginBtn.classList.remove('hidden');
-            if (userProfileArea) userProfileArea.classList.add('hidden');
+            // Desktop
+            if (loginBtn) loginBtn.classList.add('md:flex');
+            if (userProfileArea) userProfileArea.classList.remove('md:flex');
+
+            // Mobile
+            if (loginBtnMobile) loginBtnMobile.classList.remove('hidden');
+            if (userProfileMobile) userProfileMobile.classList.add('hidden');
         }
     }
 }

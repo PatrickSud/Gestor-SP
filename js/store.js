@@ -1,3 +1,5 @@
+import { Formatter } from './utils/formatter.js'
+
 /**
  * State Management using Pub/Sub pattern
  */
@@ -33,7 +35,7 @@ class Store {
   }
 
   getInitialData() {
-    const today = new Date().toISOString().split('T')[0]
+    const today = Formatter.getTodayDate()
     return {
       inputs: {
         dataInicio: today,
@@ -50,7 +52,7 @@ class Store {
         withdrawTarget: '0',
         futureToggle: 'false',
         capitalInicial: '50',
-        simStartDate: new Date().toISOString().split('T')[0],
+        simStartDate: Formatter.getTodayDate(),
         diasCiclo: '3',
         taxaDiaria: '1.2',
         repeticoesCiclo: '1',
@@ -112,7 +114,8 @@ class Store {
       portfolio: [...this.state.portfolio],
       selectedWeeks: [...this.state.selectedWeeks],
       goals: [...(this.state.goals || [])],
-      realizedWithdrawals: [...(this.state.realizedWithdrawals || [])]
+      realizedWithdrawals: [...(this.state.realizedWithdrawals || [])],
+      manualAdjustments: [...(this.state.manualAdjustments || [])]
     }
 
     this.state.currentProfileId = id
@@ -123,6 +126,7 @@ class Store {
     this.state.selectedWeeks = [...profile.selectedWeeks]
     this.state.goals = [...(profile.goals || [])]
     this.state.realizedWithdrawals = [...(profile.realizedWithdrawals || [])]
+    this.state.manualAdjustments = [...(profile.manualAdjustments || [])]
 
     this.saveToStorage()
     this.notify()
@@ -160,7 +164,8 @@ class Store {
       portfolio: this.state.portfolio,
       selectedWeeks: this.state.selectedWeeks,
       goals: this.state.goals || [],
-      realizedWithdrawals: this.state.realizedWithdrawals || []
+      realizedWithdrawals: this.state.realizedWithdrawals || [],
+      manualAdjustments: this.state.manualAdjustments || []
     }
 
     const dataToSave = {
@@ -181,7 +186,8 @@ class Store {
       portfolio: this.state.portfolio,
       selectedWeeks: this.state.selectedWeeks,
       goals: this.state.goals || [],
-      realizedWithdrawals: this.state.realizedWithdrawals || []
+      realizedWithdrawals: this.state.realizedWithdrawals || [],
+      manualAdjustments: this.state.manualAdjustments || []
     }
     return {
       currentProfileId: this.state.currentProfileId,
@@ -202,6 +208,7 @@ class Store {
     this.state.selectedWeeks = [...current.selectedWeeks]
     this.state.goals = [...(current.goals || [])]
     this.state.realizedWithdrawals = [...(current.realizedWithdrawals || [])]
+    this.state.manualAdjustments = [...(current.manualAdjustments || [])]
 
     this.saveToStorage() // Update local storage too
     this.notify()
@@ -252,6 +259,7 @@ class Store {
       this.state.selectedWeeks = [...current.selectedWeeks]
       this.state.goals = [...(current.goals || [])]
       this.state.realizedWithdrawals = [...(current.realizedWithdrawals || [])]
+      this.state.manualAdjustments = [...(current.manualAdjustments || [])]
 
       if (migrated) {
         this.saveToStorage() // Persist migration immediately
@@ -275,7 +283,9 @@ class Store {
 
   importAllData(jsonString) {
     try {
-      const { data: parsed, migrated } = this.migrateData(JSON.parse(jsonString))
+      const { data: parsed, migrated } = this.migrateData(
+        JSON.parse(jsonString)
+      )
       if (!parsed.profiles || !parsed.currentProfileId)
         throw new Error('Formato inválido')
 
@@ -288,6 +298,8 @@ class Store {
       this.state.portfolio = [...current.portfolio]
       this.state.selectedWeeks = [...current.selectedWeeks]
       this.state.goals = [...(current.goals || [])]
+      this.state.realizedWithdrawals = [...(current.realizedWithdrawals || [])]
+      this.state.manualAdjustments = [...(current.manualAdjustments || [])]
 
       this.saveToStorage()
       this.notify()
