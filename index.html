@@ -379,6 +379,31 @@
                 </div>
             </div>
 
+            <!-- Section: AI Assistant -->
+            <div class="space-y-3 pt-2">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-1">🤖 Assistente IA</label>
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
+                    <div class="bg-slate-900/50 p-3 rounded-lg border border-purple-500/30 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-purple-500"></div>
+                        <label class="text-[10px] text-purple-300 font-bold uppercase mb-2 block">API Key do Gemini</label>
+                        <input type="password" id="geminiApiKey" 
+                            placeholder="Cole sua API Key aqui..."
+                            class="custom-input w-full rounded-lg py-2 px-3 text-xs text-slate-200 border border-slate-700 bg-slate-900/50">
+                        <div class="flex items-center justify-between mt-2">
+                            <a href="https://aistudio.google.com/apikey" target="_blank" 
+                               class="text-[9px] text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1">
+                                <i class="fas fa-external-link-alt"></i> Obter API Key
+                            </a>
+                            <span id="aiKeyStatus" class="text-[9px] font-bold"></span>
+                        </div>
+                    </div>
+                    <p class="text-[9px] text-slate-500 leading-relaxed">
+                        <i class="fas fa-info-circle text-slate-600 mr-1"></i>
+                        Com a IA ativada, você terá um assistente pessoal para analisar suas finanças e responder dúvidas sobre a aplicação.
+                    </p>
+                </div>
+            </div>
+
             <div class="pb-10 text-center space-y-2">
                 <button onclick="app.toggleSidebar()"
                     class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs rounded-lg font-bold border border-slate-700 transition-colors">
@@ -954,6 +979,79 @@
             <!-- Modal Footer (Cumulative Summary) -->
             <div id="timelineFooter" class="p-6 bg-slate-900 border-t border-slate-800">
                 <!-- Detailed summary injected here via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Assistant Floating Button -->
+    <button id="aiAssistantBtn" onclick="app.openAiChat()"
+        class="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-full shadow-lg shadow-purple-900/50 z-40 hidden items-center justify-center hover:scale-110 transition-transform ai-pulse-btn group">
+        <i class="fas fa-robot text-white text-xl group-hover:animate-bounce"></i>
+    </button>
+
+    <!-- AI Chat Modal -->
+    <div id="aiChatModal" class="fixed inset-0 z-[80] hidden modal-overlay flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-slate-900 sm:rounded-2xl border-t sm:border border-slate-700 shadow-2xl w-full sm:max-w-lg h-[85vh] sm:h-[600px] flex flex-col overflow-hidden animate-slide-up">
+            <!-- Chat Header -->
+            <div class="p-4 bg-gradient-to-r from-purple-900/50 to-indigo-900/50 border-b border-slate-700 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
+                        <i class="fas fa-robot text-white"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white">Assistente Financeiro</h3>
+                        <p class="text-[10px] text-slate-400">Powered by Gemini AI</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="app.clearAiChat()" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors" title="Limpar conversa">
+                        <i class="fas fa-trash-alt text-sm"></i>
+                    </button>
+                    <button onclick="app.closeModal('aiChatModal')" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chat Messages -->
+            <div id="aiChatMessages" class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-slate-900">
+                <!-- Welcome Message -->
+                <div class="ai-message">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex-shrink-0 flex items-center justify-center">
+                            <i class="fas fa-robot text-white text-xs"></i>
+                        </div>
+                        <div class="flex-1 bg-slate-800 rounded-2xl rounded-tl-sm p-3 border border-slate-700">
+                            <p class="text-sm text-slate-200">Olá! 👋 Sou seu assistente financeiro. Posso analisar suas finanças, explicar funcionalidades e sugerir otimizações.</p>
+                            <p class="text-[10px] text-slate-500 mt-2">Experimente perguntar:</p>
+                            <div class="flex flex-wrap gap-1 mt-1">
+                                <button onclick="app.sendQuickAiMessage('Como está minha situação financeira?')" class="text-[10px] bg-slate-700 hover:bg-slate-600 text-slate-300 px-2 py-1 rounded-full transition-colors">
+                                    📊 Situação financeira
+                                </button>
+                                <button onclick="app.sendQuickAiMessage('Qual o melhor momento para sacar?')" class="text-[10px] bg-slate-700 hover:bg-slate-600 text-slate-300 px-2 py-1 rounded-full transition-colors">
+                                    💰 Quando sacar?
+                                </button>
+                                <button onclick="app.sendQuickAiMessage('Como funciona o simulador?')" class="text-[10px] bg-slate-700 hover:bg-slate-600 text-slate-300 px-2 py-1 rounded-full transition-colors">
+                                    🚀 Usar simulador
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Input -->
+            <div class="p-4 bg-slate-800 border-t border-slate-700">
+                <form id="aiChatForm" onsubmit="app.sendAiMessage(event)" class="flex items-center gap-2">
+                    <input type="text" id="aiChatInput" 
+                        placeholder="Digite sua pergunta..." 
+                        class="flex-1 bg-slate-900 border border-slate-700 rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-colors"
+                        autocomplete="off">
+                    <button type="submit" id="aiSendBtn"
+                        class="w-12 h-12 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
             </div>
         </div>
     </div>

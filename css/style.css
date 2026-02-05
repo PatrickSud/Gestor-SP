@@ -440,3 +440,97 @@ body.landscape-mode #profileBtn {
 body.landscape-mode .grid-cols-1 {
   grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
 }
+
+/* AI Assistant Styles */
+.ai-pulse-btn {
+  animation: aiPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes aiPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(147, 51, 234, 0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* AI Chat Messages */
+.ai-message .markdown-content p {
+  margin-bottom: 0.5rem;
+}
+
+.ai-message .markdown-content p:last-child {
+  margin-bottom: 0;
+}
+
+.ai-message .markdown-content ul,
+.ai-message .markdown-content ol {
+  margin-left: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.ai-message .markdown-content li {
+  margin-bottom: 0.25rem;
+}
+
+.ai-message .markdown-content code {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.85em;
+}
+
+.ai-message .markdown-content strong {
+  color: #e2e8f0;
+}
+
+/* Typing Indicator */
+.ai-typing {
+  display: flex;
+  gap: 4px;
+  padding: 8px;
+}
+
+.ai-typing span {
+  width: 8px;
+  height: 8px;
+  background: #64748b;
+  border-radius: 50%;
+  animation: typing 1.4s infinite ease-in-out both;
+}
+
+.ai-typing span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.ai-typing span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes typing {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+

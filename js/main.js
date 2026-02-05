@@ -5,6 +5,7 @@ import { Renderer } from './ui/render.js'
 import { ChartManager } from './ui/chart.js'
 import { authService } from './auth-service.js'
 import { Exporter } from './utils/exporter.js'
+import { aiService } from './ai-service.js'
 
 /**
  * Main Application Controller
@@ -40,6 +41,9 @@ class App {
 
       // Check notification permission
       this.checkNotificationPermission()
+
+      // Initialize AI Assistant visibility
+      this.updateAiButtonVisibility()
 
       Renderer.toast('Sistema inicializado com sucesso', 'success')
     } catch (error) {
@@ -225,6 +229,18 @@ class App {
     const importInp = document.getElementById('importFile')
     if (importInp) {
       importInp.onchange = e => this.importBackup(e.target.files[0])
+    }
+
+    // AI API Key Handler
+    const aiKeyInput = document.getElementById('geminiApiKey')
+    if (aiKeyInput) {
+      aiKeyInput.addEventListener('change', e => {
+        store.updateInput('geminiApiKey', e.target.value)
+        this.updateAiButtonVisibility()
+        if (e.target.value.trim()) {
+          Renderer.toast('API Key do Gemini configurada!', 'success')
+        }
+      })
     }
   }
 
@@ -1448,6 +1464,189 @@ class App {
     } else {
       Renderer.toast('Erro ao gerar Excel. Verifique o console.', 'error')
     }
+  }
+
+  // --- AI Assistant Methods ---
+  updateAiButtonVisibility() {
+    const btn = document.getElementById('aiAssistantBtn')
+    const statusEl = document.getElementById('aiKeyStatus')
+    
+    if (aiService.isConfigured()) {
+      btn?.classList.remove('hidden')
+      btn?.classList.add('flex')
+      if (statusEl) {
+        statusEl.textContent = '✓ Ativa'
+        statusEl.className = 'text-[9px] font-bold text-emerald-400'
+      }
+    } else {
+      btn?.classList.add('hidden')
+      btn?.classList.remove('flex')
+      if (statusEl) {
+        statusEl.textContent = 'Não configurada'
+        statusEl.className = 'text-[9px] font-bold text-slate-500'
+      }
+    }
+  }
+
+  openAiChat() {
+    if (!aiService.isConfigured()) {
+      Renderer.toast('Configure sua API Key do Gemini nas configurações', 'error')
+      this.toggleSidebar()
+      return
+    }
+    this.openModal('aiChatModal')
+    document.getElementById('aiChatInput')?.focus()
+  }
+
+  async sendAiMessage(event) {
+    event?.preventDefault()
+    
+    const input = document.getElementById('aiChatInput')
+    const sendBtn = document.getElementById('aiSendBtn')
+    const messagesContainer = document.getElementById('aiChatMessages')
+    const message = input?.value?.trim()
+    
+    if (!message) return
+
+    // Clear input and disable button
+    input.value = ''
+    sendBtn.disabled = true
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'
+
+    // Add user message to chat
+    this.appendAiMessage(message, 'user')
+    
+    // Add typing indicator
+    const typingId = 'ai-typing-' + Date.now()
+    messagesContainer.insertAdjacentHTML('beforeend', `
+      <div id="${typingId}" class="ai-message">
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex-shrink-0 flex items-center justify-center">
+            <i class="fas fa-robot text-white text-xs"></i>
+          </div>
+          <div class="bg-slate-800 rounded-2xl rounded-tl-sm p-3 border border-slate-700">
+            <div class="ai-typing">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `)
+    messagesContainer.scrollTop = messagesContainer.scrollHeight
+
+    try {
+      const response = await aiService.sendMessage(message)
+      
+      // Remove typing indicator
+      document.getElementById(typingId)?.remove()
+      
+      // Add AI response
+      this.appendAiMessage(response, 'assistant')
+      
+    } catch (error) {
+      // Remove typing indicator
+      document.getElementById(typingId)?.remove()
+      
+      // Add error message
+      this.appendAiMessage(`⚠️ ${error.message}`, 'error')
+    }
+
+    // Re-enable button
+    sendBtn.disabled = false
+    sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>'
+    input?.focus()
+  }
+
+  sendQuickAiMessage(message) {
+    const input = document.getElementById('aiChatInput')
+    if (input) {
+      input.value = message
+      this.sendAiMessage(new Event('submit'))
+    }
+  }
+
+  appendAiMessage(content, type) {
+    const container = document.getElementById('aiChatMessages')
+    if (!container) return
+
+    const isUser = type === 'user'
+    const isError = type === 'error'
+
+    // Simple markdown-like formatting for AI responses
+    let formattedContent = content
+    if (!isUser && !isError) {
+      formattedContent = this.formatAiResponse(content)
+    }
+
+    if (isUser) {
+      container.insertAdjacentHTML('beforeend', `
+        <div class="ai-message flex justify-end">
+          <div class="max-w-[80%] bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl rounded-tr-sm p-3 shadow-lg">
+            <p class="text-sm text-white">${this.escapeHtml(content)}</p>
+          </div>
+        </div>
+      `)
+    } else {
+      const bgClass = isError ? 'bg-red-900/30 border-red-700/50' : 'bg-slate-800 border-slate-700'
+      container.insertAdjacentHTML('beforeend', `
+        <div class="ai-message">
+          <div class="flex items-start gap-3">
+            <div class="w-8 h-8 bg-gradient-to-br ${isError ? 'from-red-500 to-orange-600' : 'from-purple-500 to-indigo-600'} rounded-full flex-shrink-0 flex items-center justify-center">
+              <i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-robot'} text-white text-xs"></i>
+            </div>
+            <div class="flex-1 ${bgClass} rounded-2xl rounded-tl-sm p-3 border">
+              <div class="text-sm text-slate-200 markdown-content">${formattedContent}</div>
+            </div>
+          </div>
+        </div>
+      `)
+    }
+
+    container.scrollTop = container.scrollHeight
+  }
+
+  formatAiResponse(text) {
+    // Basic markdown formatting
+    return text
+      // Escape HTML first
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      // Bold
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      // Italic
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      // Inline code
+      .replace(/`(.+?)`/g, '<code>$1</code>')
+      // Line breaks
+      .replace(/\n/g, '<br>')
+      // Lists (simple)
+      .replace(/^- (.+)/gm, '• $1')
+  }
+
+  escapeHtml(text) {
+    const div = document.createElement('div')
+    div.textContent = text
+    return div.innerHTML
+  }
+
+  clearAiChat() {
+    aiService.clearHistory()
+    const container = document.getElementById('aiChatMessages')
+    if (container) {
+      container.innerHTML = `
+        <div class="ai-message">
+          <div class="flex items-start gap-3">
+            <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex-shrink-0 flex items-center justify-center">
+              <i class="fas fa-robot text-white text-xs"></i>
+            </div>
+            <div class="flex-1 bg-slate-800 rounded-2xl rounded-tl-sm p-3 border border-slate-700">
+              <p class="text-sm text-slate-200">Conversa limpa! 🧹 Como posso ajudar?</p>
+            </div>
+          </div>
+        </div>
+      `
+    }
+    Renderer.toast('Histórico de conversa limpo', 'success')
   }
 }
 
