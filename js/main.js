@@ -13,6 +13,7 @@ import { aiService } from './ai-service.js'
 
 class App {
   constructor() {
+    this.insightsTimer = null
     this.init()
   }
 
@@ -134,9 +135,12 @@ class App {
       // Local Notification for Withdrawal Day
       this.checkWithdrawalNotification(results.results)
 
-      // Refresh proactive insights (invalidate cache since data changed)
-      aiService.invalidateInsightsCache()
-      this.loadInsights()
+      // Refresh proactive insights (debounced to avoid API rate limits)
+      clearTimeout(this.insightsTimer)
+      this.insightsTimer = setTimeout(() => {
+        aiService.invalidateInsightsCache()
+        this.loadInsights()
+      }, 2000)
 
       if (save) store.saveToStorage()
     }

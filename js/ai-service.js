@@ -186,6 +186,12 @@ Agora responda à pergunta do usuário com base no contexto acima.`
       })
 
       if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error('Limite de requisições do Gemini excedido. Aguarde um momento.')
+        }
+        if (response.status === 401 || response.status === 403) {
+          throw new Error('API Key do Gemini inválida ou sem permissão.')
+        }
         throw new Error(`Erro na API Gemini: ${response.status}`)
       }
 
@@ -240,6 +246,9 @@ Agora responda à pergunta do usuário com base no contexto acima.`
 
       if (!response.ok) {
         if (response.status === 401) throw new Error('API Key da OpenAI inválida.')
+        if (response.status === 429) {
+          throw new Error('Limite ou Cota da OpenAI excedida. Verifique se você tem créditos em sua conta OpenAI (platform.openai.com).')
+        }
         throw new Error(`Erro na API OpenAI: ${response.status}`)
       }
 
