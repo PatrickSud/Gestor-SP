@@ -66,7 +66,7 @@ class Store {
         geminiApiKey: '',
         openaiApiKey: '',
         groqApiKey: '',
-        groqModel: 'deepseek-r1-distill-llama-70b',
+        groqModel: 'deepseek-r1-distill-qwen-32b',
         aiProvider: 'gemini',
         syncAiKeys: false
       },
