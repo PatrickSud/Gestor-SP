@@ -150,23 +150,13 @@ export const Renderer = {
     this.els.resLucroLiquido().innerText = Formatter.currency(results.netProfit)
     
     // Updates for requested detail view
+    // Updates for requested detail view
     if (this.els.resCardIncome()) {
-        this.els.resCardIncome().innerText = `Renda/Extras: ${Formatter.currency(results.totalIncome || 0)}`
+        this.els.resCardIncome().innerText = `Renda: ${Formatter.currency(results.totalIncome || 0)}`
     }
     if (this.els.resCardInvestProfit()) {
-        const invProfit = (results.netProfit || 0) - (results.totalIncome || 0)
-        // Or if we have a direct property for investment profit, use it. 
-        // Assuming netProfit = income + invProfit - expenses? 
-        // Let's assume totalInvestmentProfit is available or we estimate it.
-        // Actually, let's look at calculator.js results.
-        // For now, let's use the explicit properties if available, or derive.
-        // Based on typical logic: Net Profit = (Total Income + Total Returns Interest) - Total Withdrawals? 
-        // Wait, "Lucro Liquido" usually implies profit. 
-        // Let's populate with what we have. If `results.totalInvestmentProfit` exists use it.
-        // If not, we might need to update Calculator. For now, let's try to access `results.totalInvestmentProfit`.
-        
         const profit = results.totalInvestmentProfit !== undefined ? results.totalInvestmentProfit : 0
-        this.els.resCardInvestProfit().innerText = `Lucro Invest.: ${Formatter.currency(profit)}`
+        this.els.resCardInvestProfit().innerText = `Lucro: ${Formatter.currency(profit)}`
     }
 
     // Card 2: Histórico de Saques
