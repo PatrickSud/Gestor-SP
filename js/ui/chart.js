@@ -74,8 +74,10 @@ export const ChartManager = {
             borderWidth: 2,
             fill: true,
             tension: 0.4,
-            pointRadius: 0,
-            pointHoverRadius: 4
+            pointRadius: 3,
+            pointHoverRadius: 6,
+            pointBackgroundColor: '#FFFFFF',
+            pointBorderWidth: 2,
           }
         ]
       },
