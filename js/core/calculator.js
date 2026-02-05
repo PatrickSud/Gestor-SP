@@ -573,8 +573,8 @@ export const Calculator = {
     return {
       results: {
         netProfit: totalIncomeCents + totalInvProfitCents,
-        totalIncomeCents,
-        totalInvProfitCents,
+        totalIncome: totalIncomeCents,
+        totalInvestmentProfit: totalInvProfitCents,
         totalWithdrawn: totalWithdrawnCents,
         currentMonthWithdrawn,
         finalBalance: currentInv + currentPersonalWallet + currentRevenueWallet,

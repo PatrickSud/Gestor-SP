@@ -22,6 +22,8 @@ export const Renderer = {
     resMelhorSaque: () => document.getElementById('resMelhorSaque'),
     navTotalBalance: () => document.getElementById('navTotalBalance'),
     currentProfileName: () => document.getElementById('currentProfileName'),
+    resCardIncome: () => document.getElementById('resCardIncome'),
+    resCardInvestProfit: () => document.getElementById('resCardInvestProfit'),
 
     // Summaries
     summaryInvCount: () => document.getElementById('summaryInvCount'),
@@ -146,7 +148,26 @@ export const Renderer = {
   renderResults(results) {
     // Card 1: Lucro Líquido
     this.els.resLucroLiquido().innerText = Formatter.currency(results.netProfit)
-    this.els.resRoi().innerText = `ROI Total: ${results.roi.toFixed(1)}%`
+    
+    // Updates for requested detail view
+    if (this.els.resCardIncome()) {
+        this.els.resCardIncome().innerText = `Renda/Extras: ${Formatter.currency(results.totalIncome || 0)}`
+    }
+    if (this.els.resCardInvestProfit()) {
+        const invProfit = (results.netProfit || 0) - (results.totalIncome || 0)
+        // Or if we have a direct property for investment profit, use it. 
+        // Assuming netProfit = income + invProfit - expenses? 
+        // Let's assume totalInvestmentProfit is available or we estimate it.
+        // Actually, let's look at calculator.js results.
+        // For now, let's use the explicit properties if available, or derive.
+        // Based on typical logic: Net Profit = (Total Income + Total Returns Interest) - Total Withdrawals? 
+        // Wait, "Lucro Liquido" usually implies profit. 
+        // Let's populate with what we have. If `results.totalInvestmentProfit` exists use it.
+        // If not, we might need to update Calculator. For now, let's try to access `results.totalInvestmentProfit`.
+        
+        const profit = results.totalInvestmentProfit !== undefined ? results.totalInvestmentProfit : 0
+        this.els.resCardInvestProfit().innerText = `Lucro Invest.: ${Formatter.currency(profit)}`
+    }
 
     // Card 2: Histórico de Saques
     const resMonthWithdraw = document.getElementById('resMonthWithdraw')
