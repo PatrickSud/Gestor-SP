@@ -60,7 +60,12 @@ export const Renderer = {
       
       const aEnd = new Date(aEndStr)
       const bEnd = new Date(bEndStr)
-      return aEnd - bEnd
+      
+       // For active: closest end date first
+      if (!aExpired) return aEnd - bEnd
+
+       // For expired: most recent end date first (top of the expired list)
+      return bEnd - aEnd
     })
 
     sorted.forEach(p => {

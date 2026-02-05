@@ -28,8 +28,14 @@ export const Exporter = {
       const darkBg = [15, 23, 42] // Dark slate
       const textColor = [226, 232, 240] // Light slate
 
-      // Header Section
+
+      // Set background for the entire page
       doc.setFillColor(...darkBg)
+      doc.rect(0, 0, 210, 297, 'F') // A4 height is 297mm
+
+      // Header Section
+      // Slightly lighter dark for header
+      doc.setFillColor(30, 41, 59) // Slate 800
       doc.rect(0, 0, 210, 45, 'F')
 
       // Title
@@ -94,11 +100,11 @@ export const Exporter = {
       const startX = 10
 
       // 1. Lucro Líquido Block
-      doc.setFillColor(248, 250, 252)
+      doc.setFillColor(30, 41, 59) // Slate 800
       doc.roundedRect(startX, yPos, boxWidth, 25, 3, 3, 'F')
       doc.setFontSize(8)
       doc.setFont('helvetica', 'normal')
-      doc.setTextColor(100, 116, 139)
+      doc.setTextColor(148, 163, 184) // Slate 400
       doc.text('Lucro Líquido', startX + boxWidth / 2, yPos + 7, {
         align: 'center'
       })
@@ -114,19 +120,19 @@ export const Exporter = {
 
       // 2. Composição Block (Renda + Invest)
       const x2 = startX + boxWidth + spacing
-      doc.setFillColor(248, 250, 252)
+      doc.setFillColor(30, 41, 59) // Slate 800
       doc.roundedRect(x2, yPos, boxWidth, 25, 3, 3, 'F')
 
       // Renda Part
       doc.setFontSize(7)
       doc.setFont('helvetica', 'normal')
-      doc.setTextColor(100, 116, 139)
+      doc.setTextColor(148, 163, 184) // Slate 400
       doc.text('Renda / Extras', x2 + boxWidth / 2, yPos + 5.5, {
         align: 'center'
       })
       doc.setFontSize(10)
       doc.setFont('helvetica', 'bold')
-      doc.setTextColor(14, 165, 233)
+      doc.setTextColor(56, 189, 248) // Sky 400
       doc.text(
         this.formatCurrency(filteredRes.income),
         x2 + boxWidth / 2,
@@ -135,14 +141,14 @@ export const Exporter = {
       )
 
       // Divider Line
-      doc.setDrawColor(226, 232, 240)
+      doc.setDrawColor(51, 65, 85) // Slate 700
       doc.setLineWidth(0.1)
       doc.line(x2 + 10, yPos + 12.5, x2 + 50, yPos + 12.5)
 
       // Invest Part
       doc.setFontSize(7)
       doc.setFont('helvetica', 'normal')
-      doc.setTextColor(100, 116, 139)
+      doc.setTextColor(148, 163, 184) // Slate 400
       doc.text('Lucro Invest.', x2 + boxWidth / 2, yPos + 17.5, {
         align: 'center'
       })
@@ -158,11 +164,11 @@ export const Exporter = {
 
       // 3. Total Sacado Block
       const x3 = startX + (boxWidth + spacing) * 2
-      doc.setFillColor(248, 250, 252)
+      doc.setFillColor(30, 41, 59) // Slate 800
       doc.roundedRect(x3, yPos, boxWidth, 25, 3, 3, 'F')
       doc.setFontSize(8)
       doc.setFont('helvetica', 'normal')
-      doc.setTextColor(100, 116, 139)
+      doc.setTextColor(148, 163, 184) // Slate 400
       doc.text('Total Sacado', x3 + boxWidth / 2, yPos + 7, { align: 'center' })
       doc.setFontSize(14)
       doc.setFont('helvetica', 'bold')
@@ -179,7 +185,7 @@ export const Exporter = {
       // Financial Table
       doc.setFontSize(14)
       doc.setFont('helvetica', 'bold')
-      doc.setTextColor(0, 0, 0)
+      doc.setTextColor(255, 255, 255) // White
       doc.text('Detalhamento Financeiro', 15, yPos)
 
       yPos += 5
@@ -236,10 +242,13 @@ export const Exporter = {
           row.push(formatF(currentValues.invest, 'invest'))
         }
 
+        const total = formatF(currentValues.personal + currentValues.revenue, 'total')
+
         row.push(
           formatF(currentValues.withdraw, 'withdraw'),
           formatF(currentValues.personal, 'personal'),
-          formatF(currentValues.revenue, 'revenue')
+          formatF(currentValues.revenue, 'revenue'),
+          total
         )
 
         tableData.push(row)
@@ -252,7 +261,7 @@ export const Exporter = {
         headers.push('Aportes')
       }
 
-      headers.push('Saques', 'Saldo Pessoal', 'Saldo Receita')
+      headers.push('Saques', 'Saldo Pessoal', 'Saldo Receita', 'Saldo Total')
 
       // Build column styles with semantic colors for each category
       const columnStyles = {
@@ -290,12 +299,18 @@ export const Exporter = {
         fontStyle: 'bold',
         textColor: [5, 150, 105]
       } // Saldo Pessoal (Emerald)
-      columnStyles[colIndex] = {
+      columnStyles[colIndex++] = {
         halign: 'right',
-        cellWidth: hasInvestments ? 25 : 30,
+        cellWidth: hasInvestments ? 20 : 25,
         fontStyle: 'bold',
         textColor: [37, 99, 235]
       } // Saldo Receita (Blue)
+      columnStyles[colIndex] = {
+        halign: 'right',
+        cellWidth: hasInvestments ? 20 : 25,
+        fontStyle: 'bold',
+        textColor: [255, 255, 255]
+      } // Saldo Total (White)
 
       // Generate table using autoTable
       doc.autoTable({
@@ -308,15 +323,18 @@ export const Exporter = {
           textColor: [255, 255, 255],
           fontStyle: 'bold',
           fontSize: 8,
-          halign: 'center'
+          halign: 'center',
+          lineWidth: 0.1,
+          lineColor: [51, 65, 85]
         },
         bodyStyles: {
-          fontSize: 7
-          // textColor is defined per column in columnStyles
+          fontSize: 7,
+          fillColor: [15, 23, 42], // Slate 900 for rows
+          textColor: [203, 213, 225] // Slate 300
         },
         columnStyles: columnStyles,
         alternateRowStyles: {
-          fillColor: [248, 250, 252]
+          fillColor: [30, 41, 59] // Slate 800
         },
         margin: { left: 15, right: 15 },
         didParseCell: function (data) {
@@ -435,6 +453,9 @@ export const Exporter = {
         row['Saques'] = formatExcel(currentValues.withdraw, 'withdraw')
         row['Saldo Pessoal'] = formatExcel(currentValues.personal, 'personal')
         row['Saldo Receita'] = formatExcel(currentValues.revenue, 'revenue')
+        
+        const totalBal = currentValues.personal + currentValues.revenue
+        row['Saldo Total'] = formatExcel(totalBal, 'total')
 
         excelData.push(row)
       })
@@ -456,7 +477,8 @@ export const Exporter = {
       colWidths.push(
         { wch: 12 }, // Saques
         { wch: 15 }, // Saldo Pessoal
-        { wch: 15 } // Saldo Receita
+        { wch: 15 }, // Saldo Receita
+        { wch: 15 }  // Saldo Total
       )
 
       ws['!cols'] = colWidths
