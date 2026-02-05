@@ -432,38 +432,12 @@
             </div>
         </div>
 
-        <!-- Chart Section -->
-        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg">
-            <div class="flex items-center justify-between mb-6">
-                <div class="flex items-center gap-2">
-                    <h3 class="font-bold text-white flex items-center gap-2"><i
-                            class="fas fa-chart-area text-blue-500"></i> Evolução Patrimonial</h3>
-                </div>
-                <button onclick="app.openTimelineModal()"
-                    class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-[10px] font-bold uppercase rounded-lg border border-blue-500/30 transition-all shadow-sm">
-                    <i class="fas fa-history"></i> + Detalhes
-                </button>
-            </div>
-            <div class="h-[300px] w-full">
-                <canvas id="balanceChart"></canvas>
-            </div>
-            <!-- Chart Legend -->
-            <div class="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-slate-700/50 pt-4">
-                <div class="flex items-center gap-2">
-                    <div class="w-3 h-0.5 bg-[#f59e0b] rounded-full"></div>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Saque Planejado</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="w-3 h-0.5 bg-[#8b5cf6] rounded-full"></div>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Retorno de Contrato</span>
-                </div>
-            </div>
-        </div>
+
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
             <!-- Left Side: Actions -->
-            <div class="lg:col-span-4 space-y-6">
+            <div class="lg:col-span-4 space-y-6 order-last">
                 <!-- Action Tabs -->
                 <div class="bg-slate-800 rounded-xl border border-slate-700 shadow-lg overflow-hidden">
                     <div class="flex border-b border-slate-700">
@@ -774,6 +748,33 @@
                                 class="text-[11px] font-medium text-slate-200 divide-y divide-slate-700/50"></tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+        </div>
+        <!-- Chart Section -->
+        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg mt-6">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-2">
+                    <h3 class="font-bold text-white flex items-center gap-2"><i
+                            class="fas fa-chart-area text-blue-500"></i> Evolução Patrimonial</h3>
+                </div>
+                <button onclick="app.openTimelineModal()"
+                    class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-[10px] font-bold uppercase rounded-lg border border-blue-500/30 transition-all shadow-sm">
+                    <i class="fas fa-history"></i> + Detalhes
+                </button>
+            </div>
+            <div class="h-[300px] w-full">
+                <canvas id="balanceChart"></canvas>
+            </div>
+            <!-- Chart Legend -->
+            <div class="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-slate-700/50 pt-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-0.5 bg-[#f59e0b] rounded-full"></div>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Saque Planejado</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-0.5 bg-[#8b5cf6] rounded-full"></div>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Retorno de Contrato</span>
                 </div>
             </div>
         </div>
