@@ -307,6 +307,17 @@ Agora responda à pergunta do usuário com base no contexto acima.`
     try {
       const model = store.state.inputs.groqModel || 'deepseek-r1-distill-llama-70b'
       
+      // Sanitização das mensagens: Filtra vazias e garante formato correto
+      const sanitizedMessages = [
+        { role: 'system', content: this.buildSystemPrompt() },
+        ...this.conversationHistory
+          .map(msg => ({
+            role: msg.role === 'model' || msg.role === 'assistant' ? 'assistant' : 'user',
+            content: typeof msg.content === 'string' ? msg.content : (msg.parts?.[0]?.text || '')
+          }))
+          .filter(msg => msg.content && msg.content.trim() !== '')
+      ]
+
       const response = await fetch(this.GROQ_URL, {
         method: 'POST',
         headers: {
@@ -315,20 +326,18 @@ Agora responda à pergunta do usuário com base no contexto acima.`
         },
         body: JSON.stringify({
           model: model,
-          messages: [
-            { role: 'system', content: this.buildSystemPrompt() },
-            ...this.conversationHistory.map(msg => ({
-              role: msg.role === 'model' ? 'assistant' : msg.role,
-              content: typeof msg.content === 'string' ? msg.content : (msg.parts?.[0]?.text || '')
-            }))
-          ],
-          temperature: 0.7
+          messages: sanitizedMessages,
+          temperature: 0.6 // DeepSeek R1 prefere temp menor
         })
       })
 
       if (!response.ok) {
+        const errData = await response.json().catch(() => ({}))
+        console.error('Erro Groq Detalhado:', errData)
+        
         if (response.status === 401) throw new Error('API Key da Groq inválida.')
-        if (response.status === 429) throw new Error('Limite de requisições da Groq excedido. Aguarde um momento.')
+        if (response.status === 400) throw new Error(`Requisição Inválida (400): ${errData.error?.message || 'Histórico malformado'}`)
+        if (response.status === 429) throw new Error('Limite de requisições da Groq excedido.')
         throw new Error(`Erro na API Groq: ${response.status}`)
       }
 
@@ -567,6 +576,15 @@ Não inclua formatação markdown, apenas o JSON.`
             generationConfig: { temperature: 0.5, maxOutputTokens: 256 }
           })
         })
+
+        if (!response.ok) {
+          if (response.status === 429) {
+            console.warn('Limite Gemini (429). Fallback para local.')
+            return localInsights
+          }
+          throw new Error(`Erro Gemini: ${response.status}`)
+        }
+
         const data = await response.json()
         aiResponseText = data.candidates?.[0]?.content?.parts?.[0]?.text
       } 
@@ -590,6 +608,15 @@ Não inclua formatação markdown, apenas o JSON.`
             max_tokens: 256
           })
         })
+
+        if (!response.ok) {
+          if (response.status === 429) {
+            console.warn(`Limite ${provider.toUpperCase()} (429). Fallback para local.`)
+            return localInsights
+          }
+          throw new Error(`Erro ${provider.toUpperCase()}: ${response.status}`)
+        }
+
         const data = await response.json()
         aiResponseText = data.choices?.[0]?.message?.content
       }

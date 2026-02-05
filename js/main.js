@@ -138,7 +138,6 @@ class App {
       // Refresh proactive insights (debounced to avoid API rate limits)
       clearTimeout(this.insightsTimer)
       this.insightsTimer = setTimeout(() => {
-        aiService.invalidateInsightsCache()
         this.loadInsights()
       }, 2000)
 
