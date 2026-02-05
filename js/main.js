@@ -45,6 +45,9 @@ class App {
       // Initialize AI Assistant visibility
       this.updateAiButtonVisibility()
 
+      // Load proactive insights
+      this.loadInsights()
+
       Renderer.toast('Sistema inicializado com sucesso', 'success')
     } catch (error) {
       console.error('Erro na inicialização do App:', error)
@@ -1648,7 +1651,134 @@ class App {
     }
     Renderer.toast('Histórico de conversa limpo', 'success')
   }
+
+  // --- Proactive Insights Methods ---
+  async loadInsights() {
+    if (!aiService.isConfigured()) {
+      // Hide panel if AI not configured, but still show local insights
+      this.renderInsights(aiService.analyzeData())
+      return
+    }
+
+    try {
+      const insights = await aiService.generateAiInsights()
+      this.renderInsights(insights)
+    } catch (error) {
+      console.warn('Erro ao carregar insights:', error)
+      // Fallback to local insights
+      this.renderInsights(aiService.analyzeData())
+    }
+  }
+
+  renderInsights(insights) {
+    const panel = document.getElementById('insightsPanel')
+    const container = document.getElementById('insightsContainer')
+    const badge = document.getElementById('insightsBadge')
+
+    if (!panel || !container) return
+
+    if (!insights || insights.length === 0) {
+      panel.classList.add('hidden')
+      return
+    }
+
+    // Show panel
+    panel.classList.remove('hidden')
+
+    // Update badge
+    if (badge) {
+      badge.textContent = insights.length
+      badge.classList.remove('hidden')
+    }
+
+    // Render insight cards
+    container.innerHTML = insights.slice(0, 6).map((insight, idx) => `
+      <div class="insight-card ${insight.type}" style="animation-delay: ${idx * 0.1}s" data-marco-key="${insight.marcoKey || ''}">
+        <div class="flex items-start gap-3">
+          <span class="insight-icon">${insight.icon}</span>
+          <div class="flex-1 min-w-0">
+            <h4 class="text-xs font-bold text-white mb-1">${insight.title}</h4>
+            <p class="text-[10px] text-slate-400 leading-relaxed">${insight.message}</p>
+            ${insight.action ? `
+              <button onclick="app.handleInsightAction('${insight.action}', '${insight.marcoKey || ''}')" 
+                class="insight-action mt-2">
+                ${insight.action}
+              </button>
+            ` : ''}
+          </div>
+          ${insight.type === 'achievement' ? `
+            <button onclick="app.dismissInsight(this, '${insight.marcoKey}')" 
+              class="text-slate-500 hover:text-white text-xs p-1" title="Marcar como visto">
+              <i class="fas fa-check"></i>
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    `).join('')
+  }
+
+  async refreshInsights() {
+    const icon = document.getElementById('refreshInsightsIcon')
+    if (icon) {
+      icon.classList.add('spin-animation')
+    }
+
+    // Invalidate cache and reload
+    aiService.invalidateInsightsCache()
+    await this.loadInsights()
+
+    if (icon) {
+      icon.classList.remove('spin-animation')
+    }
+    
+    Renderer.toast('Insights atualizados', 'success')
+  }
+
+  handleInsightAction(action, marcoKey) {
+    switch (action) {
+      case 'Ver detalhes':
+        this.openCardDetails('next_withdrawals')
+        break
+      case 'Ir para Investimentos':
+        document.getElementById('investmentsSection')?.scrollIntoView({ behavior: 'smooth' })
+        break
+      case 'Abrir Simulador':
+        const futureToggle = document.getElementById('futureToggle')
+        if (futureToggle && !futureToggle.checked) {
+          futureToggle.click()
+        }
+        document.getElementById('futureSection')?.scrollIntoView({ behavior: 'smooth' })
+        break
+      default:
+        // Open AI chat for more details
+        if (aiService.isConfigured()) {
+          this.openAiChat()
+        }
+    }
+  }
+
+  dismissInsight(element, marcoKey) {
+    if (marcoKey) {
+      aiService.markMilestoneAchieved(marcoKey)
+    }
+    
+    // Animate out
+    const card = element.closest('.insight-card')
+    if (card) {
+      card.style.opacity = '0'
+      card.style.transform = 'translateX(20px)'
+      setTimeout(() => {
+        card.remove()
+        // Check if any insights left
+        const container = document.getElementById('insightsContainer')
+        if (container && container.children.length === 0) {
+          document.getElementById('insightsPanel')?.classList.add('hidden')
+        }
+      }, 300)
+    }
+  }
 }
+
 
 // Start the app
 window.addEventListener('DOMContentLoaded', () => {

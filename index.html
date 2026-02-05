@@ -461,6 +461,23 @@
             </div>
         </div>
 
+        <!-- AI Insights Panel -->
+        <div id="insightsPanel" class="hidden">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-bold text-white flex items-center gap-2 text-sm">
+                    <i class="fas fa-lightbulb text-yellow-500"></i> 
+                    Insights
+                    <span id="insightsBadge" class="bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold hidden">0</span>
+                </h3>
+                <button onclick="app.refreshInsights()" class="text-[10px] text-slate-400 hover:text-white flex items-center gap-1 transition-colors" title="Atualizar insights">
+                    <i class="fas fa-sync-alt" id="refreshInsightsIcon"></i>
+                </button>
+            </div>
+            <div id="insightsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <!-- Insights will be injected here -->
+            </div>
+        </div>
+
         <!-- 2. Chart Section -->
         <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg">
             <div class="flex items-center justify-between mb-6">

@@ -224,6 +224,247 @@ Agora responda à pergunta do usuário com base no contexto acima.`
 
     return this.sendMessage(prompts[type] || prompts.general)
   }
+
+  // ============================================
+  // PROACTIVE INSIGHTS SYSTEM
+  // ============================================
+
+  /**
+   * Cache para evitar regeneração constante de insights
+   */
+  insightsCache = {
+    data: [],
+    timestamp: null,
+    cacheValidMs: 5 * 60 * 1000 // 5 minutos
+  }
+
+  /**
+   * Analisa os dados localmente e gera insights sem usar IA
+   * Retorna array de insights baseados em regras
+   */
+  analyzeData() {
+    const { inputs, portfolio, results, dailyData } = store.state
+    const insights = []
+    const today = Formatter.getTodayDate()
+    const todayData = dailyData[today] || {}
+
+    // 1. Verificar dia de saque
+    const targetDay = parseInt(inputs.withdrawalDaySelect) || 0
+    const currentDay = new Date().getDay()
+    
+    if (currentDay === targetDay && results.nextWithdraw > 0) {
+      insights.push({
+        type: 'urgent',
+        icon: '💰',
+        title: 'Dia de Saque!',
+        message: `Hoje é seu dia de saque preferencial. Você tem R$ ${this.formatCurrency(results.nextWithdraw)} disponível.`,
+        action: 'Ver detalhes',
+        priority: 1
+      })
+    } else if ((targetDay - currentDay + 7) % 7 === 1) {
+      insights.push({
+        type: 'warning',
+        icon: '📅',
+        title: 'Saque Amanhã',
+        message: `Amanhã é seu dia de saque. Prepare-se para sacar até R$ ${this.formatCurrency(results.nextWithdraw)}.`,
+        priority: 2
+      })
+    }
+
+    // 2. Verificar contratos próximos de vencer
+    const tomorrow = Formatter.addDays(today, 1)
+    const dayAfter = Formatter.addDays(today, 2)
+    
+    portfolio.forEach(inv => {
+      const endDate = Formatter.addDays(inv.date, inv.days)
+      const profit = inv.val * (inv.rate / 100) * inv.days
+      const total = inv.val + profit
+
+      if (endDate === today) {
+        insights.push({
+          type: 'success',
+          icon: '🎉',
+          title: 'Retorno Hoje!',
+          message: `${inv.name} retorna hoje: R$ ${this.formatCurrency(total)} (+R$ ${this.formatCurrency(profit)} lucro)`,
+          priority: 1
+        })
+      } else if (endDate === tomorrow) {
+        insights.push({
+          type: 'info',
+          icon: '📈',
+          title: 'Retorno Amanhã',
+          message: `${inv.name} retorna amanhã com R$ ${this.formatCurrency(profit)} de lucro.`,
+          priority: 3
+        })
+      } else if (endDate === dayAfter) {
+        insights.push({
+          type: 'info',
+          icon: '📊',
+          title: 'Retorno em 2 dias',
+          message: `${inv.name} vence em 2 dias. Total esperado: R$ ${this.formatCurrency(total)}`,
+          priority: 4
+        })
+      }
+    })
+
+    // 3. Verificar meta de saque
+    if (inputs.withdrawStrategy === 'fixed') {
+      const meta = parseFloat(inputs.withdrawTarget) || 0
+      const saldoTotal = (parseFloat(inputs.personalWalletStart) || 0) + (parseFloat(inputs.revenueWalletStart) || 0)
+      const diferenca = meta - saldoTotal
+
+      if (diferenca <= 0) {
+        insights.push({
+          type: 'success',
+          icon: '🎯',
+          title: 'Meta Atingida!',
+          message: `Você atingiu sua meta de R$ ${this.formatCurrency(meta)}! Considere realizar o saque.`,
+          priority: 1
+        })
+      } else if (diferenca <= meta * 0.2) { // Falta 20% ou menos
+        insights.push({
+          type: 'info',
+          icon: '🎯',
+          title: 'Quase Lá!',
+          message: `Faltam apenas R$ ${this.formatCurrency(diferenca)} para atingir sua meta de saque.`,
+          priority: 2
+        })
+      }
+    }
+
+    // 4. Oportunidade de investimento (saldo alto parado)
+    const saldoReceita = parseFloat(inputs.revenueWalletStart) || 0
+    if (saldoReceita >= 50 && portfolio.length === 0) {
+      insights.push({
+        type: 'tip',
+        icon: '💡',
+        title: 'Oportunidade',
+        message: `Você tem R$ ${this.formatCurrency(saldoReceita)} na carteira de receita sem investir. Considere alocar em um contrato.`,
+        action: 'Ir para Investimentos',
+        priority: 3
+      })
+    }
+
+    // 5. Marcos e conquistas
+    const lucroTotal = results.netProfit || 0
+    const marcos = [100, 500, 1000, 5000, 10000]
+    
+    for (const marco of marcos) {
+      const marcoKey = `milestone_${marco}`
+      const achieved = localStorage.getItem(marcoKey)
+      
+      if (lucroTotal >= marco && !achieved) {
+        insights.push({
+          type: 'achievement',
+          icon: '🏆',
+          title: 'Conquista Desbloqueada!',
+          message: `Parabéns! Você ultrapassou R$ ${this.formatCurrency(marco)} em lucros totais!`,
+          priority: 1,
+          marcoKey
+        })
+        break // Apenas um marco por vez
+      }
+    }
+
+    // 6. Sem investimentos ativos
+    if (portfolio.length === 0 && saldoReceita < 50) {
+      insights.push({
+        type: 'info',
+        icon: '📚',
+        title: 'Comece a Investir',
+        message: 'Você ainda não tem investimentos. Use o Simulador para projetar seus ganhos!',
+        action: 'Abrir Simulador',
+        priority: 5
+      })
+    }
+
+    // Ordenar por prioridade
+    return insights.sort((a, b) => a.priority - b.priority)
+  }
+
+  /**
+   * Gera insights usando IA para análises mais complexas
+   * Usa cache para evitar chamadas frequentes
+   */
+  async generateAiInsights() {
+    if (!this.isConfigured()) {
+      return this.analyzeData() // Fallback para análise local
+    }
+
+    // Verificar cache
+    const now = Date.now()
+    if (this.insightsCache.timestamp && (now - this.insightsCache.timestamp) < this.insightsCache.cacheValidMs) {
+      return this.insightsCache.data
+    }
+
+    // Combinar insights locais com análise de IA
+    const localInsights = this.analyzeData()
+    
+    try {
+      const aiPrompt = `Analise minha situação financeira e me dê 1-2 insights CURTOS e OBJETIVOS (máximo 1 frase cada) que não estejam óbvios nos dados. Foque em:
+- Padrões de comportamento
+- Oportunidades de otimização
+- Riscos potenciais
+
+Responda em formato JSON: [{"icon": "emoji", "title": "título curto", "message": "mensagem curta"}]
+Não inclua formatação markdown, apenas o JSON.`
+
+      const response = await this.sendMessage(aiPrompt)
+      
+      // Tentar parsear resposta JSON
+      const jsonMatch = response.match(/\[[\s\S]*\]/)
+      if (jsonMatch) {
+        const aiInsights = JSON.parse(jsonMatch[0])
+        const formattedAiInsights = aiInsights.map((insight, idx) => ({
+          type: 'ai',
+          icon: insight.icon || '🤖',
+          title: insight.title,
+          message: insight.message,
+          priority: 10 + idx // Menor prioridade que locais
+        }))
+
+        const combined = [...localInsights, ...formattedAiInsights]
+        
+        // Atualizar cache
+        this.insightsCache.data = combined
+        this.insightsCache.timestamp = now
+        
+        return combined
+      }
+    } catch (error) {
+      console.warn('Erro ao gerar insights com IA:', error)
+    }
+
+    // Fallback: apenas insights locais
+    return localInsights
+  }
+
+  /**
+   * Marca um marco como alcançado
+   */
+  markMilestoneAchieved(marcoKey) {
+    if (marcoKey) {
+      localStorage.setItem(marcoKey, 'true')
+    }
+  }
+
+  /**
+   * Formata valor para moeda
+   */
+  formatCurrency(value) {
+    return new Intl.NumberFormat('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value)
+  }
+
+  /**
+   * Invalida cache de insights (chamar após mudanças significativas)
+   */
+  invalidateInsightsCache() {
+    this.insightsCache.timestamp = null
+  }
 }
 
 export const aiService = new AiService()
+
