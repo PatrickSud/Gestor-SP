@@ -65,7 +65,8 @@ class Store {
         commitBaseName: '',
         geminiApiKey: '',
         openaiApiKey: '',
-        aiProvider: 'gemini'
+        aiProvider: 'gemini',
+        syncAiKeys: false
       },
       portfolio: [],
       selectedWeeks: [],
@@ -187,17 +188,36 @@ class Store {
   }
 
   getDataForPersistence() {
+    // Sync current state into the current profile first
     this.state.profiles[this.state.currentProfileId].data = {
-      inputs: this.state.inputs,
-      portfolio: this.state.portfolio,
-      selectedWeeks: this.state.selectedWeeks,
-      goals: this.state.goals || [],
-      realizedWithdrawals: this.state.realizedWithdrawals || [],
-      manualAdjustments: this.state.manualAdjustments || []
+      inputs: { ...this.state.inputs },
+      portfolio: [...this.state.portfolio],
+      selectedWeeks: [...this.state.selectedWeeks],
+      goals: [...(this.state.goals || [])],
+      realizedWithdrawals: [...(this.state.realizedWithdrawals || [])],
+      manualAdjustments: [...(this.state.manualAdjustments || [])]
     }
+
+    // Create a deep copy for cloud persistence to avoid side effects
+    const cloudProfiles = JSON.parse(JSON.stringify(this.state.profiles))
+    
+    // Check if we should sync AI keys
+    const shouldSync = this.state.inputs.syncAiKeys === true
+
+    if (!shouldSync) {
+      // Remove AI keys from ALL profiles
+      Object.keys(cloudProfiles).forEach(id => {
+        const profileInputs = cloudProfiles[id].data?.inputs
+        if (profileInputs) {
+          delete profileInputs.geminiApiKey
+          delete profileInputs.openaiApiKey
+        }
+      })
+    }
+
     return {
       currentProfileId: this.state.currentProfileId,
-      profiles: this.state.profiles
+      profiles: cloudProfiles
     }
   }
 
@@ -205,12 +225,26 @@ class Store {
     const { data: migratedData, migrated } = this.migrateData(data)
     if (!migratedData || !migratedData.profiles) return
 
+    // Preserve local AI keys just in case cloud data doesn't have them (sanitization)
+    const localGeminiKey = this.state.inputs.geminiApiKey
+    const localOpenaiKey = this.state.inputs.openaiApiKey
+
     this.state.currentProfileId = migratedData.currentProfileId
     this.state.profiles = migratedData.profiles
 
     const current = this.state.profiles[this.state.currentProfileId].data
     const defaults = this.getInitialData().inputs
+    
     this.state.inputs = { ...defaults, ...current.inputs }
+
+    // If cloud data didn't have the keys, restore local ones
+    if (this.state.inputs.geminiApiKey === undefined && localGeminiKey) {
+      this.state.inputs.geminiApiKey = localGeminiKey
+    }
+    if (this.state.inputs.openaiApiKey === undefined && localOpenaiKey) {
+      this.state.inputs.openaiApiKey = localOpenaiKey
+    }
+
     this.state.portfolio = [...current.portfolio]
     this.state.selectedWeeks = [...current.selectedWeeks]
     this.state.goals = [...(current.goals || [])]

@@ -271,6 +271,18 @@ class App {
         this.updateAiButtonVisibility()
       })
     }
+
+    const syncKeysInp = document.getElementById('syncAiKeys')
+    if (syncKeysInp) {
+      syncKeysInp.addEventListener('change', e => {
+        store.updateInput('syncAiKeys', e.target.checked)
+        if (e.target.checked) {
+          Renderer.toast('Sincronização em nuvem ativada!', 'success')
+        } else {
+          Renderer.toast('As chaves agora são apenas locais', 'info')
+        }
+      })
+    }
   }
 
   // --- Orientation Mode ---
