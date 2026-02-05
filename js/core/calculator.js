@@ -354,13 +354,23 @@ export const Calculator = {
           if (currentRevenueWallet >= withdrawTargetCents) {
             isPlanned = true
             targetWallet = 'revenue'
-            amountToWithdrawCents = withdrawTargetCents
-            withdrawalNote = 'Meta atingida (Receita)'
+            if (revTier > withdrawTargetCents) {
+              amountToWithdrawCents = revTier
+              withdrawalNote = 'Meta superada (Receita)'
+            } else {
+              amountToWithdrawCents = withdrawTargetCents
+              withdrawalNote = 'Meta atingida (Receita)'
+            }
           } else if (currentPersonalWallet >= withdrawTargetCents) {
             isPlanned = true
             targetWallet = 'personal'
-            amountToWithdrawCents = withdrawTargetCents
-            withdrawalNote = 'Meta atingida (Pessoal)'
+            if (persTier > withdrawTargetCents) {
+              amountToWithdrawCents = persTier
+              withdrawalNote = 'Meta superada (Pessoal)'
+            } else {
+              amountToWithdrawCents = withdrawTargetCents
+              withdrawalNote = 'Meta atingida (Pessoal)'
+            }
           } else {
             // ESTRITO: Não chegamos na meta. Não planeja o saque.
             isPlanned = false

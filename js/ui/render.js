@@ -43,9 +43,20 @@ export const Renderer = {
         '<p class="text-center text-[10px] text-slate-500 py-4 italic">Nenhum investimento ativo</p>'
     }
 
+    const todayStr = Formatter.getTodayDate()
+
+    // Sort: Active first (by date), then Expired (by date)
     const sorted = [...portfolio].sort((a, b) => {
-      const aEnd = new Date(Formatter.addDays(a.date, a.days))
-      const bEnd = new Date(Formatter.addDays(b.date, b.days))
+      const aEndStr = Formatter.addDays(a.date, a.days)
+      const bEndStr = Formatter.addDays(b.date, b.days)
+      const aExpired = aEndStr < todayStr
+      const bExpired = bEndStr < todayStr
+
+      if (aExpired && !bExpired) return 1
+      if (!aExpired && bExpired) return -1
+      
+      const aEnd = new Date(aEndStr)
+      const bEnd = new Date(bEndStr)
       return aEnd - bEnd
     })
 
@@ -55,9 +66,10 @@ export const Renderer = {
       totalVal += valCents
       totalProfit += profitCents
 
-      const retornoStr = Formatter.dateDisplay(
-        Formatter.addDays(p.date, p.days)
-      )
+      const endDateStr = Formatter.addDays(p.date, p.days)
+      const isExpired = endDateStr < todayStr
+      
+      const retornoStr = Formatter.dateDisplay(endDateStr)
 
       const walletLabel =
         p.wallet === 'personal'
@@ -66,21 +78,28 @@ export const Renderer = {
             ? ' • <span class="text-emerald-400">Rec.</span>'
             : ''
 
+      const containerClass = isExpired 
+        ? 'bg-slate-800/50 p-2.5 rounded-lg flex justify-between items-center text-xs border border-slate-700/30 hover:bg-slate-700/50 transition-colors group relative overflow-hidden opacity-60' 
+        : 'bg-slate-800 p-2.5 rounded-lg flex justify-between items-center text-xs border border-slate-700/50 hover:bg-slate-700 transition-colors group relative overflow-hidden'
+
+      const nameClass = isExpired
+        ? 'text-slate-500 font-bold block line-through decoration-slate-600'
+        : 'text-slate-300 font-bold block'
+
       const li = document.createElement('li')
-      li.className =
-        'bg-slate-800 p-2.5 rounded-lg flex justify-between items-center text-xs border border-slate-700/50 hover:bg-slate-700 transition-colors group relative overflow-hidden'
+      li.className = containerClass
       li.innerHTML = `
-                <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 opacity-50"></div>
+                <div class="absolute left-0 top-0 bottom-0 w-1 ${isExpired ? 'bg-slate-600' : 'bg-blue-500'} opacity-50"></div>
                 <div class="flex items-center gap-3 pl-2">
                      <div>
-                        <span class="text-slate-300 font-bold block">${p.name || 'Ativo'}</span>
+                        <span class="${nameClass}">${p.name || 'Ativo'}</span>
                         <span class="text-[10px] text-slate-500">${Formatter.dateDisplay(p.date)} • ${p.rate}% (${p.days}d)${walletLabel}</span>
-                        <span class="text-[10px] text-yellow-400">Retorno: ${retornoStr}</span>
+                        <span class="text-[10px] ${isExpired ? 'text-slate-500' : 'text-yellow-400'}">Retorno: ${retornoStr}</span>
                      </div>
                 </div>
                 <div class="text-right">
-                     <span class="block font-bold text-white text-[10px]">Ini: ${Formatter.currency(valCents)}</span>
-                     <span class="block font-bold text-emerald-400 text-[11px]">Final: ${Formatter.currency(valCents + profitCents)}</span>
+                     <span class="block font-bold ${isExpired ? 'text-slate-500 line-through' : 'text-white'} text-[10px]">Ini: ${Formatter.currency(valCents)}</span>
+                     <span class="block font-bold ${isExpired ? 'text-slate-500' : 'text-emerald-400'} text-[11px]">${isExpired ? 'Finalizado' : 'Final: ' + Formatter.currency(valCents + profitCents)}</span>
                      <button class="text-[9px] text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity absolute top-1 right-1 remove-btn" data-id="${p.id}">
                         <i class="fas fa-times"></i>
                      </button>
@@ -792,8 +811,17 @@ export const Renderer = {
       badge.innerText = alerts.length
       list.innerHTML = alerts
         .map(
-          a =>
-            `<div class="p-2 bg-slate-900 border border-slate-700 rounded flex gap-2 items-center text-[10px]"><i class="fas ${a.icon} ${a.type === 'warning' ? 'text-yellow-500' : 'text-red-500'}"></i><span class="text-white">${a.msg}</span></div>`
+          a => {
+            const isVencido = a.type === 'danger'
+            const baseClass = isVencido 
+                ? 'p-2 bg-slate-900/50 border border-slate-700/30 rounded flex gap-2 items-center text-[10px] opacity-60' 
+                : 'p-2 bg-slate-900 border border-slate-700 rounded flex gap-2 items-center text-[10px]'
+            
+            const iconClass = isVencido ? 'text-slate-500' : (a.type === 'warning' ? 'text-yellow-500' : 'text-red-500')
+            const textClass = isVencido ? 'text-slate-500 line-through' : 'text-white'
+
+            return `<div class="${baseClass}"><i class="fas ${a.icon} ${iconClass}"></i><span class="${textClass}">${a.msg}</span></div>`
+          }
         )
         .join('')
     } else {
