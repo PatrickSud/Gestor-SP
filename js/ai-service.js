@@ -313,7 +313,7 @@ Agora responda à pergunta do usuário com base no contexto acima.`
     }
 
     try {
-      const model = store.state.inputs.groqModel || 'deepseek-r1-distill-qwen-32b'
+      const model = store.state.inputs.groqModel || 'qwen-qwq-32b'
       
       // Sanitização das mensagens: Filtra vazias e garante formato correto
       const sanitizedMessages = [
@@ -598,7 +598,7 @@ Não inclua formatação markdown, apenas o JSON.`
       } 
       else if (provider === 'openai' || provider === 'groq') {
         const url = provider === 'openai' ? this.OPENAI_URL : this.GROQ_URL
-        const model = provider === 'openai' ? this.OPENAI_MODEL : (store.state.inputs.groqModel || 'deepseek-r1-distill-qwen-32b')
+        const model = provider === 'openai' ? this.OPENAI_MODEL : (store.state.inputs.groqModel || 'qwen-qwq-32b')
         
         const response = await fetch(url, {
           method: 'POST',
