@@ -297,6 +297,11 @@ class App {
       })
     }
 
+    const testAiBtn = document.getElementById('testAiBtn')
+    if (testAiBtn) {
+      testAiBtn.addEventListener('click', () => this.testAiConnection())
+    }
+
     const syncKeysInp = document.getElementById('syncAiKeys')
     if (syncKeysInp) {
       syncKeysInp.addEventListener('change', e => {
@@ -1586,6 +1591,36 @@ class App {
     }
     this.openModal('aiChatModal')
     document.getElementById('aiChatInput')?.focus()
+  }
+
+  async testAiConnection() {
+    const btn = document.getElementById('testAiBtn')
+    if (!btn) return
+
+    if (!aiService.isConfigured()) {
+      Renderer.toast('Configure a API Key antes de testar.', 'warning')
+      return
+    }
+
+    const originalContent = btn.innerHTML
+    btn.disabled = true
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testando...'
+    
+    try {
+      // Teste rápido sem poluir o histórico principal
+      const response = await aiService.sendMessage('Responda apenas com a palavra OK se estiver me ouvindo.')
+      if (response) {
+        Renderer.toast('Conexão com a IA bem sucedida! ✅', 'success')
+      } else {
+        throw new Error('Sem resposta da IA')
+      }
+    } catch (error) {
+      console.error('Teste de IA falhou:', error)
+      Renderer.toast(`Falha na conexão: ${error.message}`, 'error')
+    } finally {
+      btn.disabled = false
+      btn.innerHTML = originalContent
+    }
   }
 
   async sendAiMessage(event) {
