@@ -11,11 +11,8 @@ const ASSETS_TO_CACHE = [
   './js/ui/render.js',
   './js/ui/chart.js',
   './js/utils/formatter.js',
-  'https://cdn.tailwindcss.com',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-  'https://cdn.jsdelivr.net/npm/chart.js',
-  'https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js',
-  'https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1'
+  './js/ai-service.js',
+  './js/utils/exporter.js'
 ];
 
 self.addEventListener('install', (event) => {
