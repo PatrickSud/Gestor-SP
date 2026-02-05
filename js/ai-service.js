@@ -185,12 +185,18 @@ Agora responda à pergunta do usuário com base no contexto acima.`
     }
 
     try {
+      // Normalizar histórico para Gemini (parts)
+      const geminiHistory = this.conversationHistory.map(msg => ({
+        role: msg.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: typeof msg.content === 'string' ? msg.content : (msg.parts?.[0]?.text || '') }]
+      }))
+
       const response = await fetch(`${this.GEMINI_URL}?key=${this.getApiKey()}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: this.buildSystemPrompt() }] },
-          contents: this.conversationHistory,
+          contents: geminiHistory,
           generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
         })
       })
@@ -211,8 +217,8 @@ Agora responda à pergunta do usuário com base no contexto acima.`
       if (!assistantMessage) throw new Error('Resposta vazia do Gemini.')
 
       this.conversationHistory.push({
-        role: 'model',
-        parts: [{ text: assistantMessage }]
+        role: 'assistant',
+        content: assistantMessage
       })
 
       return assistantMessage
@@ -238,6 +244,7 @@ Agora responda à pergunta do usuário com base no contexto acima.`
     }
 
     try {
+      const model = this.OPENAI_MODEL
       const response = await fetch(this.OPENAI_URL, {
         method: 'POST',
         headers: {
@@ -245,10 +252,13 @@ Agora responda à pergunta do usuário com base no contexto acima.`
           'Authorization': `Bearer ${this.getApiKey()}`
         },
         body: JSON.stringify({
-          model: this.OPENAI_MODEL,
+          model: model,
           messages: [
             { role: 'system', content: this.buildSystemPrompt() },
-            ...this.conversationHistory
+            ...this.conversationHistory.map(msg => ({
+              role: msg.role === 'model' ? 'assistant' : msg.role,
+              content: typeof msg.content === 'string' ? msg.content : (msg.parts?.[0]?.text || '')
+            }))
           ],
           temperature: 0.7
         })
@@ -307,7 +317,10 @@ Agora responda à pergunta do usuário com base no contexto acima.`
           model: model,
           messages: [
             { role: 'system', content: this.buildSystemPrompt() },
-            ...this.conversationHistory
+            ...this.conversationHistory.map(msg => ({
+              role: msg.role === 'model' ? 'assistant' : msg.role,
+              content: typeof msg.content === 'string' ? msg.content : (msg.parts?.[0]?.text || '')
+            }))
           ],
           temperature: 0.7
         })
@@ -541,7 +554,47 @@ Agora responda à pergunta do usuário com base no contexto acima.`
 Responda em formato JSON: [{"icon": "emoji", "title": "título curto", "message": "mensagem curta"}]
 Não inclua formatação markdown, apenas o JSON.`
 
-      const response = await this.sendMessage(aiPrompt)
+      const provider = this.getProvider()
+      let aiResponseText = ''
+
+      if (provider === 'gemini') {
+        const response = await fetch(`${this.GEMINI_URL}?key=${this.getApiKey()}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: this.buildSystemPrompt() }] },
+            contents: [{ role: 'user', parts: [{ text: aiPrompt }] }],
+            generationConfig: { temperature: 0.5, maxOutputTokens: 256 }
+          })
+        })
+        const data = await response.json()
+        aiResponseText = data.candidates?.[0]?.content?.parts?.[0]?.text
+      } 
+      else if (provider === 'openai' || provider === 'groq') {
+        const url = provider === 'openai' ? this.OPENAI_URL : this.GROQ_URL
+        const model = provider === 'openai' ? this.OPENAI_MODEL : (store.state.inputs.groqModel || 'deepseek-r1-distill-llama-70b')
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this.getApiKey()}`
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [
+              { role: 'system', content: this.buildSystemPrompt() },
+              { role: 'user', content: aiPrompt }
+            ],
+            temperature: 0.5,
+            max_tokens: 256
+          })
+        })
+        const data = await response.json()
+        aiResponseText = data.choices?.[0]?.message?.content
+      }
+
+      const response = aiResponseText || ''
       
       // Tentar parsear resposta JSON
       const jsonMatch = response.match(/\[[\s\S]*\]/)

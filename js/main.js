@@ -286,6 +286,9 @@ class App {
         const val = e.target.value
         store.updateInput('aiProvider', val)
         
+        // Limpar histórico ao trocar de provedor para evitar conflitos de formato
+        aiService.clearHistory()
+        
         // Toggle visibility of config sections
         document.getElementById('geminiConfig')?.classList.toggle('hidden', val !== 'gemini')
         document.getElementById('openaiConfig')?.classList.toggle('hidden', val !== 'openai')
