@@ -353,37 +353,15 @@ export const Exporter = {
             }
           }
         },
-        didDrawPage: function (data) {
-          // Fix: Draw background on margins only to avoid covering table content
-          // The table content itself has a background via bodyStyles.fillColor
+        willDrawPage: function (data) {
+          // Draw full dark background on ALL pages BEFORE content to ensure consistent dark theme
+          const pageSize = doc.internal.pageSize
+          const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth()
+          const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight()
           
-          if (doc.internal.getCurrentPageInfo().pageNumber > 1) {
-             const pageSize = doc.internal.pageSize
-             const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth()
-             const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight()
-             
-             // Save context
-             const originalFill = doc.getFillColor()
-             doc.setFillColor(15, 23, 42) // Slate 950
-             
-             // Margins from settings
-             const margin = data.settings.margin
-             
-             // Top Margin Rect
-             // doc.rect(0, 0, pageWidth, margin.top, 'F') 
-             // Actually, creating a frame is safer.
-             // Top
-             doc.rect(0, 0, pageWidth, 20, 'F') // safe formatting
-             // Bottom
-             doc.rect(0, pageHeight - 20, pageWidth, 20, 'F')
-             // Left
-             doc.rect(0, 0, 15, pageHeight, 'F')
-             // Right
-             doc.rect(pageWidth - 15, 0, 15, pageHeight, 'F')
-             
-             // Restore context
-             doc.setFillColor(originalFill)
-          }
+          // Draw complete dark background for the entire page
+          doc.setFillColor(15, 23, 42) // Slate 950 - Dark background
+          doc.rect(0, 0, pageWidth, pageHeight, 'F')
         }
       })
 
