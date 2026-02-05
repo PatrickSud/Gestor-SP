@@ -354,43 +354,35 @@ export const Exporter = {
           }
         },
         didDrawPage: function (data) {
-          // Draw background on every new page added by autoTable
-          // 'data.settings.margin.top' might be useful but we want full page
-          // We must check if it's not the first page (which we manually painted) or just paint all?
-          // The first page background is already drawn at the start of generatePDF.
-          // AutoTable starts on the first page at 'startY'.
-          // If autoTable adds a NEW page, this hook runs.
+          // Fix: Draw background on margins only to avoid covering table content
+          // The table content itself has a background via bodyStyles.fillColor
           
           if (doc.internal.getCurrentPageInfo().pageNumber > 1) {
-             // Draw dark background which covers the white default
-             // logic: set fill color, rect full page. 
-             // IMPORTANT: This hook runs AFTER the page is added but BEFORE content? 
-             // Actually autoTable draws content row by row. This hook is often used for headers/footers.
-             // If we draw a rect here, it might cover the table content if not careful?
-             // Usually didDrawPage is called "after the page has been added so you can add headers/footers".
-             // But existing content (the table rows for that page) might be drawn *after* this hook for that page?
-             // Documentation says: "Called after a new page has been added to the document."
+             const pageSize = doc.internal.pageSize
+             const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth()
+             const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight()
              
-             // To be safe, let's use global composite operation or just set the rect.
-             // If this covers content, we have a problem. 
-             // Alternative: `hooks: { didDrawPage: ... }` 
+             // Save context
+             const originalFill = doc.getFillColor()
+             doc.setFillColor(15, 23, 42) // Slate 950
              
-             // Let's try drawing the rect and rely on z-index (painters algorithm). 
-             // If this hook runs *before* the rows of the new page are drawn, perfect.
+             // Margins from settings
+             const margin = data.settings.margin
              
-            const pageSize = doc.internal.pageSize
-            const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth()
-            const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight()
-            
-            // Save context
-            const originalFill = doc.getFillColor()
-            
-            // Paint dark bg
-            doc.setFillColor(15, 23, 42) // Slate 950
-            doc.rect(0, 0, pageWidth, pageHeight, 'F')
-            
-            // Restore context
-            doc.setFillColor(originalFill)
+             // Top Margin Rect
+             // doc.rect(0, 0, pageWidth, margin.top, 'F') 
+             // Actually, creating a frame is safer.
+             // Top
+             doc.rect(0, 0, pageWidth, 20, 'F') // safe formatting
+             // Bottom
+             doc.rect(0, pageHeight - 20, pageWidth, 20, 'F')
+             // Left
+             doc.rect(0, 0, 15, pageHeight, 'F')
+             // Right
+             doc.rect(pageWidth - 15, 0, 15, pageHeight, 'F')
+             
+             // Restore context
+             doc.setFillColor(originalFill)
           }
         }
       })
