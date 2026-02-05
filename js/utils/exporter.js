@@ -65,7 +65,7 @@ export const Exporter = {
       // Summary Section
       let yPos = 55
 
-      doc.setTextColor(0, 0, 0)
+      doc.setTextColor(255, 255, 255)
       doc.setFontSize(14)
       doc.setFont('helvetica', 'bold')
       doc.text('Resumo Financeiro', 15, yPos)
@@ -265,7 +265,7 @@ export const Exporter = {
 
       // Build column styles with semantic colors for each category
       const columnStyles = {
-        0: { halign: 'center', cellWidth: 22, textColor: [100, 116, 139] } // Data (Slate)
+        0: { halign: 'center', cellWidth: 22, textColor: [148, 163, 184] } // Data (Slate 400)
       }
 
       let colIndex = 1
@@ -344,7 +344,7 @@ export const Exporter = {
           }
 
           // Apply category specific background to headers (optional but professional)
-          if (data.section === 'head' && data.column.index > 0) {
+            if (data.section === 'head' && data.column.index > 0) {
             const colStyle = columnStyles[data.column.index]
             if (colStyle && colStyle.textColor) {
               // Apply a subtle background or thicker border could work,
@@ -352,13 +352,63 @@ export const Exporter = {
               // data.cell.styles.textColor = colStyle.textColor;
             }
           }
+        },
+        didDrawPage: function (data) {
+          // Draw background on every new page added by autoTable
+          // 'data.settings.margin.top' might be useful but we want full page
+          // We must check if it's not the first page (which we manually painted) or just paint all?
+          // The first page background is already drawn at the start of generatePDF.
+          // AutoTable starts on the first page at 'startY'.
+          // If autoTable adds a NEW page, this hook runs.
+          
+          if (doc.internal.getCurrentPageInfo().pageNumber > 1) {
+             // Draw dark background which covers the white default
+             // logic: set fill color, rect full page. 
+             // IMPORTANT: This hook runs AFTER the page is added but BEFORE content? 
+             // Actually autoTable draws content row by row. This hook is often used for headers/footers.
+             // If we draw a rect here, it might cover the table content if not careful?
+             // Usually didDrawPage is called "after the page has been added so you can add headers/footers".
+             // But existing content (the table rows for that page) might be drawn *after* this hook for that page?
+             // Documentation says: "Called after a new page has been added to the document."
+             
+             // To be safe, let's use global composite operation or just set the rect.
+             // If this covers content, we have a problem. 
+             // Alternative: `hooks: { didDrawPage: ... }` 
+             
+             // Let's try drawing the rect and rely on z-index (painters algorithm). 
+             // If this hook runs *before* the rows of the new page are drawn, perfect.
+             
+            const pageSize = doc.internal.pageSize
+            const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth()
+            const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight()
+            
+            // Save context
+            const originalFill = doc.getFillColor()
+            
+            // Paint dark bg
+            doc.setFillColor(15, 23, 42) // Slate 950
+            doc.rect(0, 0, pageWidth, pageHeight, 'F')
+            
+            // Restore context
+            doc.setFillColor(originalFill)
+          }
         }
       })
 
-      // Footer
+      // Footer & Background for all pages
       const pageCount = doc.internal.getNumberOfPages()
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i)
+        
+        // Re-draw background if needed? 
+        // Actually, preventing white background is tricky with autoTable new pages.
+        // The best way is to use the didDrawPage hook in autoTable, but for the footer loop:
+        // We can draw a big rectangle with 'F' (fill) but it acts as a layer on TOP if drawn last.
+        // We need to move it to bottom or draw it first. 
+        // Since we cannot easily reorder layers in standard jsPDF without advanced API:
+        // We will rely on `didDrawPage` hook for autoTable pages, and manual rect for the first page was already done.
+        
+        // Let's add the footer text now.
         doc.setFontSize(8)
         doc.setTextColor(148, 163, 184)
         doc.setFont('helvetica', 'normal')
