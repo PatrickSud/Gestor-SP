@@ -63,7 +63,9 @@ class Store {
         limitTier1: '99',
         bonusTier2: '6',
         commitBaseName: '',
-        geminiApiKey: ''
+        geminiApiKey: '',
+        openaiApiKey: '',
+        aiProvider: 'gemini'
       },
       portfolio: [],
       selectedWeeks: [],

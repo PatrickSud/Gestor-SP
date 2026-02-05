@@ -8,22 +8,39 @@ import { Formatter } from './utils/formatter.js'
 
 class AiService {
   constructor() {
-    this.API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
+    this.GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
+    this.OPENAI_URL = 'https://api.openai.com/v1/chat/completions'
+    this.OPENAI_MODEL = 'gpt-4o-mini'
     this.conversationHistory = []
     this.maxHistoryLength = 20
   }
 
   /**
-   * Verifica se a API key está configurada
+   * Verifica se a IA está configurada para o provedor selecionado
    */
   isConfigured() {
+    const provider = store.state.inputs.aiProvider || 'gemini'
+    if (provider === 'openai') {
+      return !!store.state.inputs.openaiApiKey?.trim()
+    }
     return !!store.state.inputs.geminiApiKey?.trim()
   }
 
   /**
-   * Obtém a API key do store
+   * Obtém o provedor atual
+   */
+  getProvider() {
+    return store.state.inputs.aiProvider || 'gemini'
+  }
+
+  /**
+   * Obtém a API key correta do store
    */
   getApiKey() {
+    const provider = this.getProvider()
+    if (provider === 'openai') {
+      return store.state.inputs.openaiApiKey?.trim() || ''
+    }
     return store.state.inputs.geminiApiKey?.trim() || ''
   }
 
@@ -125,14 +142,28 @@ Agora responda à pergunta do usuário com base no contexto acima.`
   }
 
   /**
-   * Envia mensagem para o Gemini e obtém resposta
+   * Envia mensagem para o provedor configurado e obtém resposta
    */
   async sendMessage(userMessage) {
     if (!this.isConfigured()) {
-      throw new Error('API Key do Gemini não configurada. Acesse as Configurações para adicionar.')
+      const providerName = this.getProvider() === 'openai' ? 'ChatGPT' : 'Gemini'
+      throw new Error(`API Key do ${providerName} não configurada. Acesse as Configurações para adicionar.`)
     }
 
-    // Adicionar mensagem do usuário ao histórico
+    const provider = this.getProvider()
+    
+    if (provider === 'openai') {
+      return this.sendOpenAiMessage(userMessage)
+    } else {
+      return this.sendGeminiMessage(userMessage)
+    }
+  }
+
+  /**
+   * Envia mensagem para o Gemini (Google)
+   */
+  async sendGeminiMessage(userMessage) {
+    // Adicionar mensagem do usuário ao histórico (formato Gemini)
     this.conversationHistory.push({
       role: 'user',
       parts: [{ text: userMessage }]
@@ -144,62 +175,87 @@ Agora responda à pergunta do usuário com base no contexto acima.`
     }
 
     try {
-      const response = await fetch(`${this.API_URL}?key=${this.getApiKey()}`, {
+      const response = await fetch(`${this.GEMINI_URL}?key=${this.getApiKey()}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: this.buildSystemPrompt() }]
-          },
+          systemInstruction: { parts: [{ text: this.buildSystemPrompt() }] },
           contents: this.conversationHistory,
-          generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1024
-          }
+          generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
         })
       })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        
-        if (response.status === 401 || response.status === 403) {
-          throw new Error('API Key inválida ou sem permissão. Verifique sua chave nas configurações.')
-        }
-        
-        if (response.status === 429) {
-          throw new Error('Limite de requisições excedido. Aguarde um momento e tente novamente.')
-        }
-        
-        throw new Error(errorData.error?.message || `Erro na API: ${response.status}`)
+        throw new Error(`Erro na API Gemini: ${response.status}`)
       }
 
       const data = await response.json()
       const assistantMessage = data.candidates?.[0]?.content?.parts?.[0]?.text
 
-      if (!assistantMessage) {
-        throw new Error('Resposta vazia do assistente. Tente reformular sua pergunta.')
-      }
+      if (!assistantMessage) throw new Error('Resposta vazia do Gemini.')
 
-      // Adicionar resposta ao histórico
       this.conversationHistory.push({
         role: 'model',
         parts: [{ text: assistantMessage }]
       })
 
       return assistantMessage
-
     } catch (error) {
-      // Remover mensagem do usuário se houve erro
       this.conversationHistory.pop()
-      
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        throw new Error('Erro de conexão. Verifique sua internet e tente novamente.')
+      throw error
+    }
+  }
+
+  /**
+   * Envia mensagem para o ChatGPT (OpenAI)
+   */
+  async sendOpenAiMessage(userMessage) {
+    // Adicionar mensagem do usuário (formato OpenAI)
+    this.conversationHistory.push({
+      role: 'user',
+      content: userMessage
+    })
+
+    // Manter histórico limitado
+    if (this.conversationHistory.length > this.maxHistoryLength) {
+      this.conversationHistory = this.conversationHistory.slice(-this.maxHistoryLength)
+    }
+
+    try {
+      const response = await fetch(this.OPENAI_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.getApiKey()}`
+        },
+        body: JSON.stringify({
+          model: this.OPENAI_MODEL,
+          messages: [
+            { role: 'system', content: this.buildSystemPrompt() },
+            ...this.conversationHistory
+          ],
+          temperature: 0.7
+        })
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) throw new Error('API Key da OpenAI inválida.')
+        throw new Error(`Erro na API OpenAI: ${response.status}`)
       }
-      
+
+      const data = await response.json()
+      const assistantMessage = data.choices?.[0]?.message?.content
+
+      if (!assistantMessage) throw new Error('Resposta vazia da OpenAI.')
+
+      this.conversationHistory.push({
+        role: 'assistant',
+        content: assistantMessage
+      })
+
+      return assistantMessage
+    } catch (error) {
+      this.conversationHistory.pop()
       throw error
     }
   }

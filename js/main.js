@@ -238,15 +238,37 @@ class App {
       importInp.onchange = e => this.importBackup(e.target.files[0])
     }
 
-    // AI API Key Handler
-    const aiKeyInput = document.getElementById('geminiApiKey')
-    if (aiKeyInput) {
-      aiKeyInput.addEventListener('change', e => {
+    // AI API Key & Provider Handlers
+    const geminiKeyInp = document.getElementById('geminiApiKey')
+    const openaiKeyInp = document.getElementById('openaiApiKey')
+    const providerSelect = document.getElementById('aiProvider')
+
+    if (geminiKeyInp) {
+      geminiKeyInp.addEventListener('change', e => {
         store.updateInput('geminiApiKey', e.target.value)
         this.updateAiButtonVisibility()
-        if (e.target.value.trim()) {
-          Renderer.toast('API Key do Gemini configurada!', 'success')
-        }
+        if (e.target.value.trim()) Renderer.toast('API Key do Gemini salva', 'success')
+      })
+    }
+
+    if (openaiKeyInp) {
+      openaiKeyInp.addEventListener('change', e => {
+        store.updateInput('openaiApiKey', e.target.value)
+        this.updateAiButtonVisibility()
+        if (e.target.value.trim()) Renderer.toast('API Key da OpenAI salva', 'success')
+      })
+    }
+
+    if (providerSelect) {
+      providerSelect.addEventListener('change', e => {
+        const val = e.target.value
+        store.updateInput('aiProvider', val)
+        
+        // Toggle visibility of config sections
+        document.getElementById('geminiConfig')?.classList.toggle('hidden', val !== 'gemini')
+        document.getElementById('openaiConfig')?.classList.toggle('hidden', val !== 'openai')
+        
+        this.updateAiButtonVisibility()
       })
     }
   }
@@ -352,6 +374,11 @@ class App {
         customRange.classList.remove('flex')
       }
     }
+
+    // Restore AI Provider visibility
+    const provider = inputs.aiProvider || 'gemini'
+    document.getElementById('geminiConfig')?.classList.toggle('hidden', provider !== 'gemini')
+    document.getElementById('openaiConfig')?.classList.toggle('hidden', provider !== 'openai')
 
     // Restore Future Toggle Visuals
     const futureOn = inputs.futureToggle === 'true'
@@ -1476,28 +1503,39 @@ class App {
   // --- AI Assistant Methods ---
   updateAiButtonVisibility() {
     const btn = document.getElementById('aiAssistantBtn')
-    const statusEl = document.getElementById('aiKeyStatus')
-    
-    if (aiService.isConfigured()) {
-      btn?.classList.remove('hidden')
-      btn?.classList.add('flex')
-      if (statusEl) {
-        statusEl.textContent = '✓ Ativa'
-        statusEl.className = 'text-[9px] font-bold text-emerald-400'
-      }
+    if (!btn) return
+
+    const provider = aiService.getProvider()
+    const isConfigured = aiService.isConfigured()
+
+    if (isConfigured) {
+      btn.classList.remove('hidden')
+      btn.classList.add('flex')
     } else {
-      btn?.classList.add('hidden')
-      btn?.classList.remove('flex')
-      if (statusEl) {
-        statusEl.textContent = 'Não configurada'
-        statusEl.className = 'text-[9px] font-bold text-slate-500'
-      }
+      btn.classList.add('hidden')
+      btn.classList.remove('flex')
+    }
+
+    // Update status labels in sidebar if they exist
+    const statusGemini = document.getElementById('aiKeyStatusGemini')
+    if (statusGemini) {
+      const hasKey = !!store.state.inputs.geminiApiKey?.trim()
+      statusGemini.textContent = hasKey ? '✅ Ativo' : '❌ Pendente'
+      statusGemini.className = `text-[9px] font-bold ${hasKey ? 'text-emerald-500' : 'text-slate-500'}`
+    }
+
+    const statusOpenai = document.getElementById('aiKeyStatusOpenai')
+    if (statusOpenai) {
+      const hasKey = !!store.state.inputs.openaiApiKey?.trim()
+      statusOpenai.textContent = hasKey ? '✅ Ativo' : '❌ Pendente'
+      statusOpenai.className = `text-[9px] font-bold ${hasKey ? 'text-emerald-500' : 'text-slate-500'}`
     }
   }
 
   openAiChat() {
     if (!aiService.isConfigured()) {
-      Renderer.toast('Configure sua API Key do Gemini nas configurações', 'error')
+      const providerName = aiService.getProvider() === 'openai' ? 'ChatGPT' : 'Gemini'
+      Renderer.toast(`Configure sua API Key do ${providerName} nas configurações`, 'error')
       this.toggleSidebar()
       return
     }
