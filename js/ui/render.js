@@ -26,6 +26,7 @@ export const Renderer = {
     // Summaries
     summaryInvCount: () => document.getElementById('summaryInvCount'),
     summaryInvProfit: () => document.getElementById('summaryInvProfit'),
+    summaryRealizedProfit: () => document.getElementById('summaryRealizedProfit'),
     summaryInvTotal: () => document.getElementById('summaryInvTotal')
   },
 
@@ -112,9 +113,34 @@ export const Renderer = {
       list.appendChild(li)
     })
 
-    this.els.summaryInvCount().innerText = `${portfolio.length} contratos`
-    this.els.summaryInvTotal().innerText = `Total: ${Formatter.currency(totalVal)}`
-    this.els.summaryInvProfit().innerText = `Lucro Est: ${Formatter.currency(totalProfit)}`
+    // Calculate Active vs Realized
+    let activeVal = 0
+    let activeProfit = 0
+    let realizedProfit = 0
+    let activeCount = 0
+
+    portfolio.forEach(p => {
+        const valCents = Formatter.toCents(p.val)
+        const profitCents = Math.floor(valCents * (p.rate / 100) * p.days)
+        const endStr = Formatter.addDays(p.date, p.days)
+        const isExpired = endStr < todayStr
+
+        if (isExpired) {
+            realizedProfit += profitCents
+        } else {
+            activeVal += valCents
+            activeProfit += profitCents
+            activeCount++
+        }
+    })
+
+    this.els.summaryInvCount().innerText = `${activeCount} ativos`
+    this.els.summaryInvTotal().innerText = `Total Ativo: ${Formatter.currency(activeVal)}`
+    this.els.summaryInvProfit().innerText = `Lucro Est: ${Formatter.currency(activeProfit)}`
+    
+    if(this.els.summaryRealizedProfit()) {
+        this.els.summaryRealizedProfit().innerText = `Realizado: ${Formatter.currency(realizedProfit)}`
+    }
   },
 
   renderResults(results) {
