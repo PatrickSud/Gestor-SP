@@ -65,6 +65,8 @@ class Store {
         commitBaseName: '',
         geminiApiKey: '',
         openaiApiKey: '',
+        groqApiKey: '',
+        groqModel: 'deepseek-r1-distill-llama-70b',
         aiProvider: 'gemini',
         syncAiKeys: false
       },
@@ -211,6 +213,7 @@ class Store {
         if (profileInputs) {
           delete profileInputs.geminiApiKey
           delete profileInputs.openaiApiKey
+          delete profileInputs.groqApiKey
         }
       })
     }
@@ -228,6 +231,7 @@ class Store {
     // Preserve local AI keys just in case cloud data doesn't have them (sanitization)
     const localGeminiKey = this.state.inputs.geminiApiKey
     const localOpenaiKey = this.state.inputs.openaiApiKey
+    const localGroqKey = this.state.inputs.groqApiKey
 
     this.state.currentProfileId = migratedData.currentProfileId
     this.state.profiles = migratedData.profiles
@@ -243,6 +247,9 @@ class Store {
     }
     if (this.state.inputs.openaiApiKey === undefined && localOpenaiKey) {
       this.state.inputs.openaiApiKey = localOpenaiKey
+    }
+    if (this.state.inputs.groqApiKey === undefined && localGroqKey) {
+      this.state.inputs.groqApiKey = localGroqKey
     }
 
     this.state.portfolio = [...current.portfolio]

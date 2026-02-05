@@ -389,6 +389,7 @@
                         <select id="aiProvider" class="custom-input w-full rounded-lg py-2 px-3 text-xs text-slate-200 border border-slate-700 bg-slate-900/50">
                             <option value="gemini">Google Gemini (Flash 2.0)</option>
                             <option value="openai">OpenAI ChatGPT (GPT-4o mini)</option>
+                            <option value="groq">Groq (DeepSeek / Llama 3)</option>
                         </select>
                     </div>
 
@@ -421,6 +422,34 @@
                                 <i class="fas fa-external-link-alt"></i> Obter OpenAI Key
                             </a>
                             <span id="aiKeyStatusOpenai" class="text-[9px] font-bold"></span>
+                        </div>
+                    </div>
+
+                    <!-- Groq Config -->
+                    <div id="groqConfig" class="hidden space-y-3">
+                        <div class="bg-slate-900/50 p-3 rounded-lg border border-orange-500/30 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-orange-500"></div>
+                            <label class="text-[10px] text-orange-300 font-bold uppercase mb-2 block">API Key da Groq</label>
+                            <input type="password" id="groqApiKey" 
+                                placeholder="Cole sua API Key da Groq aqui..."
+                                class="custom-input w-full rounded-lg py-2 px-3 text-xs text-slate-200 border border-slate-700 bg-slate-900/50">
+                            <div class="flex items-center justify-between mt-2">
+                                <a href="https://console.groq.com/keys" target="_blank" 
+                                   class="text-[9px] text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1">
+                                    <i class="fas fa-external-link-alt"></i> Obter Groq Key
+                                </a>
+                                <span id="aiKeyStatusGroq" class="text-[9px] font-bold"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-1">
+                            <label class="text-[10px] text-slate-400 font-bold uppercase pl-1">Modelo Groq</label>
+                            <select id="groqModel" class="custom-input w-full rounded-lg py-2 px-3 text-xs text-slate-200 border border-slate-700 bg-slate-900/50">
+                                <option value="deepseek-r1-distill-llama-70b">DeepSeek R1 (Llama 70B)</option>
+                                <option value="llama-3.3-70b-versatile">Llama 3.3 (70B) Versatile</option>
+                                <option value="llama-3.1-8b-instant">Llama 3.1 (8B) Instant (Mais rápido)</option>
+                                <option value="mixtral-8x7b-32768">Mixtral 8x7b</option>
+                            </select>
                         </div>
                     </div>
 

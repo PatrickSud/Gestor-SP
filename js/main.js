@@ -247,6 +247,9 @@ class App {
     const openaiKeyInp = document.getElementById('openaiApiKey')
     const providerSelect = document.getElementById('aiProvider')
 
+    const groqKeyInp = document.getElementById('groqApiKey')
+    const groqModelInp = document.getElementById('groqModel')
+
     if (geminiKeyInp) {
       geminiKeyInp.addEventListener('change', e => {
         store.updateInput('geminiApiKey', e.target.value)
@@ -263,6 +266,21 @@ class App {
       })
     }
 
+    if (groqKeyInp) {
+      groqKeyInp.addEventListener('change', e => {
+        store.updateInput('groqApiKey', e.target.value)
+        this.updateAiButtonVisibility()
+        if (e.target.value.trim()) Renderer.toast('API Key da Groq salva', 'success')
+      })
+    }
+
+    if (groqModelInp) {
+      groqModelInp.addEventListener('change', e => {
+        store.updateInput('groqModel', e.target.value)
+        Renderer.toast(`Modelo alterado para ${e.target.options[e.target.selectedIndex].text}`, 'info')
+      })
+    }
+
     if (providerSelect) {
       providerSelect.addEventListener('change', e => {
         const val = e.target.value
@@ -271,6 +289,7 @@ class App {
         // Toggle visibility of config sections
         document.getElementById('geminiConfig')?.classList.toggle('hidden', val !== 'gemini')
         document.getElementById('openaiConfig')?.classList.toggle('hidden', val !== 'openai')
+        document.getElementById('groqConfig')?.classList.toggle('hidden', val !== 'groq')
         
         this.updateAiButtonVisibility()
       })
@@ -395,6 +414,7 @@ class App {
     const provider = inputs.aiProvider || 'gemini'
     document.getElementById('geminiConfig')?.classList.toggle('hidden', provider !== 'gemini')
     document.getElementById('openaiConfig')?.classList.toggle('hidden', provider !== 'openai')
+    document.getElementById('groqConfig')?.classList.toggle('hidden', provider !== 'groq')
 
     // Restore Future Toggle Visuals
     const futureOn = inputs.futureToggle === 'true'
@@ -1545,6 +1565,13 @@ class App {
       const hasKey = !!store.state.inputs.openaiApiKey?.trim()
       statusOpenai.textContent = hasKey ? '✅ Ativo' : '❌ Pendente'
       statusOpenai.className = `text-[9px] font-bold ${hasKey ? 'text-emerald-500' : 'text-slate-500'}`
+    }
+
+    const statusGroq = document.getElementById('aiKeyStatusGroq')
+    if (statusGroq) {
+      const hasKey = !!store.state.inputs.groqApiKey?.trim()
+      statusGroq.textContent = hasKey ? '✅ Ativo' : '❌ Pendente'
+      statusGroq.className = `text-[9px] font-bold ${hasKey ? 'text-emerald-500' : 'text-slate-500'}`
     }
   }
 

@@ -10,6 +10,7 @@ class AiService {
   constructor() {
     this.GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent'
     this.OPENAI_URL = 'https://api.openai.com/v1/chat/completions'
+    this.GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
     this.OPENAI_MODEL = 'gpt-4o-mini'
     this.conversationHistory = []
     this.maxHistoryLength = 20
@@ -19,9 +20,12 @@ class AiService {
    * Verifica se a IA está configurada para o provedor selecionado
    */
   isConfigured() {
-    const provider = store.state.inputs.aiProvider || 'gemini'
+    const provider = this.getProvider()
     if (provider === 'openai') {
       return !!store.state.inputs.openaiApiKey?.trim()
+    }
+    if (provider === 'groq') {
+      return !!store.state.inputs.groqApiKey?.trim()
     }
     return !!store.state.inputs.geminiApiKey?.trim()
   }
@@ -40,6 +44,9 @@ class AiService {
     const provider = this.getProvider()
     if (provider === 'openai') {
       return store.state.inputs.openaiApiKey?.trim() || ''
+    }
+    if (provider === 'groq') {
+      return store.state.inputs.groqApiKey?.trim() || ''
     }
     return store.state.inputs.geminiApiKey?.trim() || ''
   }
@@ -146,7 +153,8 @@ Agora responda à pergunta do usuário com base no contexto acima.`
    */
   async sendMessage(userMessage) {
     if (!this.isConfigured()) {
-      const providerName = this.getProvider() === 'openai' ? 'ChatGPT' : 'Gemini'
+      const providers = { gemini: 'Gemini', openai: 'ChatGPT', groq: 'Groq' }
+      const providerName = providers[this.getProvider()] || 'IA'
       throw new Error(`API Key do ${providerName} não configurada. Acesse as Configurações para adicionar.`)
     }
 
@@ -154,6 +162,8 @@ Agora responda à pergunta do usuário com base no contexto acima.`
     
     if (provider === 'openai') {
       return this.sendOpenAiMessage(userMessage)
+    } else if (provider === 'groq') {
+      return this.sendGroqMessage(userMessage)
     } else {
       return this.sendGeminiMessage(userMessage)
     }
@@ -256,6 +266,63 @@ Agora responda à pergunta do usuário com base no contexto acima.`
       const assistantMessage = data.choices?.[0]?.message?.content
 
       if (!assistantMessage) throw new Error('Resposta vazia da OpenAI.')
+
+      this.conversationHistory.push({
+        role: 'assistant',
+        content: assistantMessage
+      })
+
+      return assistantMessage
+    } catch (error) {
+      this.conversationHistory.pop()
+      throw error
+    }
+  }
+
+  /**
+   * Envia mensagem para o Groq (DeepSeek / Llama)
+   */
+  async sendGroqMessage(userMessage) {
+    // Adicionar mensagem do usuário (formato compatível com OpenAI)
+    this.conversationHistory.push({
+      role: 'user',
+      content: userMessage
+    })
+
+    // Manter histórico limitado
+    if (this.conversationHistory.length > this.maxHistoryLength) {
+      this.conversationHistory = this.conversationHistory.slice(-this.maxHistoryLength)
+    }
+
+    try {
+      const model = store.state.inputs.groqModel || 'deepseek-r1-distill-llama-70b'
+      
+      const response = await fetch(this.GROQ_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.getApiKey()}`
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [
+            { role: 'system', content: this.buildSystemPrompt() },
+            ...this.conversationHistory
+          ],
+          temperature: 0.7
+        })
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) throw new Error('API Key da Groq inválida.')
+        if (response.status === 429) throw new Error('Limite de requisições da Groq excedido. Aguarde um momento.')
+        throw new Error(`Erro na API Groq: ${response.status}`)
+      }
+
+      const data = await response.json()
+      const assistantMessage = data.choices?.[0]?.message?.content
+
+      if (!assistantMessage) throw new Error('Resposta vazia da Groq.')
 
       this.conversationHistory.push({
         role: 'assistant',
