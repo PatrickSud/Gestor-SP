@@ -134,6 +134,10 @@ class App {
       // Local Notification for Withdrawal Day
       this.checkWithdrawalNotification(results.results)
 
+      // Refresh proactive insights (invalidate cache since data changed)
+      aiService.invalidateInsightsCache()
+      this.loadInsights()
+
       if (save) store.saveToStorage()
     }
   }
@@ -1689,6 +1693,13 @@ class App {
     if (badge) {
       badge.textContent = insights.length
       badge.classList.remove('hidden')
+    }
+
+    // Update floating button badge
+    const aiBtnBadge = document.getElementById('aiBtnBadge')
+    if (aiBtnBadge) {
+      aiBtnBadge.textContent = insights.length
+      aiBtnBadge.classList.toggle('hidden', insights.length === 0)
     }
 
     // Render insight cards
