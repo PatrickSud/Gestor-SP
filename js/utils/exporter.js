@@ -354,14 +354,17 @@ export const Exporter = {
           }
         },
         willDrawPage: function (data) {
-          // Draw full dark background on ALL pages BEFORE content to ensure consistent dark theme
-          const pageSize = doc.internal.pageSize
-          const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth()
-          const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight()
-          
-          // Draw complete dark background for the entire page
-          doc.setFillColor(15, 23, 42) // Slate 950 - Dark background
-          doc.rect(0, 0, pageWidth, pageHeight, 'F')
+          // Draw full dark background ONLY on pages after the first one
+          // (First page already has background and header drawn manually)
+          if (doc.internal.getCurrentPageInfo().pageNumber > 1) {
+            const pageSize = doc.internal.pageSize
+            const pageWidth = pageSize.width ? pageSize.width : pageSize.getWidth()
+            const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight()
+            
+            // Draw complete dark background for the entire page
+            doc.setFillColor(15, 23, 42) // Slate 950 - Dark background
+            doc.rect(0, 0, pageWidth, pageHeight, 'F')
+          }
         }
       })
 
