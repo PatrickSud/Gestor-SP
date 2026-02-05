@@ -845,11 +845,11 @@ class App {
                     <div class="grid grid-cols-2 gap-2">
                         <div class="bg-slate-900 p-2 rounded border border-slate-700">
                              <span class="block text-[10px] text-slate-500 uppercase mb-1">Renda / Extras</span>
-                             <span class="block text-sm font-bold text-white">${Formatter.currency(results.totalIncomeCents)}</span>
+                             <span class="block text-sm font-bold text-white">${Formatter.currency(results.totalIncome)}</span>
                         </div>
                         <div class="bg-slate-900 p-2 rounded border border-slate-700">
                              <span class="block text-[10px] text-slate-500 uppercase mb-1">Lucro Invest.</span>
-                             <span class="block text-sm font-bold text-emerald-400">${Formatter.currency(results.totalInvProfitCents)}</span>
+                             <span class="block text-sm font-bold text-emerald-400">${Formatter.currency(results.totalInvestmentProfit)}</span>
                         </div>
                     </div>
                 </div>
