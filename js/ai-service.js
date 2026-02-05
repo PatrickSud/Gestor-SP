@@ -185,11 +185,19 @@ Agora responda à pergunta do usuário com base no contexto acima.`
     }
 
     try {
-      // Normalizar histórico para Gemini (parts)
-      const geminiHistory = this.conversationHistory.map(msg => ({
-        role: msg.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: typeof msg.content === 'string' ? msg.content : (msg.parts?.[0]?.text || '') }]
-      }))
+      // Normalizar histórico para Gemini (user/model) e evitar papéis duplicados
+      const geminiHistory = this.conversationHistory
+        .map(msg => ({
+          role: (msg.role === 'assistant' || msg.role === 'model') ? 'model' : 'user',
+          content: typeof msg.content === 'string' ? msg.content : (msg.parts?.[0]?.text || '')
+        }))
+        .filter(msg => msg.content && msg.content.trim() !== '')
+        .map(msg => ({
+          role: msg.role,
+          parts: [{ text: msg.content }]
+        }))
+        // Garantir alternância user -> model -> user
+        .filter((msg, i, arr) => i === 0 || msg.role !== arr[i-1].role)
 
       const response = await fetch(`${this.GEMINI_URL}?key=${this.getApiKey()}`, {
         method: 'POST',
@@ -203,12 +211,12 @@ Agora responda à pergunta do usuário com base no contexto acima.`
 
       if (!response.ok) {
         if (response.status === 429) {
-          throw new Error('Limite de requisições do Gemini excedido. Aguarde um momento.')
+          throw new Error('Limite de requisições ou cota do Gemini excedida. Tente novamente em alguns segundos ou use a Groq.')
         }
         if (response.status === 401 || response.status === 403) {
           throw new Error('API Key do Gemini inválida ou sem permissão.')
         }
-        throw new Error(`Erro na API Gemini: ${response.status}`)
+        throw new Error(`Erro na API Gemini: ${response.status} - Verifique sua conexão.`)
       }
 
       const data = await response.json()

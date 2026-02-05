@@ -252,6 +252,7 @@ class App {
     if (geminiKeyInp) {
       geminiKeyInp.addEventListener('change', e => {
         store.updateInput('geminiApiKey', e.target.value)
+        aiService.clearHistory()
         this.updateAiButtonVisibility()
         if (e.target.value.trim()) Renderer.toast('API Key do Gemini salva', 'success')
       })
@@ -260,6 +261,7 @@ class App {
     if (openaiKeyInp) {
       openaiKeyInp.addEventListener('change', e => {
         store.updateInput('openaiApiKey', e.target.value)
+        aiService.clearHistory()
         this.updateAiButtonVisibility()
         if (e.target.value.trim()) Renderer.toast('API Key da OpenAI salva', 'success')
       })
@@ -268,6 +270,7 @@ class App {
     if (groqKeyInp) {
       groqKeyInp.addEventListener('change', e => {
         store.updateInput('groqApiKey', e.target.value)
+        aiService.clearHistory()
         this.updateAiButtonVisibility()
         if (e.target.value.trim()) Renderer.toast('API Key da Groq salva', 'success')
       })
