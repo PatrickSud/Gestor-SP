@@ -6,6 +6,7 @@ import { ChartManager } from './ui/chart.js'
 import { authService } from './auth-service.js'
 import { Exporter } from './utils/exporter.js'
 import { aiService } from './ai-service.js'
+import { NotificationManager } from './utils/notification-manager.js'
 
 /**
  * Main Application Controller
@@ -124,7 +125,7 @@ class App {
       Renderer.renderGoals(store.state.goals, results.dailyData, idx =>
         this.removeGoal(idx)
       )
-      Renderer.renderAlerts(store.state.portfolio)
+      Renderer.renderAlerts()
 
       Renderer.renderSimulationSummary(
         results.results,
@@ -1779,20 +1780,9 @@ class App {
 
   // --- Proactive Insights Methods ---
   async loadInsights() {
-    if (!aiService.isConfigured()) {
-      // Hide panel if AI not configured, but still show local insights
-      this.renderInsights(aiService.analyzeData())
-      return
-    }
-
-    try {
-      const insights = await aiService.generateAiInsights()
-      this.renderInsights(insights)
-    } catch (error) {
-      console.warn('Erro ao carregar insights:', error)
-      // Fallback to local insights
-      this.renderInsights(aiService.analyzeData())
-    }
+    // Agora os insights são determinísticos e instantâneos via NotificationManager
+    const notifications = NotificationManager.getNotifications()
+    this.renderInsights(notifications)
   }
 
   renderInsights(insights) {
@@ -1810,7 +1800,7 @@ class App {
     // Show panel
     panel.classList.remove('hidden')
 
-    // Update badge
+    // Update badge (showing all notifications in the dashboard panel)
     if (badge) {
       badge.textContent = insights.length
       badge.classList.remove('hidden')
@@ -1823,30 +1813,8 @@ class App {
       aiBtnBadge.classList.toggle('hidden', insights.length === 0)
     }
 
-    // Render insight cards
-    container.innerHTML = insights.slice(0, 6).map((insight, idx) => `
-      <div class="insight-card ${insight.type}" style="animation-delay: ${idx * 0.1}s" data-marco-key="${insight.marcoKey || ''}">
-        <div class="flex items-start gap-3">
-          <span class="insight-icon">${insight.icon}</span>
-          <div class="flex-1 min-w-0">
-            <h4 class="text-xs font-bold text-white mb-1">${insight.title}</h4>
-            <p class="text-[10px] text-slate-400 leading-relaxed">${insight.message}</p>
-            ${insight.action ? `
-              <button onclick="app.handleInsightAction('${insight.action}', '${insight.marcoKey || ''}')" 
-                class="insight-action mt-2">
-                ${insight.action}
-              </button>
-            ` : ''}
-          </div>
-          ${insight.type === 'achievement' ? `
-            <button onclick="app.dismissInsight(this, '${insight.marcoKey}')" 
-              class="text-slate-500 hover:text-white text-xs p-1" title="Marcar como visto">
-              <i class="fas fa-check"></i>
-            </button>
-          ` : ''}
-        </div>
-      </div>
-    `).join('')
+    // Render insight cards using unified Renderer helper
+    container.innerHTML = insights.map((n, idx) => Renderer.renderNotificationCard(n, idx)).join('')
   }
 
   async refreshInsights() {
@@ -1855,8 +1823,7 @@ class App {
       icon.classList.add('spin-animation')
     }
 
-    // Invalidate cache and reload
-    aiService.invalidateInsightsCache()
+    // Reload local notifications
     await this.loadInsights()
 
     if (icon) {

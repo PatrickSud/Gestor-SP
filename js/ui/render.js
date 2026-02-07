@@ -1,5 +1,6 @@
 import { Formatter } from '../utils/formatter.js'
 import { Calculator } from '../core/calculator.js'
+import { NotificationManager } from '../utils/notification-manager.js'
 
 /**
  * UI Renderer for the Gestor SP application
@@ -821,55 +822,57 @@ export const Renderer = {
       '<p class="text-center text-[10px] text-slate-500 italic">Nenhuma meta ativa</p>'
   },
 
-  renderAlerts(portfolio) {
+  renderAlerts() {
     const badge = document.getElementById('alertsBadge')
     const list = document.getElementById('alertsList')
     const container = document.getElementById('alertsContainer')
     if (!badge || !list || !container) return
 
-    const today = new Date()
-    const alerts = []
+    const notifications = NotificationManager.getNotifications()
+    // Exibir no modal apenas as notificações prioritárias (1 ou tipo urgent/success)
+    const alertItems = notifications.filter(n => n.priority === 1 || n.type === 'urgent' || n.type === 'warning')
 
-    ;(portfolio || []).forEach(p => {
-      const end = new Date(Formatter.addDays(p.date, p.days))
-      const diff = Math.ceil((end - today) / 86400000)
-      if (diff <= 2 && diff >= 0)
-        alerts.push({
-          type: 'warning',
-          msg: `Vence em ${diff}d: ${p.name}`,
-          icon: 'fa-exclamation-triangle'
-        })
-      else if (diff < 0 && diff > -5)
-        alerts.push({
-          type: 'danger',
-          msg: `VENCIDO: ${p.name}`,
-          icon: 'fa-clock'
-        })
-    })
-
-    if (alerts.length > 0) {
+    if (alertItems.length > 0) {
       container.classList.remove('hidden')
       badge.classList.remove('hidden')
-      badge.innerText = alerts.length
-      list.innerHTML = alerts
-        .map(
-          a => {
-            const isVencido = a.type === 'danger'
-            const baseClass = isVencido 
-                ? 'p-2 bg-slate-900/50 border border-slate-700/30 rounded flex gap-2 items-center text-[10px] opacity-60' 
-                : 'p-2 bg-slate-900 border border-slate-700 rounded flex gap-2 items-center text-[10px]'
-            
-            const iconClass = isVencido ? 'text-slate-500' : (a.type === 'warning' ? 'text-yellow-500' : 'text-red-500')
-            const textClass = isVencido ? 'text-slate-500 line-through' : 'text-white'
-
-            return `<div class="${baseClass}"><i class="fas ${a.icon} ${iconClass}"></i><span class="${textClass}">${a.msg}</span></div>`
-          }
-        )
+      badge.innerText = alertItems.length
+      list.innerHTML = alertItems
+        .map((n, idx) => this.renderNotificationCard(n, idx))
         .join('')
     } else {
       container.classList.add('hidden')
       badge.classList.add('hidden')
     }
+  },
+
+  renderNotificationCard(n, idx = 0) {
+    const iconHtml = n.icon.startsWith('fa-') 
+      ? `<i class="fas ${n.icon}"></i>` 
+      : n.icon
+
+    return `
+      <div class="insight-card ${n.type}" style="animation-delay: ${idx * 0.1}s">
+        <div class="flex items-start gap-3">
+          <span class="insight-icon flex-shrink-0">${iconHtml}</span>
+          <div class="flex-1 min-w-0">
+            <h4 class="text-xs font-bold text-white mb-0.5">${n.title}</h4>
+            <p class="text-[10px] text-slate-400 leading-relaxed">${n.message}</p>
+            ${n.action ? `
+              <button onclick="app.handleInsightAction('${n.action}', '${n.marcoKey || ''}')" 
+                class="insight-action mt-2">
+                ${n.action}
+              </button>
+            ` : ''}
+          </div>
+          ${n.type === 'achievement' ? `
+            <button onclick="app.dismissInsight(this, '${n.marcoKey}')" 
+              class="text-slate-500 hover:text-white text-xs p-1" title="Marcar como visto">
+              <i class="fas fa-check"></i>
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    `
   },
 
   renderWithdrawButtons(onSelect, selectedValue) {
