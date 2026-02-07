@@ -1825,8 +1825,8 @@ class App {
 
     // Render insight cards
     container.innerHTML = insights.slice(0, 6).map((insight, idx) => `
-      <div class="insight-card ${insight.type}" style="animation-delay: ${idx * 0.1}s" data-marco-key="${insight.marcoKey || ''}">
-        <div class="flex items-start gap-3">
+      <div class="insight-card ${insight.type} group/card" style="animation-delay: ${idx * 0.1}s" data-marco-key="${insight.marcoKey || ''}">
+        <div class="flex items-start gap-3 relative">
           <span class="insight-icon">${insight.icon}</span>
           <div class="flex-1 min-w-0">
             <h4 class="text-xs font-bold text-white mb-1">${insight.title}</h4>
@@ -1838,12 +1838,19 @@ class App {
               </button>
             ` : ''}
           </div>
-          ${insight.type === 'achievement' ? `
-            <button onclick="app.dismissInsight(this, '${insight.marcoKey}')" 
-              class="text-slate-500 hover:text-white text-xs p-1" title="Marcar como visto">
-              <i class="fas fa-check"></i>
+          
+          <div class="flex flex-col gap-1 items-center">
+            <button onclick="app.dismissInsight(this, '${insight.marcoKey || ''}', ${idx})" 
+              class="text-slate-500 hover:text-red-400 text-[10px] p-1 transition-colors" title="Fechar">
+              <i class="fas fa-times"></i>
             </button>
-          ` : ''}
+            ${insight.type === 'achievement' ? `
+              <button onclick="app.markAchievementSeen(this, '${insight.marcoKey}', ${idx})" 
+                class="text-emerald-500 hover:text-emerald-400 text-[10px] p-1" title="Marcar como visto">
+                <i class="fas fa-check"></i>
+              </button>
+            ` : ''}
+          </div>
         </div>
       </div>
     `).join('')
@@ -1864,6 +1871,39 @@ class App {
     }
     
     Renderer.toast('Insights atualizados', 'success')
+  }
+
+  clearAllInsights() {
+    if (!confirm('Deseja limpar todos os insights e o histórico da conversa?')) return
+    
+    // Clear AI history
+    aiService.clearHistory()
+    
+    // Invalidate insights cache
+    aiService.invalidateInsightsCache()
+    
+    // Hide panel
+    const panel = document.getElementById('insightsPanel')
+    if (panel) panel.classList.add('hidden')
+    
+    // Clear container
+    const container = document.getElementById('insightsContainer')
+    if (container) container.innerHTML = ''
+    
+    // Reset badges
+    const badge = document.getElementById('insightsBadge')
+    if (badge) {
+      badge.textContent = '0'
+      badge.classList.add('hidden')
+    }
+    
+    const aiBtnBadge = document.getElementById('aiBtnBadge')
+    if (aiBtnBadge) {
+      aiBtnBadge.textContent = '0'
+      aiBtnBadge.classList.add('hidden')
+    }
+    
+    Renderer.toast('Sessão de insights limpa', 'success')
   }
 
   handleInsightAction(action, marcoKey) {
@@ -1889,9 +1929,17 @@ class App {
     }
   }
 
-  dismissInsight(element, marcoKey) {
+  markAchievementSeen(element, marcoKey, index) {
     if (marcoKey) {
       aiService.markMilestoneAchieved(marcoKey)
+      Renderer.toast('Conquista arquivada!', 'success')
+      this.dismissInsight(element, marcoKey, index)
+    }
+  }
+
+  dismissInsight(element, marcoKey, index) {
+    if (index !== undefined) {
+      aiService.removeInsight(index)
     }
     
     // Animate out
@@ -1901,10 +1949,21 @@ class App {
       card.style.transform = 'translateX(20px)'
       setTimeout(() => {
         card.remove()
+        
+        // Update badges
+        const insights = aiService.insightsCache.data || []
+        const panel = document.getElementById('insightsPanel')
+        const badge = document.getElementById('insightsBadge')
+        const aiBtnBadge = document.getElementById('aiBtnBadge')
+
+        if (badge) badge.textContent = insights.length
+        if (aiBtnBadge) aiBtnBadge.textContent = insights.length
+
         // Check if any insights left
-        const container = document.getElementById('insightsContainer')
-        if (container && container.children.length === 0) {
-          document.getElementById('insightsPanel')?.classList.add('hidden')
+        if (insights.length === 0) {
+          if (panel) panel.classList.add('hidden')
+          if (badge) badge.classList.add('hidden')
+          if (aiBtnBadge) aiBtnBadge.classList.add('hidden')
         }
       }, 300)
     }
