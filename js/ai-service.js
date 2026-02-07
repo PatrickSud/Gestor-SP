@@ -684,17 +684,6 @@ Não inclua formatação markdown, apenas o JSON.`
   invalidateInsightsCache() {
     this.insightsCache.timestamp = null
   }
-
-  /**
-   * Remove um insight específico do cache
-   */
-  removeInsight(index) {
-    if (this.insightsCache.data && this.insightsCache.data[index]) {
-      this.insightsCache.data.splice(index, 1)
-      return true
-    }
-    return false
-  }
 }
 
 export const aiService = new AiService()
