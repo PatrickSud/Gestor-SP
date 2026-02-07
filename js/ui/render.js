@@ -851,7 +851,12 @@ export const Renderer = {
       : n.icon
 
     return `
-      <div class="insight-card ${n.type}" style="animation-delay: ${idx * 0.1}s">
+      <div class="insight-card ${n.type} relative group" style="animation-delay: ${idx * 0.1}s" id="notif-${n.id}">
+        <button onclick="app.dismissNotification('${n.id}')" 
+          class="absolute top-2 right-2 text-slate-500 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity p-1"
+          title="Fechar">
+          <i class="fas fa-times text-[10px]"></i>
+        </button>
         <div class="flex items-start gap-3">
           <span class="insight-icon flex-shrink-0">${iconHtml}</span>
           <div class="flex-1 min-w-0">

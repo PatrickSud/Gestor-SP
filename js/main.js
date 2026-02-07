@@ -1856,6 +1856,23 @@ class App {
     }
   }
 
+  dismissNotification(id) {
+    const card = document.getElementById(`notif-${id}`)
+    if (card) {
+      card.style.opacity = '0'
+      card.style.transform = 'translateX(20px)'
+      setTimeout(() => {
+        const current = store.state.dismissedNotifications || []
+        if (!current.includes(id)) {
+          store.setState({ dismissedNotifications: [...current, id] })
+        }
+        // Force refresh alerts and insights
+        Renderer.renderAlerts()
+        this.loadInsights()
+      }, 300)
+    }
+  }
+
   dismissInsight(element, marcoKey) {
     if (marcoKey) {
       aiService.markMilestoneAchieved(marcoKey)

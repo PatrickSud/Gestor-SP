@@ -11,7 +11,7 @@ export class NotificationManager {
    * @returns {Array} List of notification objects
    */
   static getNotifications() {
-    const { inputs, portfolio, results } = store.state
+    const { inputs, portfolio, results, dismissedNotifications = [] } = store.state
     const notifications = []
     const todayStr = Formatter.getTodayDate()
     const today = new Date()
@@ -20,7 +20,6 @@ export class NotificationManager {
     portfolio.forEach(p => {
       const endStr = Formatter.addDays(p.date, p.days)
       const end = new Date(endStr)
-      // Calculate diff in days
       const diff = Math.ceil((end - today) / 86400000)
       
       const profit = Math.floor(Formatter.toCents(p.val) * (p.rate / 100) * p.days)
@@ -28,6 +27,7 @@ export class NotificationManager {
 
       if (endStr === todayStr) {
         notifications.push({
+          id: `inv_today_${p.id}`,
           type: 'success',
           icon: '🎉',
           title: 'Retorno Hoje!',
@@ -36,6 +36,7 @@ export class NotificationManager {
         })
       } else if (diff === 1) {
         notifications.push({
+          id: `inv_tomorrow_${p.id}`,
           type: 'info',
           icon: '📈',
           title: 'Retorno Amanhã',
@@ -44,6 +45,7 @@ export class NotificationManager {
         })
       } else if (diff === 2) {
         notifications.push({
+          id: `inv_2days_${p.id}`,
           type: 'info',
           icon: '📊',
           title: 'Retorno em 2 dias',
@@ -52,15 +54,13 @@ export class NotificationManager {
         })
       } else if (diff < 0 && diff > -5) {
         notifications.push({
+          id: `inv_expired_${p.id}`,
           type: 'urgent',
           icon: '⚠️',
           title: 'Contrato Vencido',
           message: `O contrato ${p.name} venceu há ${Math.abs(diff)} dias. Considere realizar o saque ou reinvestir.`,
           priority: 1
         })
-      } else if (diff <= 0 && diff > -1) {
-          // This covers cases where endStr is slightly before today but not yet -1 day in diff
-          // Usually endStr === todayStr covers the exact day.
       }
     })
 
@@ -68,8 +68,9 @@ export class NotificationManager {
     const targetDay = parseInt(inputs.withdrawalDaySelect) || 0
     const currentDay = today.getDay()
     
-    if (currentDay === targetDay && results.nextWithdraw > 0) {
+    if (currentDay === targetDay && (results.nextWithdraw || 0) > 0) {
       notifications.push({
+        id: `withdraw_day_${todayStr}`,
         type: 'urgent',
         icon: '💰',
         title: 'Dia de Saque!',
@@ -79,10 +80,11 @@ export class NotificationManager {
       })
     } else if ((targetDay - currentDay + 7) % 7 === 1) {
       notifications.push({
+        id: `withdraw_tomorrow_${todayStr}`,
         type: 'warning',
         icon: '📅',
         title: 'Saque Amanhã',
-        message: `Amanhã é seu dia de saque. Prepare-se para sacar até ${Formatter.currency(results.nextWithdraw)}.`,
+        message: `Amanhã é seu dia de saque. Prepare-se para sacar até ${Formatter.currency(results.nextWithdraw || 0)}.`,
         priority: 2
       })
     }
@@ -95,6 +97,7 @@ export class NotificationManager {
 
       if (diferenca <= 0 && meta > 0) {
         notifications.push({
+          id: `goal_reached_${meta}`,
           type: 'success',
           icon: '🎯',
           title: 'Meta Atingida!',
@@ -103,6 +106,7 @@ export class NotificationManager {
         })
       } else if (meta > 0 && diferenca <= meta * 0.2) {
         notifications.push({
+          id: `goal_near_${meta}`,
           type: 'info',
           icon: '🎯',
           title: 'Quase Lá!',
@@ -114,8 +118,9 @@ export class NotificationManager {
 
     // 4. Investment Opportunity (High Idle Balance)
     const saldoReceita = results.todayRevenueBalance || 0
-    if (saldoReceita >= 5000 && portfolio.length === 0) { // 5000 cents = R$ 50
+    if (saldoReceita >= 5000 && portfolio.length === 0) {
       notifications.push({
+        id: 'opportunity_idle_balance',
         type: 'tip',
         icon: '💡',
         title: 'Oportunidade',
@@ -136,6 +141,7 @@ export class NotificationManager {
       const marcoCents = marco * 100
       if (lucroTotal >= marcoCents && !achieved) {
         notifications.push({
+          id: marcoKey,
           type: 'achievement',
           icon: '🏆',
           title: 'Conquista Desbloqueada!',
@@ -143,13 +149,14 @@ export class NotificationManager {
           priority: 1,
           marcoKey
         })
-        break // One achievement at a time
+        break 
       }
     }
 
     // 6. Onboarding / Start Tip
     if (portfolio.length === 0 && (results.todayRevenueBalance || 0) < 5000) {
       notifications.push({
+        id: 'onboarding_tip',
         type: 'info',
         icon: '📚',
         title: 'Dica de Início',
@@ -159,7 +166,9 @@ export class NotificationManager {
       })
     }
 
-    // Filter duplicates and sort by priority
-    return notifications.sort((a, b) => a.priority - b.priority)
+    // Filter out dismissed notifications and sort by priority
+    return notifications
+      .filter(n => !dismissedNotifications.includes(n.id))
+      .sort((a, b) => a.priority - b.priority)
   }
 }

@@ -74,7 +74,8 @@ class Store {
       selectedWeeks: [],
       goals: [],
       realizedWithdrawals: [],
-      manualAdjustments: []
+      manualAdjustments: [],
+      dismissedNotifications: []
     }
   }
 
@@ -123,7 +124,8 @@ class Store {
       selectedWeeks: [...this.state.selectedWeeks],
       goals: [...(this.state.goals || [])],
       realizedWithdrawals: [...(this.state.realizedWithdrawals || [])],
-      manualAdjustments: [...(this.state.manualAdjustments || [])]
+      manualAdjustments: [...(this.state.manualAdjustments || [])],
+      dismissedNotifications: [...(this.state.dismissedNotifications || [])]
     }
 
     this.state.currentProfileId = id
@@ -136,6 +138,7 @@ class Store {
     this.state.goals = [...(profile.goals || [])]
     this.state.realizedWithdrawals = [...(profile.realizedWithdrawals || [])]
     this.state.manualAdjustments = [...(profile.manualAdjustments || [])]
+    this.state.dismissedNotifications = [...(profile.dismissedNotifications || [])]
 
     this.saveToStorage()
     this.notify()
@@ -174,7 +177,8 @@ class Store {
       selectedWeeks: this.state.selectedWeeks,
       goals: this.state.goals || [],
       realizedWithdrawals: this.state.realizedWithdrawals || [],
-      manualAdjustments: this.state.manualAdjustments || []
+      manualAdjustments: this.state.manualAdjustments || [],
+      dismissedNotifications: this.state.dismissedNotifications || []
     }
 
     const dataToSave = {
@@ -197,7 +201,8 @@ class Store {
       selectedWeeks: [...this.state.selectedWeeks],
       goals: [...(this.state.goals || [])],
       realizedWithdrawals: [...(this.state.realizedWithdrawals || [])],
-      manualAdjustments: [...(this.state.manualAdjustments || [])]
+      manualAdjustments: [...(this.state.manualAdjustments || [])],
+      dismissedNotifications: [...(this.state.dismissedNotifications || [])]
     }
 
     // Create a deep copy for cloud persistence to avoid side effects
@@ -257,6 +262,7 @@ class Store {
     this.state.goals = [...(current.goals || [])]
     this.state.realizedWithdrawals = [...(current.realizedWithdrawals || [])]
     this.state.manualAdjustments = [...(current.manualAdjustments || [])]
+    this.state.dismissedNotifications = [...(current.dismissedNotifications || [])]
 
     this.saveToStorage() // Update local storage too
     this.notify()
@@ -309,6 +315,7 @@ class Store {
       this.state.goals = [...(current.goals || [])]
       this.state.realizedWithdrawals = [...(current.realizedWithdrawals || [])]
       this.state.manualAdjustments = [...(current.manualAdjustments || [])]
+      this.state.dismissedNotifications = [...(current.dismissedNotifications || [])]
 
       if (migrated) {
         this.saveToStorage() // Persist migration immediately
@@ -350,6 +357,7 @@ class Store {
       this.state.goals = [...(current.goals || [])]
       this.state.realizedWithdrawals = [...(current.realizedWithdrawals || [])]
       this.state.manualAdjustments = [...(current.manualAdjustments || [])]
+      this.state.dismissedNotifications = [...(current.dismissedNotifications || [])]
 
       this.saveToStorage()
       this.notify()
