@@ -403,10 +403,6 @@ export const Renderer = {
             markers.push(
               '<div class="w-1.5 h-1.5 rounded-full bg-sky-400"></div>'
             )
-          if ((data.inIncomeTeam || 0) > 0)
-            markers.push(
-              '<div class="w-1.5 h-1.5 rounded-full bg-cyan-400"></div>'
-            )
           if (data.inReturn > 0)
             markers.push(
               '<div class="w-1.5 h-1.5 rounded-full bg-purple-500"></div>'
