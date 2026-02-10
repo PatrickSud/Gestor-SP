@@ -1501,6 +1501,12 @@ class App {
         Renderer.toast('Backup restaurado com sucesso!', 'success')
         this.applyStoreToUI()
         this.runCalculation()
+        
+        // Se o Onboarding estiver aberto, re-renderiza a etapa atual para mostrar os dados importados
+        const modal = document.getElementById('onboardingModal')
+        if (modal && !modal.classList.contains('hidden')) {
+           this.renderOnboardingStep()
+        }
       } else {
         Renderer.toast('Erro ao importar backup. Formato inválido.', 'error')
       }
@@ -2123,6 +2129,15 @@ class App {
     this.renderOnboardingStep()
   }
 
+  dismissOnboarding() {
+    store.updateInput('setupCompleted', true)
+    store.saveToStorage()
+    this.closeModal('onboardingModal')
+    this.applyStoreToUI()
+    this.runCalculation()
+    Renderer.toast('Configuração ignorada. Você pode alterar tudo nas Configurações.', 'info')
+  }
+
   renderOnboardingStep() {
     const body = document.getElementById('onboardingBody')
     const title = document.getElementById('onboardingTitle')
@@ -2154,7 +2169,13 @@ class App {
         title.innerText = 'Vamos configurar seu caixa inicial'
         html = `
           <div class="space-y-6 animate-fade-in">
-            <p class="text-sm text-slate-400">Informe quanto você possui hoje em cada uma das suas carteiras.</p>
+            <div class="flex items-center justify-between">
+              <p class="text-sm text-slate-400">Informe quanto você possui hoje em cada uma das suas carteiras.</p>
+              <button onclick="document.getElementById('importFile').click()" 
+                class="text-[10px] bg-slate-800 hover:bg-slate-700 text-blue-400 font-bold py-2 px-3 rounded-lg border border-slate-700 transition-all flex items-center gap-2">
+                <i class="fas fa-file-import"></i> Restaurar Backup
+              </button>
+            </div>
             <div class="space-y-4">
               <div class="bg-slate-800/50 p-4 rounded-2xl border border-indigo-500/30">
                 <label class="text-[10px] text-indigo-300 font-bold uppercase mb-2 block tracking-widest">Carteira Pessoal</label>
@@ -2475,6 +2496,7 @@ class App {
 
   finishOnboarding() {
     store.updateInput('setupCompleted', true)
+    store.saveToStorage() // Force immediate save
     this.closeModal('onboardingModal')
     this.applyStoreToUI()
     this.runCalculation()
