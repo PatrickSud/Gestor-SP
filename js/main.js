@@ -182,10 +182,26 @@ class App {
           }
         }
 
-        if (el.id === 'monthlyIncomeToggle') {
-          document
-            .getElementById('monthlyIncomeContainer')
-            .classList.toggle('hidden', !val)
+        if (el.id === 'monthlyIncomeToggle' || el.id === 'promotionToggle' || el.id === 'teamBonusToggle') {
+          const containerMap = {
+            'monthlyIncomeToggle': 'monthlyIncomeContainer',
+            'promotionToggle': 'promotionContainer',
+            'teamBonusToggle': 'teamBonusContainer'
+          }
+          const container = document.getElementById(containerMap[el.id])
+          if (container) container.classList.toggle('hidden', !val)
+
+          const btnMap = {
+            'monthlyIncomeToggle': 'toggleMonthlyIncome',
+            'promotionToggle': 'togglePromotion',
+            'teamBonusToggle': 'toggleTeamBonus'
+          }
+          const btn = document.getElementById(btnMap[el.id])
+          if (btn) {
+            btn.innerHTML = val 
+              ? `Recolher <i class="fas fa-chevron-down ml-1 transition-transform rotate-180"></i>`
+              : `Expandir <i class="fas fa-chevron-down ml-1 transition-transform"></i>`
+          }
           this.runCalculation()
         }
 
@@ -341,17 +357,6 @@ class App {
     }
 
     // Team Bonus Handlers
-    const teamBonusToggle = document.getElementById('teamBonusToggle')
-    if (teamBonusToggle) {
-      teamBonusToggle.addEventListener('change', e => {
-        store.updateInput('teamBonusToggle', e.target.checked)
-        const grid = document.getElementById('teamBonusGrid')
-        const head = document.querySelector('#teamBonusContainer > div.grid')
-        if (grid) grid.classList.toggle('hidden', !e.target.checked)
-        if (head) head.classList.toggle('hidden', !e.target.checked)
-        this.runCalculation()
-      })
-    }
     const toggleTeamBtn = document.getElementById('toggleTeamBonus')
     if (toggleTeamBtn) {
       toggleTeamBtn.onclick = () => {
@@ -366,13 +371,6 @@ class App {
     }
 
     // Promotion Handlers
-    const promoToggle = document.getElementById('promotionToggle')
-    if (promoToggle) {
-      promoToggle.addEventListener('change', e => {
-        store.updateInput('promotionToggle', e.target.checked)
-        this.runCalculation()
-      })
-    }
 
     const togglePromoBtn = document.getElementById('togglePromotion')
     if (togglePromoBtn) {
@@ -392,21 +390,6 @@ class App {
       }
     }
 
-    const promoLevel = document.getElementById('promotionLevel')
-    if (promoLevel) {
-      promoLevel.addEventListener('change', e => {
-        store.updateInput('promotionLevel', e.target.value)
-        this.runCalculation()
-      })
-    }
-
-    const promoDay = document.getElementById('promotionDay')
-    if (promoDay) {
-      promoDay.addEventListener('input', e => {
-        store.updateInput('promotionDay', e.target.value)
-        this.runCalculation()
-      })
-    }
 
     document.querySelectorAll('.team-input').forEach(el => {
       el.addEventListener('input', e => {
