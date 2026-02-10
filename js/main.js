@@ -121,11 +121,10 @@ class App {
       // Update Chart
       ChartManager.renderBalanceChart('balanceChart', results.results.graphData)
 
-      // Goals & Alerts
+      // Goals & Icons
       Renderer.renderGoals(store.state.goals, results.dailyData, idx =>
         this.removeGoal(idx)
       )
-      Renderer.renderAlerts()
 
       Renderer.renderSimulationSummary(
         results.results,
@@ -2009,35 +2008,34 @@ class App {
   }
 
   renderInsights(insights) {
-    const panel = document.getElementById('insightsPanel')
-    const container = document.getElementById('insightsContainer')
-    const badge = document.getElementById('insightsBadge')
+    const alertsList = document.getElementById('alertsList')
+    const alertsBadge = document.getElementById('alertsBadge')
+    const alertsContainer = document.getElementById('alertsContainer')
 
-    if (!panel || !container) return
+    if (!alertsList) return
 
-    if (!insights || insights.length === 0) {
-      panel.classList.add('hidden')
+    // O contador (Badge) do sino baseia-se no total de insights gerados
+    const total = insights?.length || 0
+
+    if (alertsBadge) {
+      alertsBadge.textContent = total
+      alertsBadge.classList.toggle('hidden', total === 0)
+    }
+
+    if (alertsContainer) {
+      alertsContainer.classList.toggle('hidden', total === 0)
+    }
+
+    // Limpeza para evitar duplicidade
+    alertsList.innerHTML = ''
+
+    if (total === 0) {
+      alertsList.innerHTML = '<p class="text-xs text-slate-500 text-center italic">Nenhum alerta pendente</p>'
       return
     }
 
-    // Show panel
-    panel.classList.remove('hidden')
-
-    // Update badge (showing all notifications in the dashboard panel)
-    if (badge) {
-      badge.textContent = insights.length
-      badge.classList.remove('hidden')
-    }
-
-    // Update floating button badge
-    const aiBtnBadge = document.getElementById('aiBtnBadge')
-    if (aiBtnBadge) {
-      aiBtnBadge.textContent = insights.length
-      aiBtnBadge.classList.toggle('hidden', insights.length === 0)
-    }
-
-    // Render insight cards using unified Renderer helper
-    container.innerHTML = insights.map((n, idx) => Renderer.renderNotificationCard(n, idx)).join('')
+    // Renderizar HTML dos cards dentro do #alertsList
+    alertsList.innerHTML = insights.map((n, idx) => Renderer.renderNotificationCard(n, idx)).join('')
   }
 
   async refreshInsights() {
@@ -2089,8 +2087,7 @@ class App {
         if (!current.includes(id)) {
           store.setState({ dismissedNotifications: [...current, id] })
         }
-        // Force refresh alerts and insights
-        Renderer.renderAlerts()
+        // Force refresh insights (which now handles alerts)
         this.loadInsights()
       }, 300)
     }
@@ -2108,11 +2105,8 @@ class App {
       card.style.transform = 'translateX(20px)'
       setTimeout(() => {
         card.remove()
-        // Check if any insights left
-        const container = document.getElementById('insightsContainer')
-        if (container && container.children.length === 0) {
-          document.getElementById('insightsPanel')?.classList.add('hidden')
-        }
+        // Reload to update badge and list
+        this.loadInsights()
       }, 300)
     }
   }

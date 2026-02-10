@@ -704,22 +704,7 @@
             </div>
         </div>
 
-        <!-- AI Insights Panel -->
-        <div id="insightsPanel" class="hidden">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="font-bold text-white flex items-center gap-2 text-sm">
-                    <i class="fas fa-lightbulb text-yellow-500"></i> 
-                    Insights
-                    <span id="insightsBadge" class="bg-purple-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold hidden">0</span>
-                </h3>
-                <button onclick="app.refreshInsights()" class="text-[10px] text-slate-400 hover:text-white flex items-center gap-1 transition-colors" title="Atualizar insights">
-                    <i class="fas fa-sync-alt" id="refreshInsightsIcon"></i>
-                </button>
-            </div>
-            <div id="insightsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                <!-- Insights will be injected here -->
-            </div>
-        </div>
+
 
         <!-- 2. Chart Section -->
         <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg">
@@ -1269,7 +1254,6 @@
     <button id="aiAssistantBtn" onclick="app.openAiChat()"
         class="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-full shadow-lg shadow-purple-900/50 z-40 hidden items-center justify-center hover:scale-110 transition-transform ai-pulse-btn group">
         <i class="fas fa-robot text-white text-xl group-hover:animate-bounce"></i>
-        <span id="aiBtnBadge" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center hidden">0</span>
     </button>
 
     <!-- AI Chat Modal -->

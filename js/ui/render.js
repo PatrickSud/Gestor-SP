@@ -847,28 +847,7 @@ export const Renderer = {
       '<p class="text-center text-[10px] text-slate-500 italic">Nenhuma meta ativa</p>'
   },
 
-  renderAlerts() {
-    const badge = document.getElementById('alertsBadge')
-    const list = document.getElementById('alertsList')
-    const container = document.getElementById('alertsContainer')
-    if (!badge || !list || !container) return
 
-    const notifications = NotificationManager.getNotifications()
-    // Exibir no modal apenas as notificações prioritárias (1 ou tipo urgent/success)
-    const alertItems = notifications.filter(n => n.priority === 1 || n.type === 'urgent' || n.type === 'warning')
-
-    if (alertItems.length > 0) {
-      container.classList.remove('hidden')
-      badge.classList.remove('hidden')
-      badge.innerText = alertItems.length
-      list.innerHTML = alertItems
-        .map((n, idx) => this.renderNotificationCard(n, idx))
-        .join('')
-    } else {
-      container.classList.add('hidden')
-      badge.classList.add('hidden')
-    }
-  },
 
   renderNotificationCard(n, idx = 0) {
     const iconHtml = n.icon.startsWith('fa-') 
