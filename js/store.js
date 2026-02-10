@@ -69,6 +69,7 @@ class Store {
         groqModel: 'qwen-qwq-32b',
         aiProvider: 'gemini',
         syncAiKeys: false,
+        teamBonusToggle: false,
         teamCounts: {
           'S1': { A: 0, B: 0, C: 0 },
           'S2': { A: 0, B: 0, C: 0 },

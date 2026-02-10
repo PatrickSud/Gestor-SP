@@ -206,20 +206,26 @@ export const Calculator = {
         simCapitalPure += initialSimCapital
       }
 
-      // 0. Team Income (Daily, inclusive Sun)
+      // 0. Team Income (Mon-Sat, if toggle is active)
       const teamCounts = inputs.teamCounts || {}
+      const isTeamActive = inputs.teamBonusToggle === 'true' || inputs.teamBonusToggle === true
+      const isSunday = Formatter.getDayOfWeek(currentDayStr) === 0
       let stepTeamBonus = 0
-      Object.keys(teamCounts).forEach(level => {
-        const counts = teamCounts[level]
-        const rates = Calculator.TEAM_RATES[level]
-        if (rates) {
-          const levelIncome =
-            (counts.A || 0) * (rates.A || 0) +
-            (counts.B || 0) * (rates.B || 0) +
-            (counts.C || 0) * (rates.C || 0)
-          stepTeamBonus += Formatter.toCents(levelIncome.toFixed(2))
-        }
-      })
+
+      if (isTeamActive && !isSunday) {
+        Object.keys(teamCounts).forEach(level => {
+          const counts = teamCounts[level]
+          const rates = Calculator.TEAM_RATES[level]
+          if (rates) {
+            const levelIncome =
+              (counts.A || 0) * (rates.A || 0) +
+              (counts.B || 0) * (rates.B || 0) +
+              (counts.C || 0) * (rates.C || 0)
+            stepTeamBonus += Formatter.toCents(levelIncome.toFixed(2))
+          }
+        })
+      }
+
       if (d > 0) {
         stepIncome += stepTeamBonus
       }

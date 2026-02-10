@@ -319,6 +319,17 @@ class App {
     }
 
     // Team Bonus Handlers
+    const teamBonusToggle = document.getElementById('teamBonusToggle')
+    if (teamBonusToggle) {
+      teamBonusToggle.addEventListener('change', e => {
+        store.updateInput('teamBonusToggle', e.target.checked)
+        const grid = document.getElementById('teamBonusGrid')
+        const head = document.querySelector('#teamBonusContainer > div.grid')
+        if (grid) grid.classList.toggle('hidden', !e.target.checked)
+        if (head) head.classList.toggle('hidden', !e.target.checked)
+        this.runCalculation()
+      })
+    }
     const toggleTeamBtn = document.getElementById('toggleTeamBonus')
     if (toggleTeamBtn) {
       toggleTeamBtn.onclick = () => {
@@ -476,6 +487,15 @@ class App {
   }
 
   restoreTeamUI() {
+    const isTeamActive = store.state.inputs.teamBonusToggle === 'true' || store.state.inputs.teamBonusToggle === true
+    const check = document.getElementById('teamBonusToggle')
+    if (check) check.checked = isTeamActive
+
+    const grid = document.getElementById('teamBonusGrid')
+    const head = document.querySelector('#teamBonusContainer > div.grid')
+    if (grid) grid.classList.toggle('hidden', !isTeamActive)
+    if (head) head.classList.toggle('hidden', !isTeamActive)
+
     const teamCounts = store.state.inputs.teamCounts || {}
     document.querySelectorAll('.team-input').forEach(el => {
       const level = el.getAttribute('data-level')
