@@ -1376,14 +1376,63 @@ class App {
 
   // --- Backup Actions ---
   exportBackup() {
-    const data = store.exportAllData()
+    this.renderExportList()
+    this.openModal('exportModal')
+  }
+
+  renderExportList() {
+    const container = document.getElementById('exportProfileList')
+    if (!container) return
+
+    const profiles = store.state.profiles || {}
+    const currentId = store.state.currentProfileId
+
+    let html = ''
+    Object.entries(profiles).forEach(([id, profile]) => {
+      const isCurrent = id === currentId
+      html += `
+        <label class="flex items-center justify-between p-3 bg-slate-900/50 border border-slate-700 rounded-xl cursor-pointer hover:border-blue-500 transition-colors group">
+            <div class="flex items-center gap-3">
+                <input type="checkbox" name="exportProfile" value="${id}" checked 
+                    class="w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-800">
+                <div class="flex flex-col">
+                    <span class="text-xs font-bold text-white">${profile.name}</span>
+                    ${isCurrent ? '<span class="text-[8px] text-blue-400 font-bold uppercase">Perfil Ativo</span>' : ''}
+                </div>
+            </div>
+            <i class="fas fa-user text-slate-600 group-hover:text-blue-400 transition-colors text-xs"></i>
+        </label>
+      `
+    })
+    container.innerHTML = html
+  }
+
+  confirmExport() {
+    const checkboxes = document.querySelectorAll(
+      'input[name="exportProfile"]:checked'
+    )
+    const ids = Array.from(checkboxes).map(cb => cb.value)
+
+    if (ids.length === 0) {
+      return Renderer.toast(
+        'Selecione pelo menos um perfil para exportar',
+        'error'
+      )
+    }
+
+    const data = store.exportSelectedData(ids)
     const blob = new Blob([data], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
     a.download = `backup_gestor_sp_${new Date().toISOString().split('T')[0]}.json`
     a.click()
-    Renderer.toast('Backup gerado com sucesso!', 'success')
+
+    this.closeModal('exportModal')
+    Renderer.toast(
+      `${ids.length} perfil(is) exportado(s) com sucesso!`,
+      'success'
+    )
   }
 
   importBackup(file) {

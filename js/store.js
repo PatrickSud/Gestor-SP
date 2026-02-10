@@ -350,6 +350,29 @@ class Store {
     return JSON.stringify(data, null, 2)
   }
 
+  exportSelectedData(selectedProfileIds) {
+    const filteredProfiles = {}
+    selectedProfileIds.forEach(id => {
+      if (this.state.profiles[id]) {
+        filteredProfiles[id] = this.state.profiles[id]
+      }
+    })
+
+    // Se o perfil atual não foi selecionado, usar o primeiro da lista de selecionados
+    let exportCurrentId = this.state.currentProfileId
+    if (!selectedProfileIds.includes(exportCurrentId)) {
+      exportCurrentId = selectedProfileIds[0]
+    }
+
+    const data = {
+      currentProfileId: exportCurrentId,
+      profiles: filteredProfiles,
+      exportDate: new Date().toISOString(),
+      version: '2.0'
+    }
+    return JSON.stringify(data, null, 2)
+  }
+
   importAllData(jsonString) {
     try {
       const { data: parsed, migrated } = this.migrateData(
