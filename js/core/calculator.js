@@ -19,6 +19,16 @@ export const Calculator = {
     'L5': { A: 1575.00, B: 945.00, C: 315.00 }
   },
 
+  PROMOTION_SALARIES: {
+    'assistente_estagio': { label: 'Assistente de Estágio', value: 600 },
+    'assistente_oficial': { label: 'Assistente Oficial', value: 1200 },
+    'supervisor_junior': { label: 'Supervisor Júnior', value: 3600 },
+    'chefe_marketing': { label: 'Chefe de Marketing', value: 9000 },
+    'gerente_junior': { label: 'Gerente Júnior', value: 15000 },
+    'diretor_marketing': { label: 'Diretor de Marketing', value: 38000 },
+    'socio_assalariado': { label: 'Sócio Assalariado', value: 80000 }
+  },
+
   WITHDRAWAL_TIERS: [
     4000, 13000, 40000, 130000, 420000, 850000, 1900000, 3800000
   ], // Values in cents
@@ -247,6 +257,22 @@ export const Calculator = {
             stepRecurringIncome += valCents
           }
         })
+      }
+
+      // 3. Promotion Salary
+      let stepPromotionIncome = 0
+      const isPromotionActive = inputs.promotionToggle === 'true' || inputs.promotionToggle === true
+      if (d > 0 && isPromotionActive) {
+        const dayOfMonth = parseInt(currentDayStr.split('-')[2])
+        const promoDay = parseInt(inputs.promotionDay || 1)
+        if (dayOfMonth === promoDay) {
+          const promoData = Calculator.PROMOTION_SALARIES[inputs.promotionLevel]
+          if (promoData) {
+            const promoValCents = Formatter.toCents(promoData.value)
+            stepIncome += promoValCents
+            stepPromotionIncome = promoValCents
+          }
+        }
       }
 
       // 3. Portfolio Maturities
@@ -507,6 +533,7 @@ export const Calculator = {
         inIncomeTask: stepTaskIncome,
         inIncomeRecurring: stepRecurringIncome,
         inIncomeTeam: stepTeamBonus,
+        inIncomePromotion: stepPromotionIncome,
         inReturn: stepReturns,
         inReturnPrincipal: stepReturnPrincipal,
         inReturnProfit: stepReturnProfit,
@@ -535,6 +562,7 @@ export const Calculator = {
             incomeTask: stepTaskIncome,
             incomeRecurring: stepRecurringIncome,
             incomeTeam: stepTeamBonus,
+            incomePromotion: stepPromotionIncome,
             returns: stepReturns,
             withdrawNet: stepWithdraw,
             withdrawStatus: isRealized

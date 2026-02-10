@@ -142,6 +142,8 @@ class App {
         this.loadInsights()
       }, 2000)
 
+      this.updatePromotionDisplay()
+
       if (save) store.saveToStorage()
     }
   }
@@ -363,6 +365,49 @@ class App {
       }
     }
 
+    // Promotion Handlers
+    const promoToggle = document.getElementById('promotionToggle')
+    if (promoToggle) {
+      promoToggle.addEventListener('change', e => {
+        store.updateInput('promotionToggle', e.target.checked)
+        this.runCalculation()
+      })
+    }
+
+    const togglePromoBtn = document.getElementById('togglePromotion')
+    if (togglePromoBtn) {
+      togglePromoBtn.onclick = () => {
+        const container = document.getElementById('promotionContainer')
+        const chevron = document.getElementById('promotionChevron')
+        const isHidden = container.classList.contains('hidden')
+        container.classList.toggle('hidden')
+        
+        if (chevron) {
+          chevron.classList.toggle('rotate-180', !isHidden)
+        }
+        
+        togglePromoBtn.innerHTML = isHidden
+          ? `Recolher <i class="fas fa-chevron-down ml-1 transition-transform rotate-180" id="promotionChevron"></i>`
+          : `Expandir <i class="fas fa-chevron-down ml-1 transition-transform" id="promotionChevron"></i>`
+      }
+    }
+
+    const promoLevel = document.getElementById('promotionLevel')
+    if (promoLevel) {
+      promoLevel.addEventListener('change', e => {
+        store.updateInput('promotionLevel', e.target.value)
+        this.runCalculation()
+      })
+    }
+
+    const promoDay = document.getElementById('promotionDay')
+    if (promoDay) {
+      promoDay.addEventListener('input', e => {
+        store.updateInput('promotionDay', e.target.value)
+        this.runCalculation()
+      })
+    }
+
     document.querySelectorAll('.team-input').forEach(el => {
       el.addEventListener('input', e => {
         const level = e.target.getAttribute('data-level')
@@ -458,12 +503,22 @@ class App {
     // Restore Toggles
     const monCont = document.getElementById('monthlyIncomeContainer')
     const monToggle = !!inputs.monthlyIncomeToggle
-    monCont.classList.toggle('hidden', !monToggle)
+    if (monCont) monCont.classList.toggle('hidden', !monToggle)
     const monBtn = document.getElementById('toggleMonthlyIncome')
     if (monBtn) {
       monBtn.innerHTML = monToggle
         ? `Recolher <i class="fas fa-chevron-down ml-1 transition-transform rotate-180" id="monthlyIncomeChevron"></i>`
         : `Expandir <i class="fas fa-chevron-down ml-1 transition-transform" id="monthlyIncomeChevron"></i>`
+    }
+
+    const promoCont = document.getElementById('promotionContainer')
+    const promoToggleVal = !!inputs.promotionToggle
+    if (promoCont) promoCont.classList.toggle('hidden', !promoToggleVal)
+    const promoBtn = document.getElementById('togglePromotion')
+    if (promoBtn) {
+      promoBtn.innerHTML = promoToggleVal
+        ? `Recolher <i class="fas fa-chevron-down ml-1 transition-transform rotate-180" id="promotionChevron"></i>`
+        : `Expandir <i class="fas fa-chevron-down ml-1 transition-transform" id="promotionChevron"></i>`
     }
 
     document
@@ -551,6 +606,15 @@ class App {
     const display = document.getElementById('teamDailyIncomeDisplay')
     if (display) {
       display.innerText = Formatter.currency(Formatter.toCents(totalDaily.toFixed(2)))
+    }
+  }
+
+  updatePromotionDisplay() {
+    const level = store.state.inputs.promotionLevel
+    const promoData = Calculator.PROMOTION_SALARIES[level]
+    const display = document.getElementById('promotionMonthlyIncomeDisplay')
+    if (display && promoData) {
+      display.innerText = Formatter.currency(Formatter.toCents(promoData.value))
     }
   }
 

@@ -81,7 +81,10 @@ class Store {
           'L3': { A: 0, B: 0, C: 0 },
           'L4': { A: 0, B: 0, C: 0 },
           'L5': { A: 0, B: 0, C: 0 }
-        }
+        },
+        promotionToggle: false,
+        promotionLevel: 'assistente_estagio',
+        promotionDay: '1'
       },
       portfolio: [],
       selectedWeeks: [],
