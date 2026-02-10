@@ -38,6 +38,7 @@ class Store {
     const today = Formatter.getTodayDate()
     return {
       inputs: {
+        setupCompleted: false,
         dataInicio: today,
         withdrawalDaySelect: '1',
         viewPeriodSelect: '30',

@@ -15,6 +15,7 @@ import { NotificationManager } from './utils/notification-manager.js'
 class App {
   constructor() {
     this.insightsTimer = null
+    this.onboardingStep = 0
     this.init()
   }
 
@@ -49,6 +50,11 @@ class App {
 
       // Load proactive insights
       this.loadInsights()
+
+      // Trigger Onboarding if not completed
+      if (!store.state.inputs.setupCompleted) {
+        this.openOnboarding()
+      }
 
       Renderer.toast('Sistema inicializado com sucesso', 'success')
     } catch (error) {
@@ -2109,6 +2115,449 @@ class App {
         this.loadInsights()
       }, 300)
     }
+  }
+  // --- Onboarding (Wizard) Methods ---
+  openOnboarding() {
+    this.onboardingStep = 0
+    this.openModal('onboardingModal')
+    this.renderOnboardingStep()
+  }
+
+  renderOnboardingStep() {
+    const body = document.getElementById('onboardingBody')
+    const title = document.getElementById('onboardingTitle')
+    const progress = document.getElementById('onboardingProgress')
+    const backBtn = document.getElementById('onboardingBackBtn')
+    const nextBtn = document.getElementById('onboardingNextBtn')
+    const finishBtn = document.getElementById('onboardingFinishBtn')
+
+    if (!body || !title || !progress) return
+
+    const totalSteps = 8
+    
+    // Progress Dots
+    progress.innerHTML = Array.from({ length: totalSteps }).map((_, i) => `
+      <div class="w-2 h-2 rounded-full transition-all duration-300 ${i === this.onboardingStep ? 'bg-blue-500 w-6' : i < this.onboardingStep ? 'bg-emerald-500' : 'bg-slate-700'}"></div>
+    `).join('')
+
+    // Navigation Buttons
+    backBtn.classList.toggle('hidden', this.onboardingStep === 0 || this.onboardingStep === totalSteps - 1)
+    nextBtn.classList.toggle('hidden', this.onboardingStep === totalSteps - 1)
+    finishBtn.classList.toggle('hidden', this.onboardingStep !== totalSteps - 1)
+
+    // Current State for Inputs
+    const state = store.state.inputs
+
+    let html = ''
+    switch (this.onboardingStep) {
+      case 0:
+        title.innerText = 'Vamos configurar seu caixa inicial'
+        html = `
+          <div class="space-y-6 animate-fade-in">
+            <p class="text-sm text-slate-400">Informe quanto você possui hoje em cada uma das suas carteiras.</p>
+            <div class="space-y-4">
+              <div class="bg-slate-800/50 p-4 rounded-2xl border border-indigo-500/30">
+                <label class="text-[10px] text-indigo-300 font-bold uppercase mb-2 block tracking-widest">Carteira Pessoal</label>
+                <div class="flex items-center gap-3">
+                  <span class="text-2xl font-bold text-slate-500">R$</span>
+                  <input type="number" id="onb_personalWalletStart" step="0.01" value="${state.personalWalletStart}"
+                    class="bg-transparent w-full text-3xl font-bold text-white outline-none placeholder-slate-700" placeholder="0.00">
+                </div>
+              </div>
+              <div class="bg-slate-800/50 p-4 rounded-2xl border border-emerald-500/30">
+                <label class="text-[10px] text-emerald-300 font-bold uppercase mb-2 block tracking-widest">Carteira de Receita</label>
+                <div class="flex items-center gap-3">
+                  <span class="text-2xl font-bold text-slate-500">R$</span>
+                  <input type="number" id="onb_revenueWalletStart" step="0.01" value="${state.revenueWalletStart}"
+                    class="bg-transparent w-full text-3xl font-bold text-white outline-none placeholder-slate-700" placeholder="0.00">
+                </div>
+              </div>
+            </div>
+            <p class="text-[10px] text-slate-500 italic">Dica: A carteira de receita é onde você recebe ganhos diários. A pessoal é seu capital protegido.</p>
+          </div>
+        `
+        break
+
+      case 1:
+        title.innerText = 'Qual seu nível atual de tarefas?'
+        html = `
+          <div class="space-y-6 animate-fade-in">
+            <p class="text-sm text-slate-400">Selecione o nível que define seus ganhos diários por tarefas realizadas.</p>
+            <div class="space-y-4">
+              <select id="onb_taskLevel" onchange="document.getElementById('onb_customTaskInput').classList.toggle('hidden', this.value !== 'custom')"
+                class="w-full bg-slate-800 border-2 border-slate-700 rounded-2xl p-4 text-white font-bold outline-none focus:border-blue-500 transition-all cursor-pointer">
+                <option value="0" ${state.taskLevel === '0' ? 'selected' : ''}>Nível 0 (Sem renda)</option>
+                <option value="9.00" ${state.taskLevel === '9.00' ? 'selected' : ''}>S1 - R$ 9,00/dia</option>
+                <option value="28.00" ${state.taskLevel === '28.00' ? 'selected' : ''}>S2 - R$ 28,00/dia</option>
+                <option value="90.00" ${state.taskLevel === '90.00' ? 'selected' : ''}>M1 - R$ 90,00/dia</option>
+                <option value="279.00" ${state.taskLevel === '279.00' ? 'selected' : ''}>M2 - R$ 279,00/dia</option>
+                <option value="custom" ${state.taskLevel === 'custom' ? 'selected' : ''}>Valor Personalizado</option>
+              </select>
+              <div id="onb_customTaskInput" class="${state.taskLevel === 'custom' ? '' : 'hidden'} relative">
+                <input type="number" id="onb_taskDailyValue" step="0.01" value="${state.taskDailyValue}"
+                  class="bg-slate-800 border-2 border-slate-700 w-full rounded-2xl p-4 pl-10 text-white font-bold outline-none focus:border-blue-500" placeholder="Valor Diário">
+                <span class="absolute left-4 top-4 text-slate-500 font-bold">R$</span>
+              </div>
+            </div>
+          </div>
+        `
+        break
+
+      case 2:
+        title.innerText = 'Você possui equipe formada?'
+        html = `
+          <div class="space-y-6 animate-fade-in">
+             <div class="flex items-center justify-between bg-slate-800 p-4 rounded-2xl border border-slate-700">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-users text-lg"></i>
+                  </div>
+                  <div>
+                    <span class="text-sm font-bold text-white block">Ativar Bônus de Equipe</span>
+                    <span class="text-[10px] text-slate-500">Renda passiva baseada em subordinados</span>
+                  </div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="onb_teamBonusToggle" class="sr-only peer" ${state.teamBonusToggle ? 'checked' : ''} 
+                    onchange="document.getElementById('onb_teamBonusGridContainer').classList.toggle('hidden', !this.checked)">
+                  <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+             </div>
+
+             <div id="onb_teamBonusGridContainer" class="${state.teamBonusToggle ? '' : 'hidden'} space-y-4">
+                <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest text-center">Quantidade de pessoas por nível</p>
+                <div class="grid grid-cols-4 gap-2 text-center text-[9px] font-bold text-slate-500 uppercase mb-1">
+                  <span>Nível</span><span>Equipe A</span><span>Equipe B</span><span>Equipe C</span>
+                </div>
+                <div class="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar pr-2">
+                  ${Object.keys(state.teamCounts).map(level => `
+                    <div class="grid grid-cols-4 gap-2 items-center">
+                      <span class="text-[11px] font-bold text-slate-300">${level}</span>
+                      <input type="number" min="0" id="onb_team_${level}_A" value="${state.teamCounts[level].A}" class="bg-slate-800 border border-slate-700 rounded-lg p-2 text-center text-xs text-white">
+                      <input type="number" min="0" id="onb_team_${level}_B" value="${state.teamCounts[level].B}" class="bg-slate-800 border border-slate-700 rounded-lg p-2 text-center text-xs text-white">
+                      <input type="number" min="0" id="onb_team_${level}_C" value="${state.teamCounts[level].C}" class="bg-slate-800 border border-slate-700 rounded-lg p-2 text-center text-xs text-white">
+                    </div>
+                  `).join('')}
+                </div>
+             </div>
+          </div>
+        `
+        break
+
+      case 3:
+        title.innerText = 'Você recebe salário por cargo?'
+        html = `
+          <div class="space-y-6 animate-fade-in">
+             <div class="flex items-center justify-between bg-slate-800 p-4 rounded-2xl border border-slate-700">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-purple-500/20 text-purple-400 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-id-badge text-lg"></i>
+                  </div>
+                  <div>
+                    <span class="text-sm font-bold text-white block">Ativar Benefícios de Promoção</span>
+                    <span class="text-[10px] text-slate-500">Salário mensal automático do cargo atual</span>
+                  </div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="onb_promotionToggle" class="sr-only peer" ${state.promotionToggle ? 'checked' : ''} 
+                    onchange="document.getElementById('onb_promotionFields').classList.toggle('hidden', !this.checked)">
+                  <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+             </div>
+
+             <div id="onb_promotionFields" class="${state.promotionToggle ? '' : 'hidden'} space-y-4 bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
+                <div>
+                  <label class="text-[10px] text-slate-500 font-bold uppercase mb-2 block tracking-widest">Nível do Cargo</label>
+                  <select id="onb_promotionLevel" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white outline-none">
+                    <option value="assistente_estagio" ${state.promotionLevel === 'assistente_estagio' ? 'selected' : ''}>Assistente de Estágio (R$ 600)</option>
+                    <option value="assistente_oficial" ${state.promotionLevel === 'assistente_oficial' ? 'selected' : ''}>Assistente Oficial (R$ 1.200)</option>
+                    <option value="supervisor_junior" ${state.promotionLevel === 'supervisor_junior' ? 'selected' : ''}>Supervisor Júnior (R$ 3.600)</option>
+                    <option value="chefe_marketing" ${state.promotionLevel === 'chefe_marketing' ? 'selected' : ''}>Chefe de Marketing (R$ 9.000)</option>
+                    <option value="gerente_junior" ${state.promotionLevel === 'gerente_junior' ? 'selected' : ''}>Gerente Júnior (R$ 15.000)</option>
+                    <option value="diretor_marketing" ${state.promotionLevel === 'diretor_marketing' ? 'selected' : ''}>Diretor de Marketing (R$ 38.000)</option>
+                    <option value="socio_assalariado" ${state.promotionLevel === 'socio_assalariado' ? 'selected' : ''}>Sócio Assalariado (R$ 80.000)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-[10px] text-slate-500 font-bold uppercase mb-2 block tracking-widest">Dia de Pagamento</label>
+                  <input type="number" id="onb_promotionDay" min="1" max="31" value="${state.promotionDay}"
+                    class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white outline-none" placeholder="Dia (1-31)">
+                </div>
+             </div>
+          </div>
+        `
+        break
+
+      case 4:
+        title.innerText = 'Possui outra renda fixa mensal?'
+        html = `
+          <div class="space-y-6 animate-fade-in">
+             <div class="flex items-center justify-between bg-slate-800 p-4 rounded-2xl border border-slate-700">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-hand-holding-usd text-lg"></i>
+                  </div>
+                  <div>
+                    <span class="text-sm font-bold text-white block">Rendas Extras Mensais</span>
+                    <span class="text-[10px] text-slate-500">Ex: Salários externos, pensões, etc.</span>
+                  </div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="onb_monthlyIncomeToggle" class="sr-only peer" ${state.monthlyIncomeToggle ? 'checked' : ''} 
+                    onchange="document.getElementById('onb_fixedIncomeContainer').classList.toggle('hidden', !this.checked)">
+                  <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+             </div>
+
+             <div id="onb_fixedIncomeContainer" class="${state.monthlyIncomeToggle ? '' : 'hidden'} space-y-4">
+                <div class="flex gap-2">
+                  <div class="relative flex-1">
+                    <span class="absolute left-3 top-2.5 text-slate-500 text-[10px] font-bold">R$</span>
+                    <input type="number" id="onb_addIncomeAmount" placeholder="Valor" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 pl-7 text-xs text-white">
+                  </div>
+                  <input type="number" id="onb_addIncomeDay" placeholder="Dia" min="1" max="31" class="w-16 bg-slate-800 border border-slate-700 rounded-lg p-2 text-center text-xs text-white">
+                  <button onclick="app.addOnbFixedIncome()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 rounded-lg"><i class="fas fa-plus"></i></button>
+                </div>
+                <div id="onb_fixedIncomeList" class="space-y-1 max-h-[150px] overflow-y-auto custom-scrollbar">
+                   <!-- List will be rendered -->
+                </div>
+             </div>
+          </div>
+        `
+        setTimeout(() => this.renderOnbFixedIncomeList(), 0)
+        break
+
+      case 5:
+        title.innerText = 'Como você planeja seus saques?'
+        html = `
+          <div class="space-y-6 animate-fade-in">
+             <div class="space-y-4">
+               <div>
+                 <label class="text-[10px] text-slate-500 font-bold uppercase mb-2 block tracking-widest">Estratégia de Saque</label>
+                 <select id="onb_withdrawStrategy" onchange="document.getElementById('onb_targetContainer').classList.toggle('hidden', this.value !== 'fixed')"
+                   class="w-full bg-slate-800 border-2 border-slate-700 rounded-2xl p-4 text-white font-bold outline-none focus:border-blue-500 transition-all cursor-pointer">
+                   <option value="none" ${state.withdrawStrategy === 'none' ? 'selected' : ''}>Sem Saque Automático</option>
+                   <option value="max" ${state.withdrawStrategy === 'max' ? 'selected' : ''}>Sacar Teto Máximo (Sempre)</option>
+                   <option value="fixed" ${state.withdrawStrategy === 'fixed' ? 'selected' : ''}>Meta Fixa (Selecionar Alvo)</option>
+                   <option value="weekly" ${state.withdrawStrategy === 'weekly' ? 'selected' : ''}>Semanas Específicas</option>
+                 </select>
+               </div>
+
+               <div id="onb_targetContainer" class="${state.withdrawStrategy === 'fixed' ? '' : 'hidden'} animate-fade-in">
+                  <p class="text-[9px] text-slate-500 mb-2 uppercase font-bold tracking-widest">Selecione o valor teto dos saques:</p>
+                  <div class="grid grid-cols-4 gap-2">
+                    ${Calculator.WITHDRAWAL_TIERS.map(t => {
+                      const v = Formatter.fromCents(t)
+                      const isSelected = state.withdrawTarget == v
+                      return `<button class="onb-tier-btn ${isSelected ? 'selected' : ''}" onclick="app.setOnbWithdrawTarget(${v}, this)">${v.toLocaleString('pt-BR')}</button>`
+                    }).join('')}
+                  </div>
+                  <input type="hidden" id="onb_withdrawTarget" value="${state.withdrawTarget}">
+               </div>
+
+               <div>
+                 <label class="text-[10px] text-slate-500 font-bold uppercase mb-2 block tracking-widest">Dia Preferencial de Saque</label>
+                 <select id="onb_withdrawalDaySelect" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-xs text-white outline-none">
+                    <option value="0" ${state.withdrawalDaySelect == '0' ? 'selected' : ''}>Domingo</option>
+                    <option value="1" ${state.withdrawalDaySelect == '1' ? 'selected' : ''}>Segunda</option>
+                    <option value="2" ${state.withdrawalDaySelect == '2' ? 'selected' : ''}>Terça</option>
+                    <option value="3" ${state.withdrawalDaySelect == '3' ? 'selected' : ''}>Quarta</option>
+                    <option value="4" ${state.withdrawalDaySelect == '4' ? 'selected' : ''}>Quinta</option>
+                    <option value="5" ${state.withdrawalDaySelect == '5' ? 'selected' : ''}>Sexta</option>
+                    <option value="6" ${state.withdrawalDaySelect == '6' ? 'selected' : ''}>Sábado</option>
+                 </select>
+               </div>
+             </div>
+          </div>
+        `
+        break
+
+      case 6:
+        title.innerText = 'Investimentos em Andamento'
+        html = `
+          <div class="space-y-6 animate-fade-in">
+             <p class="text-sm text-slate-400 leading-relaxed">Se você já possui aportes ativos, adicione-os agora. O sistema usará esses dados para calcular seus lucros e retorno de capital.</p>
+             
+             <div class="bg-slate-800/80 p-5 rounded-2xl border border-blue-500/30 space-y-3">
+                <div class="grid grid-cols-2 gap-2">
+                   <input type="text" id="onb_newInvName" placeholder="Nome do aporte" class="col-span-2 bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white">
+                   <div class="relative">
+                      <span class="absolute left-3 top-3 text-slate-500 text-[10px] uppercase font-bold">R$</span>
+                      <input type="number" id="onb_newInvVal" placeholder="Valor" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 pl-8 text-xs text-white">
+                   </div>
+                   <input type="date" id="onb_newInvDate" class="bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white">
+                   <input type="number" id="onb_newInvDays" placeholder="Dias" class="bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white">
+                   <div class="relative">
+                      <span class="absolute right-3 top-3 text-slate-500 text-[10px] font-bold">%</span>
+                      <input type="number" id="onb_newInvRate" placeholder="Taxa" value="1.2" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white">
+                   </div>
+                </div>
+                <button onclick="app.addOnbInvestment()" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-900/50">
+                  <i class="fas fa-plus mr-2"></i> Adicionar à Lista
+                </button>
+             </div>
+
+             <div id="onb_portfolioList" class="space-y-2 max-h-[150px] overflow-y-auto custom-scrollbar">
+                <!-- Porfolio items -->
+             </div>
+          </div>
+        `
+        setTimeout(() => this.renderOnbPortfolioList(), 0)
+        break
+
+      case 7:
+        title.innerText = 'Tudo pronto!'
+        html = `
+          <div class="flex flex-col items-center justify-center text-center space-y-6 py-6 animate-fade-in">
+            <div class="w-24 h-24 bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center mb-2 animate-bounce">
+              <i class="fas fa-check-circle text-6xl"></i>
+            </div>
+            <div>
+              <h4 class="text-xl font-bold text-white mb-2">Configuração Finalizada</h4>
+              <p class="text-slate-400 text-sm max-w-xs mx-auto leading-relaxed">Seu painel estratégico foi configurado e está pronto para uso. O algoritmo já processou suas diretrizes.</p>
+            </div>
+            <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 text-[10px] text-slate-500 uppercase font-bold tracking-widest leading-loose">
+              Você pode ajustar qualquer detalhe a qualquer momento clicando no menu <span class="text-blue-400">Configurações</span>.
+            </div>
+          </div>
+        `
+        break
+    }
+
+    body.innerHTML = html
+  }
+
+  nextOnboardingStep() {
+    this.saveOnboardingStepData()
+    this.onboardingStep++
+    this.renderOnboardingStep()
+  }
+
+  prevOnboardingStep() {
+    this.onboardingStep--
+    this.renderOnboardingStep()
+  }
+
+  saveOnboardingStepData() {
+    const step = this.onboardingStep
+    const state = { ...store.state.inputs }
+
+    if (step === 0) {
+      state.personalWalletStart = document.getElementById('onb_personalWalletStart').value || '0'
+      state.revenueWalletStart = document.getElementById('onb_revenueWalletStart').value || '0'
+    } else if (step === 1) {
+      state.taskLevel = document.getElementById('onb_taskLevel').value
+      state.taskDailyValue = document.getElementById('onb_taskDailyValue').value || '0'
+    } else if (step === 2) {
+      state.teamBonusToggle = document.getElementById('onb_teamBonusToggle').checked
+      const teamCounts = { ...state.teamCounts }
+      Object.keys(teamCounts).forEach(level => {
+        teamCounts[level].A = parseInt(document.getElementById(`onb_team_${level}_A`).value) || 0
+        teamCounts[level].B = parseInt(document.getElementById(`onb_team_${level}_B`).value) || 0
+        teamCounts[level].C = parseInt(document.getElementById(`onb_team_${level}_C`).value) || 0
+      })
+      state.teamCounts = teamCounts
+    } else if (step === 3) {
+      state.promotionToggle = document.getElementById('onb_promotionToggle').checked
+      state.promotionLevel = document.getElementById('onb_promotionLevel').value
+      state.promotionDay = document.getElementById('onb_promotionDay').value || '1'
+    } else if (step === 4) {
+      state.monthlyIncomeToggle = document.getElementById('onb_monthlyIncomeToggle').checked
+      // Fixed incomes are saved in internal state already via helper
+    } else if (step === 5) {
+      state.withdrawStrategy = document.getElementById('onb_withdrawStrategy').value
+      state.withdrawTarget = document.getElementById('onb_withdrawTarget').value || '0'
+      state.withdrawalDaySelect = document.getElementById('onb_withdrawalDaySelect').value
+    }
+
+    store.setState({ inputs: state })
+  }
+
+  finishOnboarding() {
+    store.updateInput('setupCompleted', true)
+    this.closeModal('onboardingModal')
+    this.applyStoreToUI()
+    this.runCalculation()
+    Renderer.toast('Configuração concluída! Aproveite o Gestor SP.', 'success')
+  }
+
+  // --- Onboarding Helpers ---
+  addOnbFixedIncome() {
+    const amount = parseFloat(document.getElementById('onb_addIncomeAmount').value)
+    const day = parseInt(document.getElementById('onb_addIncomeDay').value)
+    if (isNaN(amount) || isNaN(day)) return
+
+    const incomes = [...(store.state.inputs.fixedIncomes || [])]
+    incomes.push({ amount, day })
+    store.updateInput('fixedIncomes', incomes)
+    
+    document.getElementById('onb_addIncomeAmount').value = ''
+    document.getElementById('onb_addIncomeDay').value = ''
+    this.renderOnbFixedIncomeList()
+  }
+
+  removeOnbFixedIncome(idx) {
+    const incomes = store.state.inputs.fixedIncomes.filter((_, i) => i !== idx)
+    store.updateInput('fixedIncomes', incomes)
+    this.renderOnbFixedIncomeList()
+  }
+
+  renderOnbFixedIncomeList() {
+    const container = document.getElementById('onb_fixedIncomeList')
+    if (!container) return
+    const incomes = store.state.inputs.fixedIncomes || []
+    container.innerHTML = incomes.map((it, i) => `
+      <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-lg px-3 py-2">
+        <span class="text-xs text-slate-300 font-bold">R$ ${it.amount.toFixed(2)} <span class="text-slate-500 ml-1">• Dia ${it.day}</span></span>
+        <button onclick="app.removeOnbFixedIncome(${i})" class="text-red-500 hover:text-red-400 p-1"><i class="fas fa-trash-alt text-[10px]"></i></button>
+      </div>
+    `).join('')
+  }
+
+  setOnbWithdrawTarget(val, btn) {
+    document.getElementById('onb_withdrawTarget').value = val
+    document.querySelectorAll('.onb-tier-btn').forEach(b => b.classList.remove('selected'))
+    btn.classList.add('selected')
+  }
+
+  addOnbInvestment() {
+    const name = document.getElementById('onb_newInvName').value
+    const val = parseFloat(document.getElementById('onb_newInvVal').value)
+    const date = document.getElementById('onb_newInvDate').value
+    const days = parseInt(document.getElementById('onb_newInvDays').value)
+    const rate = parseFloat(document.getElementById('onb_newInvRate').value)
+    
+    if (!name || isNaN(val) || !date || isNaN(days)) return Renderer.toast('Dados incompletos', 'error')
+
+    const newInv = { id: Date.now(), name, val, date, days, rate, wallet: 'none' }
+    store.setState({ portfolio: [...store.state.portfolio, newInv] })
+    
+    // Reset inputs
+    document.getElementById('onb_newInvName').value = ''
+    document.getElementById('onb_newInvVal').value = ''
+    document.getElementById('onb_newInvDays').value = ''
+    this.renderOnbPortfolioList()
+  }
+
+  removeOnbInvestment(id) {
+    const portfolio = store.state.portfolio.filter(p => p.id !== id)
+    store.setState({ portfolio })
+    this.renderOnbPortfolioList()
+  }
+
+  renderOnbPortfolioList() {
+    const container = document.getElementById('onb_portfolioList')
+    if (!container) return
+    const portfolio = store.state.portfolio || []
+    container.innerHTML = portfolio.map(p => `
+      <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-xl px-4 py-3">
+        <div>
+          <span class="text-xs font-bold text-white block">${p.name}</span>
+          <span class="text-[10px] text-slate-500">R$ ${p.val.toFixed(2)} • ${p.days}d</span>
+        </div>
+        <button onclick="app.removeOnbInvestment(${p.id})" class="text-red-500 hover:text-red-400 p-2"><i class="fas fa-trash-alt"></i></button>
+      </div>
+    `).join('')
   }
 }
 
