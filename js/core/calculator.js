@@ -534,6 +534,7 @@ export const Calculator = {
           meta: {
             incomeTask: stepTaskIncome,
             incomeRecurring: stepRecurringIncome,
+            incomeTeam: stepTeamBonus,
             returns: stepReturns,
             withdrawNet: stepWithdraw,
             withdrawStatus: isRealized

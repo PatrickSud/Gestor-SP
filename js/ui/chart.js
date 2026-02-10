@@ -179,6 +179,11 @@ export const ChartManager = {
                       Formatter.currency(meta.incomeRecurring)
                   )
                 }
+                if (meta.incomeTeam > 0) {
+                  lines.push(
+                    'Bônus de Equipe: +' + Formatter.currency(meta.incomeTeam)
+                  )
+                }
                 if (meta.returns > 0) {
                   lines.push(
                     'Retorno de Contrato: +' + Formatter.currency(meta.returns)
