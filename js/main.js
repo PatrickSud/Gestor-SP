@@ -184,6 +184,7 @@ class App {
           document
             .getElementById('monthlyIncomeContainer')
             .classList.toggle('hidden', !val)
+          this.runCalculation()
         }
 
         if (el.id === 'withdrawStrategy') {
@@ -318,6 +319,25 @@ class App {
       })
     }
 
+    // Monthly Fixed Income Handlers
+    const toggleMonthlyBtn = document.getElementById('toggleMonthlyIncome')
+    if (toggleMonthlyBtn) {
+      toggleMonthlyBtn.onclick = () => {
+        const container = document.getElementById('monthlyIncomeContainer')
+        const chevron = document.getElementById('monthlyIncomeChevron')
+        const isHidden = container.classList.contains('hidden')
+        container.classList.toggle('hidden')
+        
+        if (chevron) {
+          chevron.classList.toggle('rotate-180', !isHidden)
+        }
+        
+        toggleMonthlyBtn.innerHTML = isHidden
+          ? `Recolher <i class="fas fa-chevron-down ml-1 transition-transform rotate-180" id="monthlyIncomeChevron"></i>`
+          : `Expandir <i class="fas fa-chevron-down ml-1 transition-transform" id="monthlyIncomeChevron"></i>`
+      }
+    }
+
     // Team Bonus Handlers
     const teamBonusToggle = document.getElementById('teamBonusToggle')
     if (teamBonusToggle) {
@@ -336,9 +356,10 @@ class App {
         const container = document.getElementById('teamBonusContainer')
         const isHidden = container.classList.contains('hidden')
         container.classList.toggle('hidden')
+        
         toggleTeamBtn.innerHTML = isHidden
-          ? 'Recolher <i class="fas fa-chevron-up ml-1"></i>'
-          : 'Expandir <i class="fas fa-chevron-down ml-1"></i>'
+          ? `Recolher <i class="fas fa-chevron-down ml-1 transition-transform rotate-180"></i>`
+          : `Expandir <i class="fas fa-chevron-down ml-1 transition-transform"></i>`
       }
     }
 
@@ -435,9 +456,16 @@ class App {
     }
 
     // Restore Toggles
-    document
-      .getElementById('monthlyIncomeContainer')
-      .classList.toggle('hidden', !inputs.monthlyIncomeToggle)
+    const monCont = document.getElementById('monthlyIncomeContainer')
+    const monToggle = !!inputs.monthlyIncomeToggle
+    monCont.classList.toggle('hidden', !monToggle)
+    const monBtn = document.getElementById('toggleMonthlyIncome')
+    if (monBtn) {
+      monBtn.innerHTML = monToggle
+        ? `Recolher <i class="fas fa-chevron-down ml-1 transition-transform rotate-180" id="monthlyIncomeChevron"></i>`
+        : `Expandir <i class="fas fa-chevron-down ml-1 transition-transform" id="monthlyIncomeChevron"></i>`
+    }
+
     document
       .getElementById('customTaskInput')
       .classList.toggle('hidden', inputs.taskLevel !== 'custom')
