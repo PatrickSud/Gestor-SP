@@ -105,6 +105,7 @@ class App {
 
       // Update UI components
       Renderer.renderResults(results.results)
+      Renderer.renderTodayClosing(results.dailyData)
       Renderer.renderTable(results.dailyData, viewDays, viewStartDate)
       Renderer.renderCalendar(
         viewStartDate,

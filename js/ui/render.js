@@ -30,7 +30,13 @@ export const Renderer = {
     summaryInvCount: () => document.getElementById('summaryInvCount'),
     summaryInvProfit: () => document.getElementById('summaryInvProfit'),
     summaryRealizedProfit: () => document.getElementById('summaryRealizedProfit'),
-    summaryInvTotal: () => document.getElementById('summaryInvTotal')
+    summaryInvTotal: () => document.getElementById('summaryInvTotal'),
+    
+    // Today's Closing
+    todayBalanceDisplay: () => document.getElementById('todayBalanceDisplay'),
+    todayChangesDisplay: () => document.getElementById('todayChangesDisplay'),
+    todayInDisplay: () => document.getElementById('todayInDisplay'),
+    todayOutDisplay: () => document.getElementById('todayOutDisplay')
   },
 
   // --- Render Methods ---
@@ -222,6 +228,53 @@ export const Renderer = {
     } else {
       profitEl.classList.replace('text-red-400', 'text-white')
     }
+  },
+
+  renderTodayClosing(dailyData) {
+    const today = Formatter.getTodayDate()
+    const data = dailyData[today]
+    
+    const balanceEl = this.els.todayBalanceDisplay()
+    const changesEl = this.els.todayChangesDisplay()
+    const inEl = this.els.todayInDisplay()
+    const outEl = this.els.todayOutDisplay()
+
+    if (!balanceEl || !data) {
+        if(balanceEl) balanceEl.innerText = Formatter.currency(0)
+        if(inEl) inEl.innerText = '+R$ 0,00'
+        if(outEl) outEl.innerText = '-R$ 0,00'
+        if(changesEl) changesEl.innerText = '0 movimentações'
+        return
+    }
+
+    // Total Entradas = inIncome + inReturn + inAdjustmentPersonal (if > 0) + inAdjustmentRevenue (if > 0)
+    const totalIn = (data.inIncome || 0) + 
+                    (data.inReturn || 0) + 
+                    (data.inAdjustmentPersonal > 0 ? data.inAdjustmentPersonal : 0) + 
+                    (data.inAdjustmentRevenue > 0 ? data.inAdjustmentRevenue : 0)
+
+    // Total Saídas = outWithdraw + outInvest + adjustments (if < 0)
+    const totalOut = (data.outWithdraw || 0) + 
+                     (data.outInvest || 0) + 
+                     (data.inAdjustmentPersonal < 0 ? Math.abs(data.inAdjustmentPersonal) : 0) + 
+                     (data.inAdjustmentRevenue < 0 ? Math.abs(data.inAdjustmentRevenue) : 0)
+
+    // Count operations
+    let ops = 0
+    if (data.inIncomeTeam > 0) ops++
+    if (data.inIncomeTask > 0) ops++
+    if (data.inIncomeRecurring > 0) ops++
+    if (data.inReturn > 0) ops++
+    if (data.outInvest > 0) ops++
+    if (data.outWithdraw > 0) ops++
+    if (data.inAdjustmentPersonal !== 0 || data.inAdjustmentRevenue !== 0) ops++
+
+    balanceEl.innerText = Formatter.currency(data.endBal)
+    inEl.innerText = `+${Formatter.currency(totalIn)}`
+    outEl.innerText = `-${Formatter.currency(totalOut)}`
+    
+    const opsLabel = ops === 1 ? '1 movimentação' : `${ops} movimentações`
+    changesEl.innerText = opsLabel
   },
 
   renderSimulationSummary(results, inputs, cycleEnds = []) {
