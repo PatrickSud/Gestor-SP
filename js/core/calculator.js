@@ -208,7 +208,7 @@ export const Calculator = {
 
       // 0. Team Income (Daily, inclusive Sun)
       const teamCounts = inputs.teamCounts || {}
-      let dailyTeamIncomeCents = 0
+      let stepTeamBonus = 0
       Object.keys(teamCounts).forEach(level => {
         const counts = teamCounts[level]
         const rates = Calculator.TEAM_RATES[level]
@@ -217,11 +217,11 @@ export const Calculator = {
             (counts.A || 0) * (rates.A || 0) +
             (counts.B || 0) * (rates.B || 0) +
             (counts.C || 0) * (rates.C || 0)
-          dailyTeamIncomeCents += Formatter.toCents(levelIncome.toFixed(2))
+          stepTeamBonus += Formatter.toCents(levelIncome.toFixed(2))
         }
       })
       if (d > 0) {
-        stepIncome += dailyTeamIncomeCents
+        stepIncome += stepTeamBonus
       }
 
       // 1. Task Income (Mon-Sat)
@@ -500,6 +500,7 @@ export const Calculator = {
         inIncome: stepIncome,
         inIncomeTask: stepTaskIncome,
         inIncomeRecurring: stepRecurringIncome,
+        inIncomeTeam: stepTeamBonus,
         inReturn: stepReturns,
         inReturnPrincipal: stepReturnPrincipal,
         inReturnProfit: stepReturnProfit,

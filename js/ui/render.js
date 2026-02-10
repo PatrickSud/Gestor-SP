@@ -332,7 +332,8 @@ export const Renderer = {
                         <td class="p-2 text-slate-200 font-bold border-r border-slate-700/50 whitespace-nowrap">${Formatter.dateDisplay(dateStr)}</td>
                         <td class="p-2 text-right text-slate-400 hidden md:table-cell col-money font-medium">${Formatter.currency(d.startBal)}</td>
                         <td class="p-2 text-right text-emerald-400 font-bold col-money">${d.inReturn > 0 ? '+' + Formatter.currency(d.inReturn) : '-'}</td>
-                        <td class="p-2 text-right text-indigo-400 font-bold col-money">${d.inIncome > 0 ? '+' + Formatter.currency(d.inIncome) : '-'}</td>
+                        <td class="p-2 text-right text-cyan-400 font-bold col-money">${d.inIncomeTeam > 0 ? '+' + Formatter.currency(d.inIncomeTeam) : '-'}</td>
+                        <td class="p-2 text-right text-indigo-400 font-bold col-money">${d.inIncome > 0 ? '+' + Formatter.currency(d.inIncome - (d.inIncomeTeam || 0)) : '-'}</td>
                         <td class="p-2 text-right text-blue-400 font-bold col-money">${d.outInvest > 0 ? '-' + Formatter.currency(d.outInvest) : '-'}</td>
                         <td class="p-2 text-right text-yellow-500 font-bold col-money">${d.outWithdraw > 0 ? '-' + Formatter.currency(d.outWithdraw) : '-'}</td>
                         <td class="p-2 text-right text-white font-bold bg-slate-800/30 border-l border-slate-700/50 col-money text-[12px]">${Formatter.currency(d.endBal)}</td>
@@ -390,6 +391,10 @@ export const Renderer = {
           if (recurringIncome > 0)
             markers.push(
               '<div class="w-1.5 h-1.5 rounded-full bg-sky-400"></div>'
+            )
+          if ((data.inIncomeTeam || 0) > 0)
+            markers.push(
+              '<div class="w-1.5 h-1.5 rounded-full bg-cyan-400"></div>'
             )
           if (data.inReturn > 0)
             markers.push(
@@ -484,8 +489,21 @@ export const Renderer = {
         }
       }
 
-      const taskIncome = d.inIncomeTask ?? d.inIncome
+      const taskIncome = d.inIncomeTask ?? (d.inIncome - (d.inIncomeTeam || 0))
+      const teamIncome = d.inIncomeTeam ?? 0
       const recurringIncome = d.inIncomeRecurring ?? 0
+
+      if (teamIncome > 0) {
+        subItems.push({
+          label: 'Bônus de Equipe',
+          sub: 'Renda passiva',
+          val: teamIncome,
+          type: 'team',
+          dot: '#2dd4bf', // teal-400
+          tag: 'RECEBIDO'
+        })
+        creditoReceita += teamIncome
+      }
 
       if (taskIncome > 0) {
         subItems.push({

@@ -679,6 +679,14 @@ class App {
     // For day details, we show Start Balance as a header.
     // We focus on flows (Entradas/Saidas)
 
+    if (data.inIncomeTeam > 0) {
+      items.push({
+        label: 'Bônus de Equipe',
+        val: data.inIncomeTeam,
+        type: 'team',
+        icon: 'fa-users'
+      })
+    }
     if (data.inIncomeTask > 0) {
       items.push({
         label: 'Entradas (Tarefas)',
@@ -740,6 +748,7 @@ class App {
         const colorClass = `timeline-value ${item.type}` // reusing css classes
         // Map types to text colors for the label/icon if needed, or just use white/slate
         let iconColor = 'text-slate-400'
+        if (item.type === 'team') iconColor = 'text-cyan-400'
         if (item.type === 'task') iconColor = 'text-emerald-400'
         if (item.type === 'recurring') iconColor = 'text-sky-400'
         if (item.type === 'return') iconColor = 'text-purple-400'
@@ -931,6 +940,8 @@ class App {
     // timeline-value.income { color: #10b981; }
     // timeline-value.task { color: #22c55e; }
     switch (type) {
+      case 'team':
+        return 'color: #22d3ee;' // cyan-400
       case 'task':
         return 'color: #22c55e;'
       case 'recurring':
