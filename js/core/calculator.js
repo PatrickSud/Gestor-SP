@@ -6,6 +6,19 @@ import { Formatter } from '../utils/formatter.js'
  */
 
 export const Calculator = {
+  TEAM_RATES: {
+    'S1': { A: 0.44, B: 0.24, C: 0.08 },
+    'S2': { A: 1.36, B: 0.80, C: 0.24 },
+    'M1': { A: 4.44, B: 2.64, C: 0.84 },
+    'M2': { A: 13.86, B: 8.28, C: 2.70 },
+    'M3': { A: 42.50, B: 25.50, C: 8.50 },
+    'L1': { A: 84.80, B: 50.80, C: 16.80 },
+    'L2': { A: 189.60, B: 113.60, C: 37.60 },
+    'L3': { A: 372.00, B: 223.20, C: 74.40 },
+    'L4': { A: 760.00, B: 456.00, C: 152.00 },
+    'L5': { A: 1575.00, B: 945.00, C: 315.00 }
+  },
+
   WITHDRAWAL_TIERS: [
     4000, 13000, 40000, 130000, 420000, 850000, 1900000, 3800000
   ], // Values in cents
@@ -191,6 +204,24 @@ export const Calculator = {
       ) {
         currentInv += initialSimCapital
         simCapitalPure += initialSimCapital
+      }
+
+      // 0. Team Income (Daily, inclusive Sun)
+      const teamCounts = inputs.teamCounts || {}
+      let dailyTeamIncomeCents = 0
+      Object.keys(teamCounts).forEach(level => {
+        const counts = teamCounts[level]
+        const rates = Calculator.TEAM_RATES[level]
+        if (rates) {
+          const levelIncome =
+            (counts.A || 0) * (rates.A || 0) +
+            (counts.B || 0) * (rates.B || 0) +
+            (counts.C || 0) * (rates.C || 0)
+          dailyTeamIncomeCents += Formatter.toCents(levelIncome.toFixed(2))
+        }
+      })
+      if (d > 0) {
+        stepIncome += dailyTeamIncomeCents
       }
 
       // 1. Task Income (Mon-Sat)

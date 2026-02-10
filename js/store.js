@@ -68,7 +68,19 @@ class Store {
         groqApiKey: '',
         groqModel: 'qwen-qwq-32b',
         aiProvider: 'gemini',
-        syncAiKeys: false
+        syncAiKeys: false,
+        teamCounts: {
+          'S1': { A: 0, B: 0, C: 0 },
+          'S2': { A: 0, B: 0, C: 0 },
+          'M1': { A: 0, B: 0, C: 0 },
+          'M2': { A: 0, B: 0, C: 0 },
+          'M3': { A: 0, B: 0, C: 0 },
+          'L1': { A: 0, B: 0, C: 0 },
+          'L2': { A: 0, B: 0, C: 0 },
+          'L3': { A: 0, B: 0, C: 0 },
+          'L4': { A: 0, B: 0, C: 0 },
+          'L5': { A: 0, B: 0, C: 0 }
+        }
       },
       portfolio: [],
       selectedWeeks: [],

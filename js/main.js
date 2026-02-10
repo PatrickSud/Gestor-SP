@@ -317,6 +317,35 @@ class App {
         }
       })
     }
+
+    // Team Bonus Handlers
+    const toggleTeamBtn = document.getElementById('toggleTeamBonus')
+    if (toggleTeamBtn) {
+      toggleTeamBtn.onclick = () => {
+        const container = document.getElementById('teamBonusContainer')
+        const isHidden = container.classList.contains('hidden')
+        container.classList.toggle('hidden')
+        toggleTeamBtn.innerHTML = isHidden
+          ? 'Recolher <i class="fas fa-chevron-up ml-1"></i>'
+          : 'Expandir <i class="fas fa-chevron-down ml-1"></i>'
+      }
+    }
+
+    document.querySelectorAll('.team-input').forEach(el => {
+      el.addEventListener('input', e => {
+        const level = e.target.getAttribute('data-level')
+        const team = e.target.getAttribute('data-team')
+        const val = parseInt(e.target.value) || 0
+
+        const teamCounts = { ...(store.state.inputs.teamCounts || {}) }
+        if (!teamCounts[level]) teamCounts[level] = { A: 0, B: 0, C: 0 }
+        teamCounts[level][team] = val
+
+        store.updateInput('teamCounts', teamCounts)
+        this.updateTeamDailyIncome()
+        this.runCalculation()
+      })
+    })
   }
 
   // --- Orientation Mode ---
@@ -443,6 +472,38 @@ class App {
     }, inputs.withdrawTarget)
 
     this.restoreWeeksUI()
+    this.restoreTeamUI()
+  }
+
+  restoreTeamUI() {
+    const teamCounts = store.state.inputs.teamCounts || {}
+    document.querySelectorAll('.team-input').forEach(el => {
+      const level = el.getAttribute('data-level')
+      const team = el.getAttribute('data-team')
+      if (teamCounts[level] && teamCounts[level][team] !== undefined) {
+        el.value = teamCounts[level][team] || ''
+      }
+    })
+    this.updateTeamDailyIncome()
+  }
+
+  updateTeamDailyIncome() {
+    const teamCounts = store.state.inputs.teamCounts || {}
+    let totalDaily = 0
+    Object.keys(teamCounts).forEach(level => {
+      const counts = teamCounts[level]
+      const rates = Calculator.TEAM_RATES[level]
+      if (rates) {
+        totalDaily +=
+          (counts.A || 0) * (rates.A || 0) +
+          (counts.B || 0) * (rates.B || 0) +
+          (counts.C || 0) * (rates.C || 0)
+      }
+    })
+    const display = document.getElementById('teamDailyIncomeDisplay')
+    if (display) {
+      display.innerText = Formatter.currency(Formatter.toCents(totalDaily.toFixed(2)))
+    }
   }
 
   updateUIPieces(state) {
