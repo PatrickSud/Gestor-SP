@@ -182,11 +182,12 @@ class App {
           }
         }
 
-        if (el.id === 'monthlyIncomeToggle' || el.id === 'promotionToggle' || el.id === 'teamBonusToggle') {
+        if (el.id === 'monthlyIncomeToggle' || el.id === 'promotionToggle' || el.id === 'teamBonusToggle' || el.id === 'aiAssistantToggle') {
           const containerMap = {
             'monthlyIncomeToggle': 'monthlyIncomeContainer',
             'promotionToggle': 'promotionContainer',
-            'teamBonusToggle': 'teamBonusContainer'
+            'teamBonusToggle': 'teamBonusContainer',
+            'aiAssistantToggle': 'aiSettingsContainer'
           }
           const container = document.getElementById(containerMap[el.id])
           if (container) container.classList.toggle('hidden', !val)
@@ -194,7 +195,8 @@ class App {
           const btnMap = {
             'monthlyIncomeToggle': 'toggleMonthlyIncome',
             'promotionToggle': 'togglePromotion',
-            'teamBonusToggle': 'toggleTeamBonus'
+            'teamBonusToggle': 'toggleTeamBonus',
+            'aiAssistantToggle': 'toggleAiSettings'
           }
           const btn = document.getElementById(btnMap[el.id])
           if (btn) {
@@ -202,7 +204,12 @@ class App {
               ? `Recolher <i class="fas fa-chevron-down ml-1 transition-transform rotate-180"></i>`
               : `Expandir <i class="fas fa-chevron-down ml-1 transition-transform"></i>`
           }
-          this.runCalculation()
+          
+          if (el.id === 'aiAssistantToggle') {
+            this.updateAiButtonVisibility()
+          } else {
+            this.runCalculation()
+          }
         }
 
         if (el.id === 'withdrawStrategy') {
@@ -390,6 +397,24 @@ class App {
       }
     }
 
+    const toggleAiBtn = document.getElementById('toggleAiSettings')
+    if (toggleAiBtn) {
+      toggleAiBtn.onclick = () => {
+        const container = document.getElementById('aiSettingsContainer')
+        const chevron = document.getElementById('aiChevron')
+        const isHidden = container.classList.contains('hidden')
+        container.classList.toggle('hidden')
+        
+        if (chevron) {
+          chevron.classList.toggle('rotate-180', !isHidden)
+        }
+        
+        toggleAiBtn.innerHTML = isHidden
+          ? `Recolher <i class="fas fa-chevron-down ml-1 transition-transform rotate-180" id="aiChevron"></i>`
+          : `Expandir <i class="fas fa-chevron-down ml-1 transition-transform" id="aiChevron"></i>`
+      }
+    }
+
 
     document.querySelectorAll('.team-input').forEach(el => {
       el.addEventListener('input', e => {
@@ -483,26 +508,8 @@ class App {
       else if (el.type !== 'file') el.value = value
     }
 
-    // Restore Toggles
-    const monCont = document.getElementById('monthlyIncomeContainer')
-    const monToggle = !!inputs.monthlyIncomeToggle
-    if (monCont) monCont.classList.toggle('hidden', !monToggle)
-    const monBtn = document.getElementById('toggleMonthlyIncome')
-    if (monBtn) {
-      monBtn.innerHTML = monToggle
-        ? `Recolher <i class="fas fa-chevron-down ml-1 transition-transform rotate-180" id="monthlyIncomeChevron"></i>`
-        : `Expandir <i class="fas fa-chevron-down ml-1 transition-transform" id="monthlyIncomeChevron"></i>`
-    }
-
-    const promoCont = document.getElementById('promotionContainer')
-    const promoToggleVal = !!inputs.promotionToggle
-    if (promoCont) promoCont.classList.toggle('hidden', !promoToggleVal)
-    const promoBtn = document.getElementById('togglePromotion')
-    if (promoBtn) {
-      promoBtn.innerHTML = promoToggleVal
-        ? `Recolher <i class="fas fa-chevron-down ml-1 transition-transform rotate-180" id="promotionChevron"></i>`
-        : `Expandir <i class="fas fa-chevron-down ml-1 transition-transform" id="promotionChevron"></i>`
-    }
+    // Restore Toggle Switch States (Containers stay hidden by default as per HTML)
+    this.updateAiButtonVisibility()
 
     document
       .getElementById('customTaskInput')
@@ -559,8 +566,7 @@ class App {
 
     const grid = document.getElementById('teamBonusGrid')
     const head = document.querySelector('#teamBonusContainer > div.grid')
-    if (grid) grid.classList.toggle('hidden', !isTeamActive)
-    if (head) head.classList.toggle('hidden', !isTeamActive)
+    // Containers stay hidden on load as per user requirement
 
     const teamCounts = store.state.inputs.teamCounts || {}
     document.querySelectorAll('.team-input').forEach(el => {
@@ -1768,10 +1774,11 @@ class App {
     const btn = document.getElementById('aiAssistantBtn')
     if (!btn) return
 
-    const provider = aiService.getProvider()
+    const { inputs } = store.state
+    const isToggleOn = inputs.aiAssistantToggle === true || inputs.aiAssistantToggle === 'true'
     const isConfigured = aiService.isConfigured()
 
-    if (isConfigured) {
+    if (isToggleOn && isConfigured) {
       btn.classList.remove('hidden')
       btn.classList.add('flex')
     } else {
