@@ -274,8 +274,8 @@ export const Renderer = {
     inEl.innerText = `+${Formatter.currency(totalIn)}`
     outEl.innerText = `-${Formatter.currency(totalOut)}`
     
-    const opsLabel = ops === 1 ? '1 movimentação' : `${ops} movimentações`
-    changesEl.innerText = opsLabel
+    // Removido contador de movimentações conforme solicitado
+    changesEl.innerText = ''
 
     // Build transactions list
     const listEl = this.els.todayTransactionsList()
@@ -667,6 +667,31 @@ export const Renderer = {
         creditoReceita += recurringIncome
       }
 
+      if (teamBonusToggle && (d.inIncomeTeam ?? 0) > 0) {
+        subItems.push({
+          label: 'Bônus de Equipe',
+          sub: 'Rede',
+          val: d.inIncomeTeam,
+          type: 'team',
+          dot: '#3b82f6',
+          tag: 'RECEBIDO'
+        })
+        creditoReceita += d.inIncomeTeam
+      }
+
+      const promotionIncome = d.inIncomePromotion ?? 0
+      if (promotionIncome > 0) {
+        subItems.push({
+          label: 'Benefícios de Promoção',
+          sub: 'Bônus de carreira',
+          val: promotionIncome,
+          type: 'promotion', // using generic or new type
+          dot: '#f472b6', // pink-400
+          tag: 'RECEBIDO'
+        })
+        creditoReceita += promotionIncome
+      }
+
       if (d.inReturn > 0) {
         const names = (d.maturing || []).map(m => m.name).filter(n => !!n) || []
         let subLabel = 'Capital reavido'
@@ -790,7 +815,8 @@ export const Renderer = {
         else debitoReceita += Math.abs(adjRevenue)
       }
 
-      if (subItems.length > 0) {
+      // Always render if date is within view, regardless of subItems
+      // if (subItems.length > 0) { // Removed check to show all days
         const dateObj = new Date(dateStr + 'T12:00:00Z')
         const dayNum = dateStr.split('-')[2]
         const weekday = dateObj
@@ -812,8 +838,13 @@ export const Renderer = {
         let headerClass = isMonthStart
           ? 'timeline-day-header month-separator'
           : 'timeline-day-header'
-        if (dateStr === todayStr) headerClass += ' today'
-        const dayLabel = `<span class="timeline-day-pill">${dayNum}</span><span class="timeline-day-text">${weekday} • ${monthShort}</span>`
+        
+        // Highlight Today
+        if (dateStr === todayStr) {
+            headerClass += ' today text-yellow-400 border-l-4 border-yellow-400 pl-2 bg-yellow-400/5'
+        }
+
+        const dayLabel = `<span class="timeline-day-pill ${dateStr === todayStr ? 'bg-yellow-400 text-slate-900 border-yellow-500' : ''}">${dayNum}</span><span class="timeline-day-text">${weekday} • ${monthShort}</span>`
 
         html += `<div class="${headerClass}">${dayLabel}</div>`
 
@@ -865,7 +896,7 @@ export const Renderer = {
           <div class="bg-slate-800/30 border border-slate-700/50 rounded-lg p-2 mt-2 mb-4">
             <!-- Resumo Geral -->
             <div class="flex justify-between items-center text-[10px] pb-2 border-b border-slate-700/30 mb-2">
-              <span class="text-slate-500 font-bold uppercase tracking-wider">Fechamento do Dia</span>
+              <span class="text-slate-500 font-bold uppercase tracking-wider">Totais:</span>
               <div class="flex gap-3">
                 <span class="text-emerald-400 font-bold font-mono">+${Formatter.currency(dayTotalCredito)}</span>
                 <span class="text-red-400 font-bold font-mono">-${Formatter.currency(dayTotalDebito)}</span>
@@ -892,7 +923,6 @@ export const Renderer = {
               </div>
             </div>
           </div>`
-      }
     })
 
     container.innerHTML =

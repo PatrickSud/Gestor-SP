@@ -52,7 +52,8 @@ class Store {
         taskLevel: '0',
         taskDailyValue: '0',
         withdrawStrategy: 'none',
-        withdrawTarget: '0',
+        withdrawTarget: '1000.00',
+        skippedWithdrawals: [], // Dates (YYYY-MM-DD) to skip planned withdrawals
         futureToggle: 'false',
         capitalInicial: '50',
         simStartDate: Formatter.getTodayDate(),
@@ -359,7 +360,7 @@ class Store {
       currentProfileId: this.state.currentProfileId,
       profiles: this.state.profiles,
       exportDate: new Date().toISOString(),
-      version: '2.1.5'
+      version: '2.1.4'
     }
     return JSON.stringify(data, null, 2)
   }
@@ -382,7 +383,7 @@ class Store {
       currentProfileId: exportCurrentId,
       profiles: filteredProfiles,
       exportDate: new Date().toISOString(),
-      version: '2.1.5'
+      version: '2.1.4'
     }
     return JSON.stringify(data, null, 2)
   }

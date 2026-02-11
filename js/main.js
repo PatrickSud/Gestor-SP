@@ -1098,7 +1098,7 @@ class App {
     setTimeout(() => {
       const todayEl = document.querySelector('.timeline-day-header.today')
       if (todayEl) {
-        todayEl.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        todayEl.scrollIntoView({ block: 'start', behavior: 'smooth' })
       }
     }, 100)
   }
@@ -1133,64 +1133,77 @@ class App {
     } else if (type === 'history') {
       const history = (store.state.realizedWithdrawals || []).map((w, i) => ({
         ...w,
-        index: i
+        index: i,
+        type: 'realized'
       }))
+      
+      // Add Planned Withdrawals that are active (status 'planned')
+      const today = Formatter.getTodayDate()
+      const dailyData = store.state.dailyData
+      Object.keys(dailyData).forEach(date => {
+          if (date >= today && dailyData[date].status === 'planned') {
+              history.push({
+                  date: date,
+                  amount: dailyData[date].outWithdraw || dailyData[date].tier, // Approximate if not calculated yet
+                  type: 'planned',
+                  wallet: dailyData[date].recommendedWallet || 'revenue'
+              })
+          }
+      })
+
       history.sort((a, b) => b.date.localeCompare(a.date))
+
       const currentMonthStr = Formatter.getTodayDate().substring(0, 7)
       const grossMonthTotal = history
-        .filter(w => w.date.startsWith(currentMonthStr))
+        .filter(w => w.type === 'realized' && w.date.startsWith(currentMonthStr))
         .reduce((acc, w) => acc + Formatter.toCents(w.amount), 0)
       const netMonthTotal = history
-        .filter(w => w.date.startsWith(currentMonthStr))
+        .filter(w => w.type === 'realized' && w.date.startsWith(currentMonthStr))
         .reduce(
           (acc, w) => acc + Math.floor(Formatter.toCents(w.amount) * 0.9),
           0
         )
-      const grossList =
-        history.length === 0
-          ? '<p class="text-xs text-slate-500 italic text-center">Nenhum saque realizado.</p>'
-          : history
-              .map(
-                w => `
-                    <div class="flex justify-between items-center text-xs bg-slate-900/50 p-2 rounded mb-1 group">
-                        <span class="text-slate-400">${Formatter.dateDisplay(w.date)}</span>
-                        <div class="flex items-center gap-2">
-                            <span class="text-blue-400 font-bold">${Formatter.currency(Formatter.toCents(w.amount))}</span>
-                            <button onclick="app.deleteWithdrawal(${w.index})" class="text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash-alt"></i></button>
-                        </div>
-                    </div>`
-              )
-              .join('')
-      const netList =
-        history.length === 0
-          ? '<p class="text-xs text-slate-500 italic text-center">Nenhum saque realizado.</p>'
-          : history
-              .map(
-                w => `
-                    <div class="flex justify-between items-center text-xs bg-slate-900/50 p-2 rounded mb-1 group">
-                        <span class="text-slate-400">${Formatter.dateDisplay(w.date)}</span>
-                        <div class="flex items-center gap-2">
-                            <span class="text-blue-400 font-bold">${Formatter.currency(Math.floor(Formatter.toCents(w.amount) * 0.9))}</span>
-                            <button onclick="app.deleteWithdrawal(${w.index})" class="text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-trash-alt"></i></button>
-                        </div>
-                    </div>`
-              )
-              .join('')
-      this._historyGrossListHtml = grossList
-      this._historyNetListHtml = netList
+
+      const renderList = (isNet) => {
+          if (history.length === 0) return '<p class="text-xs text-slate-500 italic text-center">Nenhum saque.</p>'
+          return history.map(w => {
+              const isRealized = w.type === 'realized'
+              const amount = isNet ? Math.floor(Formatter.toCents(w.amount) * (isRealized ? 0.9 : 0.9)) : Formatter.toCents(w.amount)
+              // Note: Planned withdrawals provided by calculator usually are gross. We simulate net if needed.
+              
+              const colorClass = isRealized ? 'text-blue-400' : 'text-yellow-400'
+              const action = isRealized 
+                ? `app.deleteWithdrawal(${w.index})` 
+                : `app.skipPlannedWithdrawal('${w.date}')`
+              
+              return `
+                <div class="flex justify-between items-center text-xs bg-slate-900/50 p-2 rounded mb-1 group">
+                    <span class="text-slate-400">${Formatter.dateDisplay(w.date)} ${!isRealized ? '<i class="fas fa-clock text-[10px] ml-1 text-yellow-500" title="Planejado"></i>' : ''}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="${colorClass} font-bold">${Formatter.currency(amount)}</span>
+                        <button onclick="${action}" class="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity" title="${isRealized ? 'Apagar' : 'Pular Saque'}">
+                            <i class="fas ${isRealized ? 'fa-trash-alt' : 'fa-ban'}"></i>
+                        </button>
+                    </div>
+                </div>`
+          }).join('')
+      }
+
+      this._historyGrossListHtml = renderList(false)
+      this._historyNetListHtml = renderList(true)
       this._historyGrossMonth = grossMonthTotal
       this._historyNetMonth = netMonthTotal
       html = `
-                <h3 class="text-lg font-bold text-blue-400 mb-4"><i class="fas fa-history mr-2"></i>Histórico de Saques</h3>
+                <h3 class="text-lg font-bold text-blue-400 mb-4"><i class="fas fa-history mr-2"></i>Histórico & Planejamento</h3>
                 <div class="flex gap-2 mb-3">
                   <button id="historyTabNet" class="px-2 py-1 text-[10px] font-bold rounded border border-slate-700 text-white bg-slate-700">Líquido</button>
                   <button id="historyTabGross" class="px-2 py-1 text-[10px] font-bold rounded border border-slate-700 text-slate-400 hover:text-white">Bruto</button>
                 </div>
                 <div class="text-center mb-4">
                     <span class="text-3xl font-black text-white" id="historyMonthTotal"></span>
-                    <p class="text-[10px] text-slate-500">Sacado no Mês Corrente</p>
+                    <p class="text-[10px] text-slate-500">Sacado no Mês (Realizado)</p>
                 </div>
-                <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Histórico Completo</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Linha do Tempo</p>
                 <div class="max-h-[200px] overflow-y-auto custom-scrollbar" id="historyList"></div>
             `
     } else if (type === 'balance_flow') {
@@ -1245,14 +1258,14 @@ class App {
       })
 
       html = `
-                <h3 class="text-lg font-bold text-yellow-400 mb-4"><i class="fas fa-clock mr-2"></i>Próximos Saques</h3>
+                <h3 class="text-lg font-bold text-yellow-400 mb-4"><i class="fas fa-clock mr-2"></i>Previsão</h3>
                 <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-4 text-center">
                     <span class="text-xs text-slate-400 block">Próxima Data Estimada</span>
                     <span class="text-xl font-bold text-white">${results.nextWithdrawDate !== '-' ? Formatter.dateDisplay(results.nextWithdrawDate) : '---'}</span>
                     <span class="text-sm font-bold text-yellow-400 block mt-1">${Formatter.currency(results.nextWithdraw)}</span>
                 </div>
                 
-                <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Previsão (Próx. 8 Semanas)</p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Previsão</p>
                 <div class="max-h-[150px] overflow-y-auto custom-scrollbar">${listHtml}</div>
             `
     }
@@ -1788,8 +1801,24 @@ class App {
     store.setState({ realizedWithdrawals: list })
     Renderer.toast('Saque removido')
     this.runCalculation()
-    if (date) this.openDayDetails(date)
-    else this.openCardDetails('history')
+    // Refresh the view that called it
+    if (document.getElementById('dayDetailsModal') && !document.getElementById('dayDetailsModal').classList.contains('hidden')) {
+         if(date) this.openDayDetails(date)
+    } else {
+         this.openCardDetails('history')
+    }
+  }
+
+  skipPlannedWithdrawal(date) {
+      if (!confirm(`Deseja pular o saque planejado para ${Formatter.dateDisplay(date)}?`)) return
+      const skipped = [...(store.state.inputs.skippedWithdrawals || [])]
+      if (!skipped.includes(date)) {
+          skipped.push(date)
+          store.updateInput('skippedWithdrawals', skipped)
+          Renderer.toast('Saque planejado ignorado', 'success')
+          this.runCalculation()
+          this.openCardDetails('history') // Refresh history view
+      }
   }
 
   // --- Utils ---

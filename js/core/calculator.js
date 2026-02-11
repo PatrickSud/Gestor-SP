@@ -58,7 +58,8 @@ export const Calculator = {
       taxaDiaria,
       repeticoesCiclo,
       withdrawStrategy,
-      withdrawTarget
+      withdrawTarget,
+      skippedWithdrawals
     } = inputs
 
     if (!startDateStr) return null
@@ -390,11 +391,16 @@ export const Calculator = {
       let withdrawalNote = ''
       let isPartial = false
 
-      if (realizedOnDay) {
-        isRealized = true
-        amountToWithdrawCents = Formatter.toCents(realizedOnDay.amount)
-        targetWallet = realizedOnDay.wallet || 'revenue'
-      } else if (isWithdrawalDay && d > 0 && withdrawStrategy !== 'none') {
+    if (realizedOnDay) {
+      isRealized = true
+      amountToWithdrawCents = Formatter.toCents(realizedOnDay.amount)
+      targetWallet = realizedOnDay.wallet || 'revenue'
+    } else if (
+      isWithdrawalDay &&
+      d > 0 &&
+      withdrawStrategy !== 'none' &&
+      !(inputs.skippedWithdrawals || []).includes(currentDayStr)
+    ) {
         const revTier =
           this.WITHDRAWAL_TIERS.filter(t => t <= currentRevenueWallet).pop() ||
           0
