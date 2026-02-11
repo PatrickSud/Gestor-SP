@@ -2261,8 +2261,20 @@ class App {
       <div class="w-2 h-2 rounded-full transition-all duration-300 ${i === this.onboardingStep ? 'bg-blue-500 w-6' : i < this.onboardingStep ? 'bg-emerald-500' : 'bg-slate-700'}"></div>
     `).join('')
 
-    // Navigation Buttons
-    backBtn.classList.toggle('hidden', this.onboardingStep === 0 || this.onboardingStep === totalSteps - 1)
+    // Navigation Buttons Logic
+    if (this.onboardingStep === 0) {
+      backBtn.classList.remove('hidden')
+      backBtn.innerHTML = '<i class="fas fa-file-import mr-2"></i> Restaurar Backup'
+      backBtn.className = 'text-slate-400 hover:text-white text-xs font-bold flex items-center gap-2 transition-colors'
+      backBtn.onclick = () => document.getElementById('importFile').click()
+    } else {
+      const isLastStep = this.onboardingStep === totalSteps - 1
+      backBtn.classList.toggle('hidden', isLastStep)
+      backBtn.innerHTML = '<i class="fas fa-chevron-left mr-2"></i> Voltar'
+      backBtn.className = 'px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold transition-all border border-slate-600'
+      backBtn.onclick = () => this.prevOnboardingStep()
+    }
+
     nextBtn.classList.toggle('hidden', this.onboardingStep === totalSteps - 1)
     finishBtn.classList.toggle('hidden', this.onboardingStep !== totalSteps - 1)
 
@@ -2275,13 +2287,7 @@ class App {
         title.innerText = 'Vamos configurar seu caixa inicial'
         html = `
           <div class="space-y-6 animate-fade-in">
-            <div class="flex items-center justify-between">
-              <p class="text-sm text-slate-400">Informe quanto você possui hoje em cada uma das suas carteiras.</p>
-              <button onclick="document.getElementById('importFile').click()" 
-                class="text-[10px] bg-slate-800 hover:bg-slate-700 text-blue-400 font-bold py-2 px-3 rounded-lg border border-slate-700 transition-all flex items-center gap-2">
-                <i class="fas fa-file-import"></i> Restaurar Backup
-              </button>
-            </div>
+            <p class="text-sm text-slate-400">Informe quanto você possui hoje em cada uma das suas carteiras.</p>
             <div class="space-y-4">
               <div class="bg-slate-800/50 p-4 rounded-2xl border border-indigo-500/30">
                 <label class="text-[10px] text-indigo-300 font-bold uppercase mb-2 block tracking-widest">Carteira Pessoal</label>
