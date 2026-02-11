@@ -324,18 +324,25 @@ export const Renderer = {
             const val = Math.abs(adj.amount || 0)
             const isPositive = adj.amount > 0
             const colorClass = isPositive ? 'text-emerald-400' : 'text-red-400'
-            const iconColor = isPositive ? 'text-emerald-500' : 'text-red-500'
             const sign = isPositive ? '+' : '-'
             const walletLabel = adj.wallet === 'personal' ? 'Pessoal' : 'Receita'
             const desc = adj.description || `Ajuste (${walletLabel})`
             
+            const deleteBtn = adj.id ? `
+                <button onclick="app.deleteManualAdjustment(${adj.id})" class="text-slate-500 hover:text-red-400 p-1 ml-2 transition-colors">
+                    <i class="fas fa-trash-alt text-[9px]"></i>
+                </button>` : '';
+
             transactionItems.push(`
                 <div class="flex justify-between items-center text-[10px] text-slate-300 bg-slate-900/40 p-2 rounded-lg border border-slate-700/30 hover:bg-slate-700/40 transition-colors">
                     <div class="flex items-center gap-2">
                         <i class="fas fa-pen text-orange-400 w-3 text-center"></i>
                         <span class="font-medium">${desc}</span>
                     </div>
-                    <span class="font-bold ${colorClass} font-mono">${sign}${Formatter.currency(Formatter.toCents(val))}</span>
+                    <div class="flex items-center">
+                        <span class="font-bold ${colorClass} font-mono">${sign}${Formatter.currency(Formatter.toCents(val))}</span>
+                        ${deleteBtn}
+                    </div>
                 </div>
             `)
         })

@@ -1760,6 +1760,7 @@ class App {
     const finalAmount = type === 'in' ? amount : -amount
 
     store.addManualAdjustment({
+      id: Date.now(),
       date: Formatter.getTodayDate(),
       amount: finalAmount,
       wallet: wallet,
@@ -1769,6 +1770,14 @@ class App {
     this.runCalculation()
     this.closeModal('cardModal')
     Renderer.toast('Lançamento adicionado com sucesso', 'success')
+  }
+
+  deleteManualAdjustment(id) {
+    if (!confirm('Excluir este lançamento manual?')) return
+    const list = store.state.manualAdjustments.filter(a => a.id !== id)
+    store.setState({ manualAdjustments: list })
+    this.runCalculation()
+    Renderer.toast('Lançamento excluído')
   }
 
   deleteWithdrawal(index) {
