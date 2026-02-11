@@ -827,6 +827,15 @@ class App {
       })
     }
 
+    if (data.inIncomePromotion > 0) {
+      items.push({
+        label: 'Benefícios de Promoção',
+        val: data.inIncomePromotion,
+        type: 'promotion', // styling needs to be handled
+        icon: 'fa-award'
+      })
+    }
+
     // Withdrawals
     if (data.status !== 'none') {
       const isRealized = data.status === 'realized'
@@ -1059,6 +1068,8 @@ class App {
         return 'color: #eab308;'
       case 'withdraw-realized':
         return 'color: #3b82f6;'
+      case 'promotion':
+        return 'color: #f472b6;' // pink-400
       default:
         return ''
     }

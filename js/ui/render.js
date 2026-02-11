@@ -667,17 +667,7 @@ export const Renderer = {
         creditoReceita += recurringIncome
       }
 
-      if (teamBonusToggle && (d.inIncomeTeam ?? 0) > 0) {
-        subItems.push({
-          label: 'Bônus de Equipe',
-          sub: 'Rede',
-          val: d.inIncomeTeam,
-          type: 'team',
-          dot: '#3b82f6',
-          tag: 'RECEBIDO'
-        })
-        creditoReceita += d.inIncomeTeam
-      }
+
 
       const promotionIncome = d.inIncomePromotion ?? 0
       if (promotionIncome > 0) {
@@ -865,7 +855,7 @@ export const Renderer = {
                             <div class="timeline-content">
                                 <div><div class="timeline-label">${item.label}</div><div class="timeline-sublabel">${item.sub}</div></div>
                                 <div class="text-right">
-                                    <div class="timeline-value ${item.type}">${showValue ? sign + Formatter.currency(item.val) : item.tag}</div>
+                                    <div class="timeline-value ${item.type} ${showValue && sign === '+' && item.type !== 'manual' ? 'text-emerald-400' : ''}">${showValue ? sign + Formatter.currency(item.val) : item.tag}</div>
                                     <div class="efetivar-badge">${item.tag}</div>
                                 </div>
                             </div>
@@ -962,7 +952,7 @@ export const Renderer = {
         </div>
 
         <div class="space-y-1">
-          <span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Saldo Final (Período)</span>
+          <span class="text-[9px] text-slate-500 font-bold uppercase tracking-wider block mb-1">Saldo (Período)</span>
           <div class="text-[10px] flex justify-between">
             <span class="text-indigo-400 font-bold uppercase text-[8px]">Pessoal:</span>
             <span class="text-indigo-400 font-bold font-mono">${Formatter.currency(lastDayData.endPersonal)}</span>
