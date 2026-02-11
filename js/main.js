@@ -1031,10 +1031,10 @@ class App {
                         isActionDay
                           ? `
                       <div class="flex flex-col gap-2">
-                        <button onclick="app.executeWithdrawal('${dateStr}', ${Formatter.fromCents(data.tier)}, 'revenue')" class="w-full ${isPlanned ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-slate-700 hover:bg-slate-600'} text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
+                        <button onclick="app.executeWithdrawal('${dateStr}', ${Formatter.fromCents(data.tier)}, 'revenue', ${isPlanned})" class="w-full ${isPlanned ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-slate-700 hover:bg-slate-600'} text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
                             <i class="fas fa-hand-holding-usd mr-1"></i> Sacar da Receita
                         </button>
-                        <button onclick="app.executeWithdrawal('${dateStr}', ${Formatter.fromCents(data.tier)}, 'personal')" class="w-full ${isPlanned ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-700 hover:bg-slate-600'} text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
+                        <button onclick="app.executeWithdrawal('${dateStr}', ${Formatter.fromCents(data.tier)}, 'personal', ${isPlanned})" class="w-full ${isPlanned ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-700 hover:bg-slate-600'} text-white text-[10px] font-bold py-2 rounded-lg transition-colors">
                             <i class="fas fa-wallet mr-1"></i> Sacar da Pessoal
                         </button>
                       </div>
@@ -1178,11 +1178,18 @@ class App {
               const action = `app.deleteWithdrawal(${w.index})`
               
               const walletLabel = w.wallet === 'personal' ? 'Pessoal' : 'Receita'
+              const isAutomatic = w.isAutomatic === true
+              const typeBadge = isAutomatic 
+                ? '<span class="text-[8px] bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded border border-yellow-500/30 font-bold">AUTO</span>'
+                : '<span class="text-[8px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/30 font-bold">MANUAL</span>'
 
               return `
                 <div class="flex justify-between items-center text-xs bg-slate-900/50 p-2 rounded mb-1 group border border-slate-700/30 hover:border-slate-500 transition-colors">
                     <div>
-                        <span class="text-slate-300 block font-bold">${Formatter.dateDisplay(w.date)}</span>
+                        <div class="flex items-center gap-2 mb-0.5">
+                            <span class="text-slate-300 font-bold">${Formatter.dateDisplay(w.date)}</span>
+                            ${typeBadge}
+                        </div>
                         <span class="text-[9px] text-slate-500 uppercase">${walletLabel}</span>
                     </div>
                     <div class="flex items-center gap-3">
@@ -1536,7 +1543,7 @@ class App {
     reader.readAsText(file)
   }
 
-  executeWithdrawal(date, amount, walletType = 'revenue') {
+  executeWithdrawal(date, amount, walletType = 'revenue', isAutomatic = false) {
     const dayData = store.state.dailyData[date]
     if (!dayData) return
 
@@ -1577,7 +1584,7 @@ class App {
 
     const realizedWithdrawals = [
       ...(store.state.realizedWithdrawals || []),
-      { date, amount: finalAmount.toFixed(2), wallet: walletType }
+      { date, amount: finalAmount.toFixed(2), wallet: walletType, isAutomatic }
     ]
     store.setState({ realizedWithdrawals })
 
