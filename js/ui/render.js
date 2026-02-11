@@ -335,7 +335,7 @@ export const Renderer = {
                         <i class="fas fa-pen text-orange-400 w-3 text-center"></i>
                         <span class="font-medium">${desc}</span>
                     </div>
-                    <span class="font-bold ${colorClass} font-mono">${sign}${Formatter.currency(val)}</span>
+                    <span class="font-bold ${colorClass} font-mono">${sign}${Formatter.currency(Formatter.toCents(val))}</span>
                 </div>
             `)
         })
@@ -814,7 +814,8 @@ export const Renderer = {
           const isWithdraw =
             item.type === 'withdraw-realized' ||
             item.type === 'withdraw-planned'
-          const sign = isWithdraw ? '-' : '+'
+          const isManualDebit = item.type === 'manual' && item.tag === 'DÉBITO'
+          const sign = isWithdraw || isManualDebit ? '-' : '+'
           const showValue = item.val > 0
 
           html += `

@@ -1671,7 +1671,7 @@ class App {
           <div class="bg-slate-900/50 p-5 rounded-xl border border-slate-700 space-y-4">
             <div>
               <label class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Descrição</label>
-              <input type="text" id="manualDesc" placeholder="Ex: Almoço, Venda Extra, Estorno..."
+              <input type="text" id="manualDesc" placeholder="Ex: Bônus, Benefícios, Estorno, Correção..."
                 class="custom-input w-full rounded-lg py-2 px-3 text-xs">
             </div>
 
