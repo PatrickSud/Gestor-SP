@@ -36,7 +36,8 @@ export const Renderer = {
     todayBalanceDisplay: () => document.getElementById('todayBalanceDisplay'),
     todayChangesDisplay: () => document.getElementById('todayChangesDisplay'),
     todayInDisplay: () => document.getElementById('todayInDisplay'),
-    todayOutDisplay: () => document.getElementById('todayOutDisplay')
+    todayOutDisplay: () => document.getElementById('todayOutDisplay'),
+    todayTransactionsList: () => document.getElementById('todayTransactionsList')
   },
 
   // --- Render Methods ---
@@ -275,6 +276,62 @@ export const Renderer = {
     
     const opsLabel = ops === 1 ? '1 movimentação' : `${ops} movimentações`
     changesEl.innerText = opsLabel
+
+    // Build transactions list
+    const listEl = this.els.todayTransactionsList()
+    if (!listEl) return
+
+    const transactionItems = []
+
+    // Helper to add specialized items
+    const addItem = (icon, label, val, type) => {
+        const isPositive = type === 'in'
+        const colorClass = isPositive ? 'text-emerald-400' : 'text-red-400'
+        const iconColor = isPositive ? 'text-emerald-500' : 'text-red-500'
+        const sign = isPositive ? '+' : '-'
+        
+        transactionItems.push(`
+            <div class="flex justify-between items-center text-[10px] text-slate-300 bg-slate-900/40 p-2 rounded-lg border border-slate-700/30 hover:bg-slate-700/40 transition-colors">
+                <div class="flex items-center gap-2">
+                    <i class="fas ${icon} ${iconColor} w-3 text-center"></i>
+                    <span class="font-medium">${label}</span>
+                </div>
+                <span class="font-bold ${colorClass} font-mono">${sign}${Formatter.currency(Math.abs(val))}</span>
+            </div>
+        `)
+    }
+
+    if (data.inIncomeTeam > 0) addItem('fa-users', 'Bônus de Equipe', data.inIncomeTeam, 'in')
+    if (data.inIncomeTask > 0) addItem('fa-check-circle', 'Renda de Tarefas', data.inIncomeTask, 'in')
+    if (data.inIncomeRecurring > 0) addItem('fa-calendar-check', 'Renda Fixa', data.inIncomeRecurring, 'in')
+    if (data.inIncomePromotion > 0) addItem('fa-award', 'Bônus de Promoção', data.inIncomePromotion, 'in')
+    
+    if (data.inReturn > 0) {
+        const names = (data.maturing || []).map(m => m.name).join(', ')
+        addItem('fa-undo', `Retorno de Contrato ${names ? '('+names+')' : ''}`, data.inReturn, 'in')
+    }
+
+    if (data.outInvest > 0) addItem('fa-arrow-up-right-from-square', 'Novo Aporte', data.outInvest, 'out')
+    
+    if (data.outWithdraw > 0) {
+        const label = data.status === 'realized' ? 'Saque Realizado' : 'Saque Planejado'
+        addItem('fa-hand-holding-usd', label, data.outWithdraw, 'out')
+    }
+
+    if (data.inAdjustmentPersonal !== 0) {
+        const val = data.inAdjustmentPersonal
+        addItem('fa-tools', 'Ajuste (Pessoal)', Math.abs(val), val > 0 ? 'in' : 'out')
+    }
+    if (data.inAdjustmentRevenue !== 0) {
+        const val = data.inAdjustmentRevenue
+        addItem('fa-tools', 'Ajuste (Receita)', Math.abs(val), val > 0 ? 'in' : 'out')
+    }
+
+    if (transactionItems.length > 0) {
+        listEl.innerHTML = transactionItems.join('')
+    } else {
+        listEl.innerHTML = '<p class="text-[10px] text-slate-500 italic text-center py-2">Nenhuma movimentação registrada hoje.</p>'
+    }
   },
 
   renderSimulationSummary(results, inputs, cycleEnds = []) {
