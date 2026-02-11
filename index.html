@@ -655,7 +655,7 @@
                     <i class="fas fa-chevron-left mr-2"></i> Fechar Menu
                 </button>
                 <footer class="text-center text-[10px] text-slate-600 py-4 mt-2">
-                    <p>&copy; 2025 Gestor SP - v2.1.8</p>
+                    <p>&copy; 2025 Gestor SP - v2.1.9</p>
                 </footer>
             </div>
         </div>
@@ -692,10 +692,10 @@
         </div>
 
         <!-- 1. Dashboard Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <!-- Card 1: Lucro Líquido -->
             <div onclick="app.openCardDetails('profit')"
-                class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm relative overflow-hidden group">
+                class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm relative overflow-hidden group bg-gradient-to-br from-slate-800 to-emerald-900/20 border-emerald-900/30">
                 <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><i
                         class="fas fa-chart-line text-4xl text-emerald-500"></i></div>
                 <p class="text-[10px] font-bold text-slate-400 uppercase">Lucro Líquido</p>
@@ -709,7 +709,7 @@
 
             <!-- Card 2: Histórico de Saques -->
             <div onclick="app.openCardDetails('history')"
-                class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm relative overflow-hidden group">
+                class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm relative overflow-hidden group bg-gradient-to-br from-slate-800 to-blue-900/20 border-blue-900/30">
                 <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><i
                         class="fas fa-history text-4xl text-blue-500"></i></div>
                 <p class="text-[10px] font-bold text-slate-400 uppercase">Histórico de Saques</p>
@@ -719,7 +719,7 @@
 
             <!-- Card 3: Próximo Vencimento (Focado em Investimentos) -->
             <div onclick="app.openCardDetails('active_capital')"
-                class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm relative overflow-hidden group">
+                class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm relative overflow-hidden group bg-gradient-to-br from-slate-800 to-purple-900/20 border-purple-900/30">
                 <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                     <i class="fas fa-coins text-4xl text-purple-500"></i>
                 </div>
@@ -743,15 +743,7 @@
                 </div>
             </div>
 
-            <!-- Card 4: Break-Even / Payback -->
-            <div onclick="app.openCardDetails('breakeven')"
-                class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm bg-gradient-to-br from-slate-800 to-purple-900/20 border-purple-900/30 relative overflow-hidden group">
-                <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><i
-                        class="fas fa-hourglass-half text-4xl text-purple-500"></i></div>
-                <p class="text-[10px] font-bold text-purple-400 uppercase">Break-Even</p>
-                <h3 class="text-lg md:text-xl font-bold text-purple-300 mt-1" id="resBreakEvenDate">---</h3>
-                <p class="text-[9px] text-purple-600/70" id="resPaybackDays">Calculando...</p>
-            </div>
+
 
             <!-- Card 5: Próximo Saque -->
             <div onclick="app.openCardDetails('next_withdrawals')"
@@ -1136,7 +1128,7 @@
             <div class="flex items-center gap-2">
                 <span>Desenvolvido por <strong class="text-slate-400">Patrick Godoy</strong></span>
                 <span class="hidden md:inline text-slate-700">•</span>
-                <span class="font-mono text-slate-600">v2.1.8</span>
+                <span class="font-mono text-slate-600">v2.1.9</span>
             </div>
 
             <a href="mailto:patricksud96@gmail.com?subject=Gestor%20SP%20-%20Bug%2FSugestão"
