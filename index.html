@@ -206,11 +206,14 @@
                     Renda</label>
                 <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-4 shadow-lg shadow-black/20">
                     
-                    <div class="border-b border-slate-700/50 pb-2 mb-2">
-                        <span class="text-[9px] font-bold text-blue-400 uppercase tracking-widest pl-1">Configuração Inicial da Gestão</span>
+                    <div class="flex items-center justify-between mb-2 cursor-pointer" onclick="document.getElementById('initialSetupContainer').classList.toggle('hidden'); document.getElementById('initialSetupChevron').classList.toggle('rotate-180')">
+                        <label class="text-[10px] text-blue-400 font-bold uppercase tracking-widest cursor-pointer">
+                            Configuração Inicial & Saldos
+                        </label>
+                        <i class="fas fa-chevron-down text-slate-500 text-xs transition-transform" id="initialSetupChevron"></i>
                     </div>
 
-                    <div class="space-y-3">
+                    <div id="initialSetupContainer" class="space-y-3 hidden animate-fade-in">
                         <div>
                             <label class="text-[10px] text-slate-400 font-bold mb-1 block">Início da Gestão (Data Base)</label>
                             <input type="date" id="dataInicio"
