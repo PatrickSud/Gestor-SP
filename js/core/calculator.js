@@ -348,6 +348,7 @@ export const Calculator = {
       let stepAdjustmentRevenue = 0
       let stepOutInvest = stepPortfolioDeduction // Track portfolio deductions as well as manual "Aportes"
 
+      const stepAdjustmentsList = []
       manualAdjustments
         .filter(a => a.date === currentDayStr)
         .forEach(a => {
@@ -365,6 +366,11 @@ export const Calculator = {
             currentRevenueWallet += valCents
             stepAdjustmentRevenue += valCents
           }
+
+          stepAdjustmentsList.push({
+            ...a,
+            valCents
+          })
         })
 
       let totalPool = currentInv + currentPersonalWallet + currentRevenueWallet
@@ -545,6 +551,7 @@ export const Calculator = {
         outWithdrawPersonal: stepWithdrawPersonal,
         outWithdrawRevenue: stepWithdrawRevenue,
         maturing: stepMaturingList,
+        adjustments: stepAdjustmentsList,
         tier: amountToDisplayCents,
         isCycleEnd,
         status: isRealized ? 'realized' : isPlanned ? 'planned' : 'none'

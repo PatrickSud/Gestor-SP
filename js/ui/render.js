@@ -318,13 +318,27 @@ export const Renderer = {
         addItem('fa-hand-holding-usd', label, data.outWithdraw, 'out')
     }
 
-    if (data.inAdjustmentPersonal !== 0) {
-        const val = data.inAdjustmentPersonal
-        addItem('fa-tools', 'Ajuste (Pessoal)', Math.abs(val), val > 0 ? 'in' : 'out')
-    }
-    if (data.inAdjustmentRevenue !== 0) {
-        const val = data.inAdjustmentRevenue
-        addItem('fa-tools', 'Ajuste (Receita)', Math.abs(val), val > 0 ? 'in' : 'out')
+    // Manual Adjustments List
+    if (data.adjustments && data.adjustments.length > 0) {
+        data.adjustments.forEach(adj => {
+            const val = Math.abs(adj.amount || 0)
+            const isPositive = adj.amount > 0
+            const colorClass = isPositive ? 'text-emerald-400' : 'text-red-400'
+            const iconColor = isPositive ? 'text-emerald-500' : 'text-red-500'
+            const sign = isPositive ? '+' : '-'
+            const walletLabel = adj.wallet === 'personal' ? 'Pessoal' : 'Receita'
+            const desc = adj.description || `Ajuste (${walletLabel})`
+            
+            transactionItems.push(`
+                <div class="flex justify-between items-center text-[10px] text-slate-300 bg-slate-900/40 p-2 rounded-lg border border-slate-700/30 hover:bg-slate-700/40 transition-colors">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-pen text-orange-400 w-3 text-center"></i>
+                        <span class="font-medium">${desc}</span>
+                    </div>
+                    <span class="font-bold ${colorClass} font-mono">${sign}${Formatter.currency(val)}</span>
+                </div>
+            `)
+        })
     }
 
     if (transactionItems.length > 0) {

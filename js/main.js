@@ -1606,19 +1606,31 @@ class App {
       <div class="space-y-6">
         <div class="flex items-center gap-3 border-b border-slate-700 pb-3">
           <div class="w-10 h-10 bg-indigo-500/20 text-indigo-400 rounded-lg flex items-center justify-center">
-            <i class="fas fa-adjust text-xl"></i>
+            <i class="fas fa-sliders-h text-xl"></i>
           </div>
           <div>
-            <h3 class="text-lg font-bold text-white">Ajuste de Saldo (Hoje)</h3>
-            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Edite o valor final para corrigir</p>
+            <h3 class="text-lg font-bold text-white">Ajustes Manuais</h3>
+            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Lançamentos ou correções de saldo</p>
           </div>
         </div>
 
-        <div class="space-y-4">
+        <!-- Tabs -->
+        <div class="flex bg-slate-900 rounded-xl p-1 border border-slate-700">
+          <button onclick="app.switchAdjustmentTab('quick')" id="adj-tab-quick"
+            class="flex-1 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all bg-slate-700 text-white">
+            Ajuste Rápido
+          </button>
+          <button onclick="app.switchAdjustmentTab('new')" id="adj-tab-new"
+            class="flex-1 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all text-slate-500 hover:text-slate-300">
+            Novo Lançamento
+          </button>
+        </div>
+
+        <div id="quickAdjustmentView" class="space-y-4">
           <!-- Pessoal -->
           <div class="bg-slate-900/50 p-4 rounded-xl border border-indigo-500/30">
             <div class="flex justify-between items-center mb-2">
-              <label class="text-[10px] text-indigo-300 font-bold uppercase">Carteira Pessoal</label>
+              <label class="text-[10px] text-indigo-300 font-bold uppercase">Carteira Pessoal (Hoje)</label>
             </div>
             
             <div class="flex gap-2 items-center">
@@ -1632,13 +1644,12 @@ class App {
                  Salvar
                </button>
             </div>
-            <p class="text-[10px] text-slate-500 mt-2">O sistema calculará a diferença automaticamente.</p>
           </div>
 
           <!-- Receita -->
           <div class="bg-slate-900/50 p-4 rounded-xl border border-emerald-500/30">
             <div class="flex justify-between items-center mb-2">
-              <label class="text-[10px] text-emerald-300 font-bold uppercase">Carteira de Receita</label>
+              <label class="text-[10px] text-emerald-300 font-bold uppercase">Carteira de Receita (Hoje)</label>
             </div>
 
             <div class="flex gap-2 items-center">
@@ -1652,19 +1663,113 @@ class App {
                  Salvar
                </button>
             </div>
-            <p class="text-[10px] text-slate-500 mt-2">O sistema calculará a diferença automaticamente.</p>
+          </div>
+          <p class="text-[10px] text-slate-500 italic text-center">O sistema calculará a diferença necessária para atingir o valor final informado.</p>
+        </div>
+
+        <div id="newAdjustmentView" class="space-y-4 hidden animate-fade-in">
+          <div class="bg-slate-900/50 p-5 rounded-xl border border-slate-700 space-y-4">
+            <div>
+              <label class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Descrição</label>
+              <input type="text" id="manualDesc" placeholder="Ex: Almoço, Venda Extra, Estorno..."
+                class="custom-input w-full rounded-lg py-2 px-3 text-xs">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Valor (R$)</label>
+                <input type="number" id="manualValue" step="0.01" placeholder="0.00"
+                  class="custom-input w-full rounded-lg py-2 px-3 text-sm font-bold">
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Carteira</label>
+                <select id="manualWallet" class="custom-input w-full rounded-lg py-2 px-3 text-xs">
+                  <option value="personal">Pessoal</option>
+                  <option value="revenue">Receita</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="text-[10px] text-slate-400 font-bold uppercase mb-2 block">Tipo de Lançamento</label>
+              <div class="flex gap-2">
+                <button onclick="this.parentElement.dataset.type='in'; this.nextElementSibling.classList.remove('bg-red-600','text-white'); this.classList.add('bg-emerald-600','text-white')"
+                  class="flex-1 py-2 rounded-lg text-[10px] font-bold uppercase border border-slate-700 transition-all bg-emerald-600 text-white">
+                  Entrada (+)
+                </button>
+                <button onclick="this.parentElement.dataset.type='out'; this.previousElementSibling.classList.remove('bg-emerald-600','text-white'); this.classList.add('bg-red-600','text-white')"
+                  class="flex-1 py-2 rounded-lg text-[10px] font-bold uppercase border border-slate-700 transition-all">
+                  Saída (-)
+                </button>
+              </div>
+              <div id="manualTypeContainer" data-type="in" class="hidden"></div>
+            </div>
+
+            <button onclick="app.addManualTransaction()"
+              class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-900/20 text-xs uppercase tracking-widest mt-2">
+              <i class="fas fa-plus mr-2"></i> Adicionar Lançamento
+            </button>
           </div>
         </div>
-        
+
         <div class="border-t border-slate-700/50 pt-4 mt-2">
            <button onclick="app.closeModal('cardModal')" class="w-full py-3 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-colors text-xs uppercase tracking-widest">
-             Fechar
+             Cancelar
            </button>
         </div>
       </div>
     `
     document.getElementById('cardModalContent').innerHTML = html
     this.openModal('cardModal')
+  }
+
+  switchAdjustmentTab(tab) {
+    const quickTab = document.getElementById('adj-tab-quick')
+    const newTab = document.getElementById('adj-tab-new')
+    const quickView = document.getElementById('quickAdjustmentView')
+    const newView = document.getElementById('newAdjustmentView')
+
+    if (tab === 'quick') {
+      quickTab.classList.add('bg-slate-700', 'text-white')
+      quickTab.classList.remove('text-slate-500')
+      newTab.classList.remove('bg-slate-700', 'text-white')
+      newTab.classList.add('text-slate-500')
+      quickView.classList.remove('hidden')
+      newView.classList.add('hidden')
+    } else {
+      newTab.classList.add('bg-slate-700', 'text-white')
+      newTab.classList.remove('text-slate-500')
+      quickTab.classList.remove('bg-slate-700', 'text-white')
+      quickTab.classList.add('text-slate-500')
+      newView.classList.remove('hidden')
+      quickView.classList.add('hidden')
+    }
+  }
+
+  addManualTransaction() {
+    const desc = document.getElementById('manualDesc').value || 'Ajuste'
+    const valInput = document.getElementById('manualValue').value
+    const wallet = document.getElementById('manualWallet').value
+    const type = document.querySelector('[onclick*="dataset.type"]').parentElement.dataset.type // Get type from container
+
+    const amount = parseFloat(valInput)
+    if (isNaN(amount) || amount <= 0) {
+      Renderer.toast('Por favor, informe um valor válido', 'error')
+      return
+    }
+
+    const finalAmount = type === 'in' ? amount : -amount
+
+    store.addManualAdjustment({
+      date: Formatter.getTodayDate(),
+      amount: finalAmount,
+      wallet: wallet,
+      description: desc
+    })
+
+    this.runCalculation()
+    this.closeModal('cardModal')
+    Renderer.toast('Lançamento adicionado com sucesso', 'success')
   }
 
   deleteWithdrawal(index) {

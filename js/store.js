@@ -131,6 +131,15 @@ class Store {
     this.state.dailyData = data
   }
 
+  addManualAdjustment(adj) {
+    if (!this.state.manualAdjustments) {
+      this.state.manualAdjustments = []
+    }
+    this.state.manualAdjustments.push(adj)
+    this.saveToStorage()
+    this.notify()
+  }
+
   // --- Profile Management ---
   switchProfile(id) {
     if (!this.state.profiles[id]) return
@@ -350,7 +359,7 @@ class Store {
       currentProfileId: this.state.currentProfileId,
       profiles: this.state.profiles,
       exportDate: new Date().toISOString(),
-      version: '2.1.0'
+      version: '2.1.1'
     }
     return JSON.stringify(data, null, 2)
   }
@@ -373,7 +382,7 @@ class Store {
       currentProfileId: exportCurrentId,
       profiles: filteredProfiles,
       exportDate: new Date().toISOString(),
-      version: '2.1.0'
+      version: '2.1.1'
     }
     return JSON.stringify(data, null, 2)
   }
