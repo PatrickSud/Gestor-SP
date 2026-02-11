@@ -42,7 +42,7 @@ export const Exporter = {
       doc.setTextColor(...primaryColor)
       doc.setFontSize(24)
       doc.setFont('helvetica', 'bold')
-      doc.text('Relatório Gestor Estratégico Pro', 105, 20, { align: 'center' })
+      doc.text('Relatório Gestor SP', 105, 20, { align: 'center' })
 
       // Date
       doc.setTextColor(...textColor)
@@ -392,7 +392,7 @@ export const Exporter = {
           { align: 'center' }
         )
         doc.text(
-          'Gestor Estratégico Pro - Relatório Confidencial',
+          'Gestor SP - Relatório Confidencial',
           105,
           doc.internal.pageSize.height - 5,
           { align: 'center' }

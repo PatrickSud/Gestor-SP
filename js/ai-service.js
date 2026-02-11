@@ -115,7 +115,7 @@ class AiService {
   buildSystemPrompt() {
     const context = this.buildUserContext()
     
-    return `Você é um assistente financeiro inteligente integrado ao Gestor Estratégico Pro, uma aplicação de gestão financeira pessoal e projeção de investimentos.
+    return `Você é um assistente financeiro inteligente integrado ao Gestor SP, uma aplicação de gestão financeira pessoal e projeção de investimentos.
 
 ## Seu Papel
 - Ajudar o usuário a entender sua situação financeira
