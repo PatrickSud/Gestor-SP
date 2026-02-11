@@ -133,6 +133,31 @@ export const Calculator = {
       }
     })
 
+    // --- Investment Highlights Logic ---
+    let activePrincipal = 0
+    let activePendingProfit = 0
+    let nextMaturityDate = '---'
+    let nextMaturityValue = 0
+
+    const activeInvestments = portfolio
+      .map(p => {
+        const endStr = Formatter.addDays(p.date, p.days)
+        const valCents = Formatter.toCents(p.val)
+        const profitCents = Math.floor(valCents * (p.rate / 100) * p.days)
+        return { ...p, endStr, valCents, profitCents, totalCents: valCents + profitCents }
+      })
+      .filter(p => p.endStr >= todayStr)
+      .sort((a, b) => a.endStr.localeCompare(b.endStr))
+
+    if (activeInvestments.length > 0) {
+      activePrincipal = activeInvestments.reduce((acc, p) => acc + p.valCents, 0)
+      activePendingProfit = activeInvestments.reduce((acc, p) => acc + p.profitCents, 0)
+      nextMaturityDate = activeInvestments[0].endStr
+      nextMaturityValue = activeInvestments
+        .filter(p => p.endStr === nextMaturityDate)
+        .reduce((acc, p) => acc + p.totalCents, 0)
+    }
+
     const totalCentsInvested =
       personalStart + revenueStart + initialSimCapital + totalPortfolioVal
 
@@ -667,6 +692,10 @@ export const Calculator = {
         nextWithdraw: nextWithdrawCents,
         nextWithdrawDate: nextWithdrawDate,
         nextWithdrawalsList,
+        activePrincipal,
+        activePendingProfit,
+        nextMaturityDate,
+        nextMaturityValue,
         roi:
           totalCentsInvested > 0
             ? ((currentInv +

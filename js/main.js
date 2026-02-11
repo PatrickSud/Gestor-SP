@@ -1334,6 +1334,73 @@ class App {
                     </p>
                 </div>
             `
+    } else if (type === 'active_capital') {
+        const activeInvestments = (store.state.portfolio || [])
+            .map(p => {
+                const endStr = Formatter.addDays(p.date, p.days)
+                const valCents = Formatter.toCents(p.val)
+                const profitCents = Math.floor(valCents * (p.rate / 100) * p.days)
+                return { ...p, endStr, valCents, profitCents, totalCents: valCents + profitCents }
+            })
+            .filter(p => p.endStr >= Formatter.getTodayDate())
+            .sort((a, b) => a.endStr.localeCompare(b.endStr))
+
+        const totalActive = activeInvestments.reduce((acc, p) => acc + p.valCents, 0)
+        const personalActive = activeInvestments.filter(p => p.wallet === 'personal').reduce((acc, p) => acc + p.valCents, 0)
+        const revenueActive = activeInvestments.filter(p => p.wallet === 'revenue').reduce((acc, p) => acc + p.valCents, 0)
+        
+        const persPerc = totalActive > 0 ? (personalActive / totalActive) * 100 : 0
+        const revPerc = totalActive > 0 ? (revenueActive / totalActive) * 100 : 0
+
+        // Groups by day
+        const daysMap = {}
+        activeInvestments.forEach(p => {
+            if (!daysMap[p.endStr]) daysMap[p.endStr] = { total: 0, count: 0 }
+            daysMap[p.endStr].total += p.totalCents
+            daysMap[p.endStr].count++
+        })
+        const next3Days = Object.keys(daysMap).sort().slice(0, 3).map(d => ({
+            date: d,
+            ...daysMap[d]
+        }))
+
+        let nextDaysHtml = next3Days.map(d => `
+            <div class="flex justify-between items-center bg-slate-900/40 p-3 rounded border border-slate-700/50 mb-2">
+                <div>
+                    <span class="text-[10px] text-slate-500 block uppercase font-bold">Data de Retorno</span>
+                    <span class="text-xs font-bold text-white">${Formatter.dateDisplay(d.date)}</span>
+                </div>
+                <div class="text-right">
+                    <span class="text-[10px] text-slate-500 block uppercase font-bold">${d.count} Contrato(s)</span>
+                    <span class="text-sm font-bold text-purple-400">${Formatter.currency(d.total)}</span>
+                </div>
+            </div>
+        `).join('')
+
+        html = `
+          <h3 class="text-lg font-bold text-purple-400 mb-4"><i class="fas fa-coins mr-2"></i>Carteira de Investimentos</h3>
+          
+          <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-4">
+              <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider block mb-3">Distribuição por Origem</span>
+              <div class="h-2 w-full bg-slate-800 rounded-full flex overflow-hidden mb-2">
+                  <div class="bg-indigo-500 h-full" style="width: ${persPerc}%" title="Pessoal"></div>
+                  <div class="bg-emerald-500 h-full" style="width: ${revPerc}%" title="Receita"></div>
+              </div>
+              <div class="flex justify-between text-[10px] font-bold">
+                  <div class="flex items-center gap-1.5 text-indigo-400">
+                      <span class="w-2 h-2 rounded-full bg-indigo-500"></span> Pessoal: ${persPerc.toFixed(0)}%
+                  </div>
+                  <div class="flex items-center gap-1.5 text-emerald-400">
+                      <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Receita: ${revPerc.toFixed(0)}%
+                  </div>
+              </div>
+          </div>
+
+          <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Próximos 3 Vencimentos</p>
+          <div class="max-h-[300px] overflow-y-auto custom-scrollbar">
+              ${nextDaysHtml || '<p class="text-xs text-slate-500 italic text-center py-4">Nenhum investimento ativo no momento.</p>'}
+          </div>
+        `
     }
 
     content.innerHTML = html

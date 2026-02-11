@@ -692,7 +692,7 @@
         </div>
 
         <!-- 1. Dashboard Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
             <!-- Card 1: Lucro Líquido -->
             <div onclick="app.openCardDetails('profit')"
                 class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm relative overflow-hidden group">
@@ -717,7 +717,33 @@
                 <p class="text-[9px] text-slate-500">Sacado Mês Corrente</p>
             </div>
 
-            <!-- Card 3: Break-Even / Payback -->
+            <!-- Card 3: Próximo Vencimento (Focado em Investimentos) -->
+            <div onclick="app.openCardDetails('active_capital')"
+                class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm relative overflow-hidden group">
+                <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <i class="fas fa-coins text-4xl text-purple-500"></i>
+                </div>
+                
+                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Próximo Vencimento</p>
+                
+                <div class="flex items-baseline gap-2 mb-1">
+                    <h3 class="text-lg md:text-xl font-bold text-white" id="resNextMaturityDate">--/--</h3>
+                    <span class="text-xs font-bold text-purple-400" id="resNextMaturityValue">R$ 0,00</span>
+                </div>
+                
+                <div class="space-y-0.5">
+                    <p class="text-[9px] text-slate-500 flex justify-between">
+                        <span>Investido:</span>
+                        <span class="font-bold text-slate-300" id="resActivePrincipal">R$ 0,00</span>
+                    </p>
+                    <p class="text-[9px] text-slate-500 flex justify-between">
+                        <span>Lucro Pendente:</span>
+                        <span class="font-bold text-emerald-400" id="resPendingProfit">+R$ 0,00</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Card 4: Break-Even / Payback -->
             <div onclick="app.openCardDetails('breakeven')"
                 class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm bg-gradient-to-br from-slate-800 to-purple-900/20 border-purple-900/30 relative overflow-hidden group">
                 <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><i
@@ -727,7 +753,7 @@
                 <p class="text-[9px] text-purple-600/70" id="resPaybackDays">Calculando...</p>
             </div>
 
-            <!-- Card 4: Próximo Saque -->
+            <!-- Card 5: Próximo Saque -->
             <div onclick="app.openCardDetails('next_withdrawals')"
                 class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm bg-gradient-to-br from-slate-800 to-yellow-900/20 border-yellow-900/30 relative overflow-hidden group">
                 <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><i

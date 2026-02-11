@@ -225,6 +225,26 @@ export const Renderer = {
     if (resNextValue)
       resNextValue.innerText = `Est: ${Formatter.currency(results.nextWithdraw)}`
 
+    // Card: Active Capital / Investments Highlights
+    const resNextMaturityDate = document.getElementById('resNextMaturityDate')
+    if (resNextMaturityDate) {
+        resNextMaturityDate.innerText = results.nextMaturityDate !== '---' 
+            ? Formatter.dateDisplay(results.nextMaturityDate).substring(0, 5) 
+            : '--/--'
+    }
+    const resNextMaturityValue = document.getElementById('resNextMaturityValue')
+    if (resNextMaturityValue) {
+        resNextMaturityValue.innerText = Formatter.currency(results.nextMaturityValue || 0)
+    }
+    const resActivePrincipal = document.getElementById('resActivePrincipal')
+    if (resActivePrincipal) {
+        resActivePrincipal.innerText = Formatter.currency(results.activePrincipal || 0)
+    }
+    const resPendingProfit = document.getElementById('resPendingProfit')
+    if (resPendingProfit) {
+        resPendingProfit.innerText = `+${Formatter.currency(results.activePendingProfit || 0)}`
+    }
+
     const headerPersonal = document.getElementById('headerPersonalBalance')
     const headerRevenue = document.getElementById('headerRevenueBalance')
     if (headerPersonal)
