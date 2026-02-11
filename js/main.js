@@ -1692,7 +1692,7 @@ class App {
 
             <div>
               <label class="text-[10px] text-slate-400 font-bold uppercase mb-2 block">Tipo de Lançamento</label>
-              <div class="flex gap-2">
+              <div id="manualTypeSelector" class="flex gap-2" data-type="in">
                 <button onclick="this.parentElement.dataset.type='in'; this.nextElementSibling.classList.remove('bg-red-600','text-white'); this.classList.add('bg-emerald-600','text-white')"
                   class="flex-1 py-2 rounded-lg text-[10px] font-bold uppercase border border-slate-700 transition-all bg-emerald-600 text-white">
                   Entrada (+)
@@ -1702,7 +1702,6 @@ class App {
                   Saída (-)
                 </button>
               </div>
-              <div id="manualTypeContainer" data-type="in" class="hidden"></div>
             </div>
 
             <button onclick="app.addManualTransaction()"
@@ -1750,7 +1749,7 @@ class App {
     const desc = document.getElementById('manualDesc').value || 'Ajuste'
     const valInput = document.getElementById('manualValue').value
     const wallet = document.getElementById('manualWallet').value
-    const type = document.querySelector('[onclick*="dataset.type"]').parentElement.dataset.type // Get type from container
+    const type = document.getElementById('manualTypeSelector').dataset.type
 
     const amount = parseFloat(valInput)
     if (isNaN(amount) || amount <= 0) {
