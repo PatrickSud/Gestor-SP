@@ -190,6 +190,21 @@ export const Renderer = {
     if (resProjectedMonthEnd)
       resProjectedMonthEnd.innerText = `Final Mês: ${Formatter.currency(results.projectedEndOfMonthBalance)}`
 
+    // Card 3: Break-Even / Payback
+    const resBreakEvenDate = document.getElementById('resBreakEvenDate')
+    if (resBreakEvenDate) {
+      resBreakEvenDate.innerText = results.breakEvenDate !== 'N/A' 
+        ? Formatter.dateDisplay(results.breakEvenDate) 
+        : '---'
+    }
+
+    const resPaybackDays = document.getElementById('resPaybackDays')
+    if (resPaybackDays) {
+      resPaybackDays.innerText = results.paybackDays !== '---'
+        ? `${results.paybackDays} dias para o Retorno`
+        : 'Calculando...'
+    }
+
     const projectedBalanceDisplay = document.getElementById(
       'projectedBalanceDisplay'
     )

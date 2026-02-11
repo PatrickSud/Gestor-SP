@@ -717,12 +717,14 @@
                 <p class="text-[9px] text-slate-500">Sacado Mês Corrente</p>
             </div>
 
-            <!-- Card 3: Saldo Atual/Final -->
-            <div onclick="app.openCardDetails('balance_flow')"
-                class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm relative overflow-hidden group">
-                <p class="text-[10px] font-bold text-slate-400 uppercase">Saldo Atual/Final</p>
-                <h3 class="text-lg md:text-xl font-bold text-white mt-1" id="resCurrentBalance">R$ 0,00</h3>
-                <p class="text-[9px] text-slate-500" id="resProjectedMonthEnd">Final Mês: R$ 0,00</p>
+            <!-- Card 3: Break-Even / Payback -->
+            <div onclick="app.openCardDetails('breakeven')"
+                class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm bg-gradient-to-br from-slate-800 to-purple-900/20 border-purple-900/30 relative overflow-hidden group">
+                <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><i
+                        class="fas fa-hourglass-half text-4xl text-purple-500"></i></div>
+                <p class="text-[10px] font-bold text-purple-400 uppercase">Break-Even</p>
+                <h3 class="text-lg md:text-xl font-bold text-purple-300 mt-1" id="resBreakEvenDate">---</h3>
+                <p class="text-[9px] text-purple-600/70" id="resPaybackDays">Calculando...</p>
             </div>
 
             <!-- Card 4: Próximo Saque -->

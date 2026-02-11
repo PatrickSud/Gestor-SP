@@ -1283,6 +1283,57 @@ class App {
                 <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Previsão</p>
                 <div class="max-h-[150px] overflow-y-auto custom-scrollbar">${listHtml}</div>
             `
+    } else if (type === 'breakeven') {
+      const reached = results.breakEvenDate !== 'N/A'
+      const statusIcon = reached ? 'fa-check-circle text-emerald-400' : 'fa-hourglass-half text-purple-400'
+      const statusText = reached ? 'Meta Atingida' : 'Em Andamento'
+      
+      html = `
+                <h3 class="text-lg font-bold text-purple-400 mb-4"><i class="fas fa-chart-line mr-2"></i>Análise de Retorno</h3>
+                
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-4">
+                    <div class="flex items-center justify-between mb-3 border-b border-slate-700 pb-2">
+                        <span class="text-xs text-slate-400 uppercase font-bold tracking-wider">Status do Payback</span>
+                        <div class="flex items-center gap-1.5">
+                            <i class="fas ${statusIcon} text-xs"></i>
+                            <span class="text-[10px] font-black uppercase ${reached ? 'text-emerald-400' : 'text-purple-400'}">${statusText}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 gap-3">
+                        <div class="flex justify-between items-center bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
+                            <div>
+                                <span class="text-[10px] text-slate-500 block uppercase font-bold">Data Estimada</span>
+                                <span class="text-lg font-bold text-white">${reached ? Formatter.dateDisplay(results.breakEvenDate) : '---'}</span>
+                            </div>
+                            <i class="fas fa-calendar-alt text-slate-600 text-xl"></i>
+                        </div>
+                        
+                        <div class="flex justify-between items-center bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
+                            <div>
+                                <span class="text-[10px] text-slate-500 block uppercase font-bold">Tempo de Retorno</span>
+                                <span class="text-lg font-bold text-white">${results.paybackDays !== '---' ? `${results.paybackDays} dias` : 'Calculando...'}</span>
+                            </div>
+                            <i class="fas fa-clock text-slate-600 text-xl"></i>
+                        </div>
+
+                        <div class="flex justify-between items-center bg-slate-800/50 p-3 rounded-lg border border-slate-700/50">
+                            <div>
+                                <span class="text-[10px] text-slate-500 block uppercase font-bold">ROI Estimado</span>
+                                <span class="text-lg font-bold ${results.roi >= 0 ? 'text-emerald-400' : 'text-red-400'}">${results.roi.toFixed(1)}%</span>
+                            </div>
+                            <i class="fas fa-percentage text-slate-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-indigo-900/10 border border-indigo-500/20 p-3 rounded-lg mb-2">
+                    <p class="text-[10px] text-indigo-300 leading-relaxed italic">
+                        <i class="fas fa-info-circle mr-1"></i> 
+                        O **Break-Even** representa o momento em que o total sacado somado ao saldo atual iguala ou supera o capital total investido.
+                    </p>
+                </div>
+            `
     }
 
     content.innerHTML = html
