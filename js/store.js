@@ -362,7 +362,7 @@ class Store {
       currentProfileId: this.state.currentProfileId,
       profiles: this.state.profiles,
       exportDate: new Date().toISOString(),
-      version: '2.2.0'
+      version: '2.2.1'
     }
     return JSON.stringify(data, null, 2)
   }
@@ -385,7 +385,7 @@ class Store {
       currentProfileId: exportCurrentId,
       profiles: filteredProfiles,
       exportDate: new Date().toISOString(),
-      version: '2.2.0'
+      version: '2.2.1'
     }
     return JSON.stringify(data, null, 2)
   }

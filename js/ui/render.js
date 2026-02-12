@@ -850,6 +850,38 @@ export const Renderer = {
         const monthShort = dateObj
           .toLocaleDateString('pt-BR', { month: 'short' })
           .toUpperCase()
+        const isToday = dateStr === todayStr
+        
+        // Definição de Cores (Amarelo para Hoje, Azul para os demais)
+        const theme = isToday ? {
+            bg: 'bg-yellow-500/10',
+            border: 'border-yellow-500',
+            text: 'text-yellow-500',
+            pillBg: 'bg-yellow-500',
+            pillText: 'text-slate-900',
+            pillBorder: 'border-yellow-400'
+        } : {
+            bg: 'bg-slate-800/60', // Fundo sutil para dias normais
+            border: 'border-blue-500',
+            text: 'text-blue-400',
+            pillBg: 'bg-slate-700',
+            pillText: 'text-blue-400',
+            pillBorder: 'border-blue-500/30'
+        }
+
+        // HTML do Cabeçalho Padronizado
+        const headerHtml = `
+            <div class="flex items-center gap-3 p-3 rounded-r-xl border-l-4 mb-4 mt-6 shadow-sm backdrop-blur-sm transition-all ${theme.bg} ${theme.border}">
+                <div class="w-8 h-8 flex items-center justify-center rounded-full font-bold text-xs shadow-sm border-2 ${theme.pillBg} ${theme.pillText} ${theme.pillBorder}">
+                    ${dayNum}
+                </div>
+                <div class="text-xs font-bold uppercase tracking-wider ${theme.text}">
+                    ${weekday} • ${monthShort}
+                </div>
+            </div>
+        `
+
+        // Adiciona cabeçalho de mês se necessário (mantém lógica existente)
         const isMonthStart = dateStr.endsWith('-01')
         if (isMonthStart) {
           const monthLabel = dateObj
@@ -860,18 +892,9 @@ export const Renderer = {
             .toUpperCase()
           html += `<div class="timeline-month-header">${monthLabel}</div>`
         }
-        let headerClass = isMonthStart
-          ? 'timeline-day-header month-separator'
-          : 'timeline-day-header'
-        
-        // Highlight Today
-        if (dateStr === todayStr) {
-            headerClass += ' today text-yellow-400 border-l-4 border-yellow-400 pl-2 bg-yellow-400/5'
-        }
 
-        const dayLabel = `<span class="timeline-day-pill ${dateStr === todayStr ? 'bg-yellow-400 text-slate-900 border-yellow-500' : ''}">${dayNum}</span><span class="timeline-day-text">${weekday} • ${monthShort}</span>`
-
-        html += `<div class="${headerClass}">${dayLabel}</div>`
+        // Adiciona o cabeçalho gerado
+        html += headerHtml
 
         subItems.forEach((item, idx) => {
           const isWithdraw =
