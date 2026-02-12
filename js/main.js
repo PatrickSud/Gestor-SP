@@ -1107,7 +1107,7 @@ class App {
 
     // Auto-scroll to current day
     setTimeout(() => {
-      const todayEl = document.querySelector('.timeline-day-header.today')
+      const todayEl = document.getElementById('timeline-today')
       if (todayEl) {
         todayEl.scrollIntoView({ block: 'start', behavior: 'smooth' })
       }
