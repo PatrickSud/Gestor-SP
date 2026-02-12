@@ -655,7 +655,7 @@
                     <i class="fas fa-chevron-left mr-2"></i> Fechar Menu
                 </button>
                 <footer class="text-center text-[10px] text-slate-600 py-4 mt-2">
-                    <p>&copy; 2025 Gestor SP - v2.1.9</p>
+                    <p>&copy; 2025 Gestor SP - v2.2.0</p>
                 </footer>
             </div>
         </div>
@@ -707,17 +707,7 @@
                 </p>
             </div>
 
-            <!-- Card 2: Histórico de Saques -->
-            <div onclick="app.openCardDetails('history')"
-                class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm relative overflow-hidden group bg-gradient-to-br from-slate-800 to-blue-900/20 border-blue-900/30">
-                <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><i
-                        class="fas fa-history text-4xl text-blue-500"></i></div>
-                <p class="text-[10px] font-bold text-slate-400 uppercase">Histórico de Saques</p>
-                <h3 class="text-lg md:text-xl font-bold text-blue-400 mt-1" id="resMonthWithdraw">R$ 0,00</h3>
-                <p class="text-[9px] text-slate-500">Sacado Mês Corrente</p>
-            </div>
-
-            <!-- Card 3: Próximo Vencimento (Focado em Investimentos) -->
+            <!-- Card 2: Próximo Vencimento (Focado em Investimentos) -->
             <div onclick="app.openCardDetails('active_capital')"
                 class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm relative overflow-hidden group bg-gradient-to-br from-slate-800 to-purple-900/20 border-purple-900/30">
                 <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -743,9 +733,17 @@
                 </div>
             </div>
 
+            <!-- Card 3: Histórico de Saques -->
+            <div onclick="app.openCardDetails('history')"
+                class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm relative overflow-hidden group bg-gradient-to-br from-slate-800 to-blue-900/20 border-blue-900/30">
+                <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><i
+                        class="fas fa-history text-4xl text-blue-500"></i></div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Histórico de Saques</p>
+                <h3 class="text-lg md:text-xl font-bold text-blue-400 mt-1" id="resMonthWithdraw">R$ 0,00</h3>
+                <p class="text-[9px] text-slate-500">Sacado Mês Corrente</p>
+            </div>
 
-
-            <!-- Card 5: Próximo Saque -->
+            <!-- Card 4: Próximo Saque -->
             <div onclick="app.openCardDetails('next_withdrawals')"
                 class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm bg-gradient-to-br from-slate-800 to-yellow-900/20 border-yellow-900/30 relative overflow-hidden group">
                 <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><i

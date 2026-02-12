@@ -145,15 +145,17 @@ class Store {
   switchProfile(id) {
     if (!this.state.profiles[id]) return
 
-    // Save current profile data before switching
-    this.state.profiles[this.state.currentProfileId].data = {
-      inputs: { ...this.state.inputs },
-      portfolio: [...this.state.portfolio],
-      selectedWeeks: [...this.state.selectedWeeks],
-      goals: [...(this.state.goals || [])],
-      realizedWithdrawals: [...(this.state.realizedWithdrawals || [])],
-      manualAdjustments: [...(this.state.manualAdjustments || [])],
-      dismissedNotifications: [...(this.state.dismissedNotifications || [])]
+    // CORREÇÃO: Só salva o perfil atual se ele ainda existir (não foi deletado)
+    if (this.state.profiles[this.state.currentProfileId]) {
+      this.state.profiles[this.state.currentProfileId].data = {
+        inputs: { ...this.state.inputs },
+        portfolio: [...this.state.portfolio],
+        selectedWeeks: [...this.state.selectedWeeks],
+        goals: [...(this.state.goals || [])],
+        realizedWithdrawals: [...(this.state.realizedWithdrawals || [])],
+        manualAdjustments: [...(this.state.manualAdjustments || [])],
+        dismissedNotifications: [...(this.state.dismissedNotifications || [])]
+      }
     }
 
     this.state.currentProfileId = id
@@ -360,7 +362,7 @@ class Store {
       currentProfileId: this.state.currentProfileId,
       profiles: this.state.profiles,
       exportDate: new Date().toISOString(),
-      version: '2.1.9'
+      version: '2.2.0'
     }
     return JSON.stringify(data, null, 2)
   }
@@ -383,7 +385,7 @@ class Store {
       currentProfileId: exportCurrentId,
       profiles: filteredProfiles,
       exportDate: new Date().toISOString(),
-      version: '2.1.9'
+      version: '2.2.0'
     }
     return JSON.stringify(data, null, 2)
   }

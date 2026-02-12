@@ -380,11 +380,6 @@ export const Calculator = {
         .forEach(a => {
           const valCents = Formatter.toCents(a.amount || 0)
 
-          // If it's a positive adjustment/transaction, count as investment/aporte
-          if (valCents > 0) {
-            stepOutInvest += valCents
-          }
-
           if (a.wallet === 'personal') {
             currentPersonalWallet += valCents
             stepAdjustmentPersonal += valCents
