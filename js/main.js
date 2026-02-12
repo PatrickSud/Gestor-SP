@@ -1109,9 +1109,9 @@ class App {
     setTimeout(() => {
       const todayEl = document.getElementById('timeline-today')
       if (todayEl) {
-        todayEl.scrollIntoView({ block: 'start', behavior: 'smooth' })
+        todayEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }
-    }, 100)
+    }, 300)
   }
 
   openCardDetails(type) {
