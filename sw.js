@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gestor-sp-v2.2.2';
+const CACHE_NAME = 'gestor-sp-v2.2.1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -20,7 +20,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Abrindo cache v2.2.2');
+        console.log('Abrindo cache v2.2.1');
         return cache.addAll(ASSETS_TO_CACHE);
       })
   );

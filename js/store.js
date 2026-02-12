@@ -184,17 +184,9 @@ class Store {
   }
 
   deleteProfile(id) {
-    if (Object.keys(this.state.profiles).length <= 1) {
-      return false
-    }
+    if (Object.keys(this.state.profiles).length <= 1) return false
 
-    const profileName = this.state.profiles[id]?.name || id
     const wasCurrent = this.state.currentProfileId === id
-    
-    // Remove individual profile key if it exists (for compatibility/cleanup)
-    localStorage.removeItem(`gestor_sp_profile_${id}`)
-    localStorage.removeItem(`gestor_sp_profile_${profileName}`)
-
     delete this.state.profiles[id]
 
     if (wasCurrent) {
@@ -203,8 +195,7 @@ class Store {
       this.saveToStorage()
       this.notify()
     }
-    
-    return profileName
+    return true
   }
 
   // --- Persistence & Backup ---
@@ -371,7 +362,7 @@ class Store {
       currentProfileId: this.state.currentProfileId,
       profiles: this.state.profiles,
       exportDate: new Date().toISOString(),
-      version: '2.2.2'
+      version: '2.2.1'
     }
     return JSON.stringify(data, null, 2)
   }
@@ -394,7 +385,7 @@ class Store {
       currentProfileId: exportCurrentId,
       profiles: filteredProfiles,
       exportDate: new Date().toISOString(),
-      version: '2.2.2'
+      version: '2.2.1'
     }
     return JSON.stringify(data, null, 2)
   }

@@ -819,34 +819,25 @@ export const Renderer = {
         }
       }
 
-      if (d.adjustments && d.adjustments.length > 0) {
-        d.adjustments.forEach(adj => {
-          const valCents = Formatter.toCents(adj.amount || '0')
-          const isPositive = adj.amount > 0
-          // Definir cores/ícones
-          const type = 'manual'
-          const tag = isPositive ? 'CRÉDITO' : 'DÉBITO'
-          const dotColor = isPositive ? '#10b981' : '#f59e0b' // Verde ou Laranja
+      const adjPersonal = d.inAdjustmentPersonal || 0
+      const adjRevenue = d.inAdjustmentRevenue || 0
+      const totalAdj = adjPersonal + adjRevenue
 
-          subItems.push({
-            label: adj.description || 'Ajuste Manual',
-            sub: isPositive ? 'Entrada manual' : 'Saída manual',
-            val: Math.abs(valCents),
-            type: type,
-            dot: dotColor,
-            tag: tag,
-            forceSign: isPositive ? '+' : '-' // Forçar sinal visual
-          })
-
-          // Atualizar totais do rodapé
-          if (adj.wallet === 'personal') {
-            if (isPositive) creditoPessoal += valCents
-            else debitoPessoal += Math.abs(valCents)
-          } else {
-            if (isPositive) creditoReceita += valCents
-            else debitoReceita += Math.abs(valCents)
-          }
+      if (totalAdj !== 0) {
+        subItems.push({
+          label: 'Ajuste Manual de Saldo',
+          sub: totalAdj > 0 ? 'Correção positiva' : 'Correção negativa',
+          val: Math.abs(totalAdj),
+          type: 'manual',
+          dot: '#f59e0b',
+          tag: totalAdj > 0 ? 'CRÉDITO' : 'DÉBITO'
         })
+
+        if (adjPersonal > 0) creditoPessoal += adjPersonal
+        else debitoPessoal += Math.abs(adjPersonal)
+
+        if (adjRevenue > 0) creditoReceita += adjRevenue
+        else debitoReceita += Math.abs(adjRevenue)
       }
 
       // Always render if date is within view, regardless of subItems
@@ -880,7 +871,7 @@ export const Renderer = {
 
         // HTML do Cabeçalho Padronizado
         const headerHtml = `
-            <div ${isToday ? 'id="timeline-today"' : ''} class="flex items-center gap-3 p-3 rounded-r-xl border-l-4 mb-4 mt-6 shadow-sm backdrop-blur-sm transition-all ${theme.bg} ${theme.border}">
+            <div class="flex items-center gap-3 p-3 rounded-r-xl border-l-4 mb-4 mt-6 shadow-sm backdrop-blur-sm transition-all ${theme.bg} ${theme.border}">
                 <div class="w-8 h-8 flex items-center justify-center rounded-full font-bold text-xs shadow-sm border-2 ${theme.pillBg} ${theme.pillText} ${theme.pillBorder}">
                     ${dayNum}
                 </div>
@@ -910,7 +901,7 @@ export const Renderer = {
             item.type === 'withdraw-realized' ||
             item.type === 'withdraw-planned'
           const isManualDebit = item.type === 'manual' && item.tag === 'DÉBITO'
-          const sign = item.forceSign || (isWithdraw || isManualDebit ? '-' : '+')
+          const sign = isWithdraw || isManualDebit ? '-' : '+'
           const showValue = item.val > 0
 
           html += `

@@ -1107,11 +1107,11 @@ class App {
 
     // Auto-scroll to current day
     setTimeout(() => {
-      const todayEl = document.getElementById('timeline-today')
+      const todayEl = document.querySelector('.timeline-day-header.today')
       if (todayEl) {
-        todayEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        todayEl.scrollIntoView({ block: 'start', behavior: 'smooth' })
       }
-    }, 300)
+    }, 100)
   }
 
   openCardDetails(type) {

@@ -372,7 +372,7 @@ export const Calculator = {
       // 4. Manual Adjustments (Corrections/Transactions)
       let stepAdjustmentPersonal = 0
       let stepAdjustmentRevenue = 0
-      let stepOutInvest = stepPortfolioDeduction // Apenas deduções de portfólio, não soma ajustes manuais aqui
+      let stepOutInvest = stepPortfolioDeduction // Track portfolio deductions as well as manual "Aportes"
 
       const stepAdjustmentsList = []
       manualAdjustments
