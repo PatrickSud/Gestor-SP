@@ -597,6 +597,9 @@ class App {
     this.updateFutureToggleVisual(futureOn)
     this.updateBonusTierUI()
 
+    const simIndicator = document.getElementById('simActiveIndicator')
+    if (simIndicator) simIndicator.classList.toggle('hidden', !futureOn)
+
     const simContent = document.getElementById('content-simulation')
     if (simContent) {
       simContent.classList.toggle('collapsed-padding', !futureOn)
@@ -777,6 +780,9 @@ class App {
     if (simContent) {
       simContent.classList.toggle('collapsed-padding', !newVal)
     }
+
+    const simIndicator = document.getElementById('simActiveIndicator')
+    if (simIndicator) simIndicator.classList.toggle('hidden', !newVal)
 
     if (newVal) {
       const today = Formatter.getTodayDate()
