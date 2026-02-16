@@ -247,6 +247,10 @@ class App {
           }
         }
 
+        if (el.id === 'bonusTier3Toggle') {
+          this.updateBonusTierUI()
+        }
+
         this.runCalculation() // Force immediate calculation on change
       })
     })
@@ -737,6 +741,7 @@ class App {
     tabs.forEach(t => {
       const btn = document.getElementById('tab-' + t)
       const content = document.getElementById('content-' + t)
+      if (!btn || !content) return
       if (t === tabName) {
         btn.className =
           'flex-1 py-3 text-xs font-bold uppercase tracking-wider text-white bg-slate-700/50 border-b-2 border-blue-500 transition-colors'
