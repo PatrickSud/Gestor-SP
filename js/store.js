@@ -57,7 +57,6 @@ class Store {
         futureToggle: 'false',
         capitalInicial: '50',
         simStartDate: Formatter.getTodayDate(),
-        simWalletBase: 'personal',
         diasCiclo: '3',
         taxaDiaria: '1.2',
         repeticoesCiclo: '1',
@@ -65,10 +64,6 @@ class Store {
         minTier1: '50',
         limitTier1: '99',
         bonusTier2: '6',
-        minTier2: '100',
-        limitTier2: '299',
-        bonusTier3: '9',
-        bonusTier3Toggle: false,
         commitBaseName: '',
         aiAssistantToggle: false,
         geminiApiKey: '',
@@ -79,16 +74,16 @@ class Store {
         syncAiKeys: false,
         teamBonusToggle: false,
         teamCounts: {
-          S1: { A: 0, B: 0, C: 0 },
-          S2: { A: 0, B: 0, C: 0 },
-          M1: { A: 0, B: 0, C: 0 },
-          M2: { A: 0, B: 0, C: 0 },
-          M3: { A: 0, B: 0, C: 0 },
-          L1: { A: 0, B: 0, C: 0 },
-          L2: { A: 0, B: 0, C: 0 },
-          L3: { A: 0, B: 0, C: 0 },
-          L4: { A: 0, B: 0, C: 0 },
-          L5: { A: 0, B: 0, C: 0 }
+          'S1': { A: 0, B: 0, C: 0 },
+          'S2': { A: 0, B: 0, C: 0 },
+          'M1': { A: 0, B: 0, C: 0 },
+          'M2': { A: 0, B: 0, C: 0 },
+          'M3': { A: 0, B: 0, C: 0 },
+          'L1': { A: 0, B: 0, C: 0 },
+          'L2': { A: 0, B: 0, C: 0 },
+          'L3': { A: 0, B: 0, C: 0 },
+          'L4': { A: 0, B: 0, C: 0 },
+          'L5': { A: 0, B: 0, C: 0 }
         },
         promotionToggle: false,
         promotionLevel: 'assistente_estagio',
@@ -173,9 +168,7 @@ class Store {
     this.state.goals = [...(profile.goals || [])]
     this.state.realizedWithdrawals = [...(profile.realizedWithdrawals || [])]
     this.state.manualAdjustments = [...(profile.manualAdjustments || [])]
-    this.state.dismissedNotifications = [
-      ...(profile.dismissedNotifications || [])
-    ]
+    this.state.dismissedNotifications = [...(profile.dismissedNotifications || [])]
 
     this.saveToStorage()
     this.notify()
@@ -197,7 +190,7 @@ class Store {
 
     const profileName = this.state.profiles[id]?.name || id
     const wasCurrent = this.state.currentProfileId === id
-
+    
     // Remove individual profile key if it exists (for compatibility/cleanup)
     localStorage.removeItem(`gestor_sp_profile_${id}`)
     localStorage.removeItem(`gestor_sp_profile_${profileName}`)
@@ -210,7 +203,7 @@ class Store {
       this.saveToStorage()
       this.notify()
     }
-
+    
     return profileName
   }
 
@@ -253,7 +246,7 @@ class Store {
 
     // Create a deep copy for cloud persistence to avoid side effects
     const cloudProfiles = JSON.parse(JSON.stringify(this.state.profiles))
-
+    
     // Check if we should sync AI keys
     const shouldSync = this.state.inputs.syncAiKeys === true
 
@@ -289,7 +282,7 @@ class Store {
 
     const current = this.state.profiles[this.state.currentProfileId].data
     const defaults = this.getInitialData().inputs
-
+    
     this.state.inputs = { ...defaults, ...current.inputs }
 
     // If cloud data didn't have the keys, restore local ones
@@ -308,9 +301,7 @@ class Store {
     this.state.goals = [...(current.goals || [])]
     this.state.realizedWithdrawals = [...(current.realizedWithdrawals || [])]
     this.state.manualAdjustments = [...(current.manualAdjustments || [])]
-    this.state.dismissedNotifications = [
-      ...(current.dismissedNotifications || [])
-    ]
+    this.state.dismissedNotifications = [...(current.dismissedNotifications || [])]
 
     this.saveToStorage() // Update local storage too
     this.notify()
@@ -363,9 +354,7 @@ class Store {
       this.state.goals = [...(current.goals || [])]
       this.state.realizedWithdrawals = [...(current.realizedWithdrawals || [])]
       this.state.manualAdjustments = [...(current.manualAdjustments || [])]
-      this.state.dismissedNotifications = [
-        ...(current.dismissedNotifications || [])
-      ]
+      this.state.dismissedNotifications = [...(current.dismissedNotifications || [])]
 
       if (migrated) {
         this.saveToStorage() // Persist migration immediately
@@ -382,7 +371,7 @@ class Store {
       currentProfileId: this.state.currentProfileId,
       profiles: this.state.profiles,
       exportDate: new Date().toISOString(),
-      version: '2.2.4'
+      version: '2.2.2'
     }
     return JSON.stringify(data, null, 2)
   }
@@ -405,7 +394,7 @@ class Store {
       currentProfileId: exportCurrentId,
       profiles: filteredProfiles,
       exportDate: new Date().toISOString(),
-      version: '2.2.4'
+      version: '2.2.2'
     }
     return JSON.stringify(data, null, 2)
   }
@@ -430,9 +419,7 @@ class Store {
       this.state.goals = [...(current.goals || [])]
       this.state.realizedWithdrawals = [...(current.realizedWithdrawals || [])]
       this.state.manualAdjustments = [...(current.manualAdjustments || [])]
-      this.state.dismissedNotifications = [
-        ...(current.dismissedNotifications || [])
-      ]
+      this.state.dismissedNotifications = [...(current.dismissedNotifications || [])]
 
       this.saveToStorage()
       this.notify()

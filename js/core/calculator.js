@@ -7,26 +7,26 @@ import { Formatter } from '../utils/formatter.js'
 
 export const Calculator = {
   TEAM_RATES: {
-    S1: { A: 0.44, B: 0.24, C: 0.08 },
-    S2: { A: 1.36, B: 0.8, C: 0.24 },
-    M1: { A: 4.44, B: 2.64, C: 0.84 },
-    M2: { A: 13.86, B: 8.28, C: 2.7 },
-    M3: { A: 42.5, B: 25.5, C: 8.5 },
-    L1: { A: 84.8, B: 50.8, C: 16.8 },
-    L2: { A: 189.6, B: 113.6, C: 37.6 },
-    L3: { A: 372.0, B: 223.2, C: 74.4 },
-    L4: { A: 760.0, B: 456.0, C: 152.0 },
-    L5: { A: 1575.0, B: 945.0, C: 315.0 }
+    'S1': { A: 0.44, B: 0.24, C: 0.08 },
+    'S2': { A: 1.36, B: 0.80, C: 0.24 },
+    'M1': { A: 4.44, B: 2.64, C: 0.84 },
+    'M2': { A: 13.86, B: 8.28, C: 2.70 },
+    'M3': { A: 42.50, B: 25.50, C: 8.50 },
+    'L1': { A: 84.80, B: 50.80, C: 16.80 },
+    'L2': { A: 189.60, B: 113.60, C: 37.60 },
+    'L3': { A: 372.00, B: 223.20, C: 74.40 },
+    'L4': { A: 760.00, B: 456.00, C: 152.00 },
+    'L5': { A: 1575.00, B: 945.00, C: 315.00 }
   },
 
   PROMOTION_SALARIES: {
-    assistente_estagio: { label: 'Assistente de Estágio', value: 600 },
-    assistente_oficial: { label: 'Assistente Oficial', value: 1200 },
-    supervisor_junior: { label: 'Supervisor Júnior', value: 3600 },
-    chefe_marketing: { label: 'Chefe de Marketing', value: 9000 },
-    gerente_junior: { label: 'Gerente Júnior', value: 15000 },
-    diretor_marketing: { label: 'Diretor de Marketing', value: 38000 },
-    socio_assalariado: { label: 'Sócio Assalariado', value: 80000 }
+    'assistente_estagio': { label: 'Assistente de Estágio', value: 600 },
+    'assistente_oficial': { label: 'Assistente Oficial', value: 1200 },
+    'supervisor_junior': { label: 'Supervisor Júnior', value: 3600 },
+    'chefe_marketing': { label: 'Chefe de Marketing', value: 9000 },
+    'gerente_junior': { label: 'Gerente Júnior', value: 15000 },
+    'diretor_marketing': { label: 'Diretor de Marketing', value: 38000 },
+    'socio_assalariado': { label: 'Sócio Assalariado', value: 80000 }
   },
 
   WITHDRAWAL_TIERS: [
@@ -54,7 +54,6 @@ export const Calculator = {
       futureToggle,
       capitalInicial,
       simStartDate,
-      simWalletBase,
       diasCiclo,
       taxaDiaria,
       repeticoesCiclo,
@@ -86,19 +85,8 @@ export const Calculator = {
     const revenueStart = Formatter.toCents(revenueWalletStart || '0')
     const taskValCents = Formatter.toCents(taskDailyValue)
     const incomesList = monthlyIncomeToggle ? fixedIncomes || [] : []
-
-    // Lógica melhorada para capital inicial da simulação
-    let initialSimCapital = 0
-    if (futureToggle === 'true') {
-      const requestedCapitalCents = Formatter.toCents(capitalInicial)
-      const walletBase = simWalletBase || 'personal'
-
-      // Por enquanto, usa saldo inicial (será calculado corretamente mais tarde)
-      const availableBalance =
-        walletBase === 'personal' ? personalStart : revenueStart
-      initialSimCapital = Math.max(requestedCapitalCents, availableBalance)
-    }
-
+    const initialSimCapital =
+      futureToggle === 'true' ? Formatter.toCents(capitalInicial) : 0
     const withdrawTargetCents = Formatter.toCents(withdrawTarget)
 
     // Simulation Params
@@ -112,15 +100,6 @@ export const Calculator = {
     const mT1 = Formatter.toCents(inputs.minTier1)
     const lT1 = Formatter.toCents(inputs.limitTier1)
     const bT2 = (parseFloat(inputs.bonusTier2) || 0) / 100
-    const is3Levels =
-      inputs.bonusTier3Toggle === true || inputs.bonusTier3Toggle === 'true'
-    let mT2, lT2, bT3
-
-    if (is3Levels) {
-      mT2 = Formatter.toCents(inputs.minTier2 || 100)
-      lT2 = Formatter.toCents(inputs.limitTier2 || 299)
-      bT3 = (parseFloat(inputs.bonusTier3) || 0) / 100
-    }
 
     // Portfolio Mapping
     const portReleases = {}
@@ -165,26 +144,14 @@ export const Calculator = {
         const endStr = Formatter.addDays(p.date, p.days)
         const valCents = Formatter.toCents(p.val)
         const profitCents = Math.floor(valCents * (p.rate / 100) * p.days)
-        return {
-          ...p,
-          endStr,
-          valCents,
-          profitCents,
-          totalCents: valCents + profitCents
-        }
+        return { ...p, endStr, valCents, profitCents, totalCents: valCents + profitCents }
       })
       .filter(p => p.endStr >= todayStr)
       .sort((a, b) => a.endStr.localeCompare(b.endStr))
 
     if (activeInvestments.length > 0) {
-      activePrincipal = activeInvestments.reduce(
-        (acc, p) => acc + p.valCents,
-        0
-      )
-      activePendingProfit = activeInvestments.reduce(
-        (acc, p) => acc + p.profitCents,
-        0
-      )
+      activePrincipal = activeInvestments.reduce((acc, p) => acc + p.valCents, 0)
+      activePendingProfit = activeInvestments.reduce((acc, p) => acc + p.profitCents, 0)
       nextMaturityDate = activeInvestments[0].endStr
       nextMaturityValue = activeInvestments
         .filter(p => p.endStr === nextMaturityDate)
@@ -205,37 +172,6 @@ export const Calculator = {
     let dailyData = {}
     let graphData = []
     let simCapitalPure = 0
-
-    // Recalcula initialSimCapital com base no saldo real na data da simulação
-    if (futureToggle === 'true') {
-      const requestedCapitalCents = Formatter.toCents(capitalInicial)
-      const walletBase = simWalletBase || 'personal'
-
-      // Função para calcular saldo disponível em uma data específica
-      const calculateAvailableBalance = (targetDateStr, walletType) => {
-        let balance = walletType === 'personal' ? personalStart : revenueStart
-
-        // Se a data for anterior à data de início, retorna o saldo inicial
-        if (targetDateStr < startDateStr) {
-          return balance
-        }
-
-        // Para datas futuras, precisamos projetar o saldo
-        // Isso será calculado durante o loop principal, então por agora usamos o inicial
-        // TODO: Implementar cálculo projetado para datas futuras
-
-        return balance
-      }
-
-      // Calcula o saldo disponível na data informada
-      const availableBalance = calculateAvailableBalance(
-        simStartDate,
-        walletBase
-      )
-
-      // Usa o saldo disponível, ou adiciona fictício se o solicitado for maior
-      initialSimCapital = Math.max(requestedCapitalCents, availableBalance)
-    }
 
     // Ensure simulation covers history up to Today + viewDays
     const daysSinceStart = Math.max(
@@ -302,38 +238,13 @@ export const Calculator = {
         d === simStartIndex &&
         initialSimCapital > 0
       ) {
-        // Calcula o saldo disponível na data atual da simulação
-        const walletBase = simWalletBase || 'personal'
-        const currentBalance =
-          walletBase === 'personal'
-            ? currentPersonalWallet
-            : currentRevenueWallet
-        const requestedCapitalCents = Formatter.toCents(capitalInicial)
-
-        // Usa o saldo disponível, ou adiciona fictício se o solicitado for maior
-        const actualCapitalToAdd = Math.max(
-          requestedCapitalCents,
-          currentBalance
-        )
-
-        currentInv += actualCapitalToAdd
-        simCapitalPure += actualCapitalToAdd
-
-        // Se adicionou valor fictício, deduz da carteira correspondente
-        if (actualCapitalToAdd > currentBalance) {
-          const fictitiousAmount = actualCapitalToAdd - currentBalance
-          if (walletBase === 'personal') {
-            currentPersonalWallet -= fictitiousAmount
-          } else {
-            currentRevenueWallet -= fictitiousAmount
-          }
-        }
+        currentInv += initialSimCapital
+        simCapitalPure += initialSimCapital
       }
 
       // 0. Team Income (Mon-Sat, if toggle is active)
       const teamCounts = inputs.teamCounts || {}
-      const isTeamActive =
-        inputs.teamBonusToggle === 'true' || inputs.teamBonusToggle === true
+      const isTeamActive = inputs.teamBonusToggle === 'true' || inputs.teamBonusToggle === true
       const isSunday = Formatter.getDayOfWeek(currentDayStr) === 0
       let stepTeamBonus = 0
 
@@ -376,8 +287,7 @@ export const Calculator = {
 
       // 3. Promotion Salary
       let stepPromotionIncome = 0
-      const isPromotionActive =
-        inputs.promotionToggle === 'true' || inputs.promotionToggle === true
+      const isPromotionActive = inputs.promotionToggle === 'true' || inputs.promotionToggle === true
       if (d > 0 && isPromotionActive) {
         const dayOfMonth = parseInt(currentDayStr.split('-')[2])
         const promoDay = parseInt(inputs.promotionDay || 1)
@@ -420,30 +330,12 @@ export const Calculator = {
 
         if (currentDayStr === expectedEndDate) {
           let bonusPercCur = 0
+          if (currentInv >= mT1 && currentInv <= lT1) bonusPercCur = bT1
+          else if (currentInv > lT1) bonusPercCur = bT2
           let bonusPercPure = 0
-
-          if (is3Levels) {
-            // Lógica com 3 níveis
-            if (currentInv >= mT1 && currentInv <= lT1) bonusPercCur = bT1
-            else if (currentInv >= mT2 && currentInv <= lT2) bonusPercCur = bT2
-            else if (currentInv > lT2) bonusPercCur = bT3
-            else bonusPercCur = bT2 // Para valores entre lT1 e mT2
-
-            if (simCapitalPure >= mT1 && simCapitalPure <= lT1)
-              bonusPercPure = bT1
-            else if (simCapitalPure >= mT2 && simCapitalPure <= lT2)
-              bonusPercPure = bT2
-            else if (simCapitalPure > lT2) bonusPercPure = bT3
-            else bonusPercPure = bT2 // Para valores entre lT1 e mT2
-          } else {
-            // Lógica original com 2 níveis
-            if (currentInv >= mT1 && currentInv <= lT1) bonusPercCur = bT1
-            else if (currentInv > lT1) bonusPercCur = bT2
-
-            if (simCapitalPure >= mT1 && simCapitalPure <= lT1)
-              bonusPercPure = bT1
-            else if (simCapitalPure > lT1) bonusPercPure = bT2
-          }
+          if (simCapitalPure >= mT1 && simCapitalPure <= lT1)
+            bonusPercPure = bT1
+          else if (simCapitalPure > lT1) bonusPercPure = bT2
 
           const prevInv = currentInv
           const activeCapCur = Math.floor(prevInv * (1 + bonusPercCur))
@@ -519,16 +411,16 @@ export const Calculator = {
       let withdrawalNote = ''
       let isPartial = false
 
-      if (realizedOnDay) {
-        isRealized = true
-        amountToWithdrawCents = Formatter.toCents(realizedOnDay.amount)
-        targetWallet = realizedOnDay.wallet || 'revenue'
-      } else if (
-        isWithdrawalDay &&
-        d > 0 &&
-        withdrawStrategy !== 'none' &&
-        !(inputs.skippedWithdrawals || []).includes(currentDayStr)
-      ) {
+    if (realizedOnDay) {
+      isRealized = true
+      amountToWithdrawCents = Formatter.toCents(realizedOnDay.amount)
+      targetWallet = realizedOnDay.wallet || 'revenue'
+    } else if (
+      isWithdrawalDay &&
+      d > 0 &&
+      withdrawStrategy !== 'none' &&
+      !(inputs.skippedWithdrawals || []).includes(currentDayStr)
+    ) {
         const revTier =
           this.WITHDRAWAL_TIERS.filter(t => t <= currentRevenueWallet).pop() ||
           0
