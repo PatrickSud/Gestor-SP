@@ -717,6 +717,9 @@ export const Renderer = {
       const teamIncome = d.inIncomeTeam ?? 0
       const recurringIncome = d.inIncomeRecurring ?? 0
 
+      const adjPersonal = d.inAdjustmentPersonal || 0
+      const adjRevenue = d.inAdjustmentRevenue || 0
+
       if (teamIncome > 0) {
         subItems.push({
           label: 'Bônus de Equipe',
