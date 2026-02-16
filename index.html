@@ -264,6 +264,12 @@
                             <option value="28.00">S2 - R$ 28,00/dia</option>
                             <option value="90.00">M1 - R$ 90,00/dia</option>
                             <option value="279.00">M2 - R$ 279,00/dia</option>
+                            <option value="850.00">M3 - R$ 850,00/dia</option>
+                            <option value="1700.00">L1 - R$ 1700,00/dia</option>
+                            <option value="3800.00">L2 - R$ 3800,00/dia</option>
+                            <option value="7440.00">L3 - R$ 7440,00/dia</option>
+                            <option value="15200.00">L4 - R$ 15200,00/dia</option>
+                            <option value="31500.00">L5 - R$ 31500,00/dia</option>
                             <option value="custom">Personalizado</option>
                         </select>
                         <div id="customTaskInput" class="hidden relative mt-2">
@@ -655,7 +661,7 @@
                     <i class="fas fa-chevron-left mr-2"></i> Fechar Menu
                 </button>
                 <footer class="text-center text-[10px] text-slate-600 py-4 mt-2">
-                    <p>&copy; 2025 Gestor SP - v2.2.2</p>
+                    <p>&copy; 2025 Gestor SP - v2.2.3</p>
                 </footer>
             </div>
         </div>
@@ -865,12 +871,16 @@
                         <span>Retorno de Contrato</span>
                     </div>
                     <div class="flex items-center gap-1">
-                        <span class="inline-block w-2 h-2 rounded-full bg-violet-500"></span>
-                        <span>Reinvestimento / Fim de Ciclo</span>
+                        <span class="inline-block w-2 h-2 rounded-full bg-amber-600"></span>
+                        <span>Retorno do Investimento Simulado</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="inline-block w-2 h-2 rounded-full bg-orange-500"></span>
+                        <span>Saque Planejado (Carteira Pessoal)</span>
                     </div>
                     <div class="flex items-center gap-1">
                         <span class="inline-block w-2 h-2 rounded-full bg-yellow-400"></span>
-                        <span>Saque Planejado</span>
+                        <span>Saque Planejado (Carteira de Receita)</span>
                     </div>
                     <div class="flex items-center gap-1">
                         <span class="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
@@ -901,7 +911,7 @@
                     </button>
                 </div>
 
-                <div class="min-h-[300px]">
+                <div>
                     <!-- Tab Content: Resources -->
                     <div id="content-resources" class="">
                         <div onclick="app.togglePortfolioDetails()"
@@ -918,13 +928,10 @@
                                         contratos</div>
                                 </div>
                             </div>
-                            <div class="mt-2 text-right">
-                                <div class="text-[10px] text-emerald-400 font-bold" id="summaryInvProfit">Lucro Est:
-                                    R$ 0,00</div>
-                                <div class="text-[10px] text-purple-400 font-bold" id="summaryRealizedProfit">Realizado:
-                                    R$ 0,00</div>
-                                <div class="text-[10px] text-blue-400 font-mono" id="summaryInvTotal">Total: R$ 0,00
-                                </div>
+                            <div class="mt-2 flex items-center justify-between gap-3 text-[10px]">
+                                <div class="text-emerald-400 font-bold whitespace-nowrap" id="summaryInvProfit">Lucro Est: R$ 0,00</div>
+                                <div class="text-purple-400 font-bold whitespace-nowrap" id="summaryRealizedProfit">Realizado: R$ 0,00</div>
+                                <div class="text-blue-400 font-mono whitespace-nowrap" id="summaryInvTotal">Total: R$ 0,00</div>
                             </div>
                         </div>
 
@@ -1003,15 +1010,32 @@
                                         placeholder="Taxa %"
                                         class="custom-input w-full rounded-lg py-2 px-3 text-xs">
                                 </div>
-                                <div>
-                                    <label
-                                        class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Repetições</label>
-                                    <input type="number" id="repeticoesCiclo" value="1" min="1"
-                                        class="custom-input w-full rounded-lg py-2 px-3 text-xs">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label
+                                            class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Repetições</label>
+                                        <input type="number" id="repeticoesCiclo" value="1" min="1"
+                                            class="custom-input w-full rounded-lg py-2 px-3 text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Carteira do Aporte</label>
+                                        <select id="simSourceWallet" class="custom-input w-full rounded-lg py-2 px-3 text-xs">
+                                            <option value="revenue">Carteira de Receita</option>
+                                            <option value="personal">Carteira Pessoal</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div class="bg-slate-900/50 rounded-lg border border-slate-700 p-3 mt-3">
                                     <label class="text-[10px] font-bold text-slate-400 uppercase mb-2 block">Regras
                                         de Bônus (Juros Compostos)</label>
+                                    <div class="flex items-center justify-between mb-2">
+                                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                                            <input type="checkbox" id="bonusTier3Toggle" class="peer hidden">
+                                            <div class="w-8 h-4 bg-slate-700 rounded-full peer-checked:bg-amber-600 transition-colors"></div>
+                                            <div class="absolute opacity-0"></div>
+                                            <span class="text-[9px] text-slate-500 font-bold uppercase">Habilitar 3º Nível</span>
+                                        </label>
+                                    </div>
                                     <div class="grid grid-cols-2 gap-2 text-[10px]">
                                         <div class="p-2 bg-slate-800 rounded border border-slate-600">
                                             <div class="flex justify-between text-slate-400 mb-1">
@@ -1040,10 +1064,30 @@
                                                     <span>%</span>
                                                 </div>
                                             </div>
-                                            <div
-                                                class="text-center text-slate-500 mt-2 text-[9px] uppercase tracking-wide">
+                                            <div id="bonusTier2Range" class="text-center text-slate-500 mt-2 text-[9px] uppercase tracking-wide">
                                                 > Teto Nível 1
                                             </div>
+                                            <div id="bonusTier2RangeFields" class="hidden flex gap-1 items-center text-slate-500 mt-2">
+                                                <input type="number" id="minTier2" value="100"
+                                                    class="w-full bg-transparent text-center border-b border-slate-600 focus:border-yellow-500 outline-none text-slate-300">
+                                                <span>-</span>
+                                                <input type="number" id="limitTier2" value="199"
+                                                    class="w-full bg-transparent text-center border-b border-slate-600 focus:border-yellow-500 outline-none text-slate-300">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="bonusTier3Panel" class="hidden mt-2 p-2 bg-slate-800 rounded border border-slate-600 text-[10px]">
+                                        <div class="flex justify-between text-slate-400 mb-1">
+                                            <span>Nível 3</span>
+                                            <div class="flex items-center">
+                                                <input type="number" id="bonusTier3" value="9"
+                                                    class="w-6 bg-transparent text-right text-yellow-500 font-bold outline-none appearance-none p-0 border-none focus:ring-0">
+                                                <span>%</span>
+                                            </div>
+                                        </div>
+                                        <div class="text-center text-slate-500 mt-2 text-[9px] uppercase tracking-wide">
+                                            > Teto Nível 2
                                         </div>
                                     </div>
                                 </div>
@@ -1126,7 +1170,7 @@
             <div class="flex items-center gap-2">
                 <span>Desenvolvido por <strong class="text-slate-400">Patrick Godoy</strong></span>
                 <span class="hidden md:inline text-slate-700">•</span>
-                <span class="font-mono text-slate-600">v2.2.2</span>
+                <span class="font-mono text-slate-600">v2.2.3</span>
             </div>
 
             <a href="mailto:patricksud96@gmail.com?subject=Gestor%20SP%20-%20Bug%2FSugestão"
@@ -1405,6 +1449,13 @@
             </div>
         </div>
     </div>
+
+    <!-- Botão de orientação (mobile) -->
+    <button id="orientationToggleBtn"
+        class="fixed bottom-4 left-4 z-50 bg-slate-900/90 border border-slate-600 text-white text-[10px] font-bold px-3 py-2 rounded-full shadow-lg flex items-center gap-2 md:hidden hidden">
+        <i class="fas fa-expand-arrows-alt text-xs"></i>
+        <span>Modo horizontal</span>
+    </button>
 
     <!-- Onboarding Modal (Wizard) -->
     <div id="onboardingModal" class="fixed inset-0 z-[100] hidden modal-overlay flex items-center justify-center p-4 backdrop-blur-md">

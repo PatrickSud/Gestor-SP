@@ -7,26 +7,26 @@ import { Formatter } from '../utils/formatter.js'
 
 export const Calculator = {
   TEAM_RATES: {
-    'S1': { A: 0.44, B: 0.24, C: 0.08 },
-    'S2': { A: 1.36, B: 0.80, C: 0.24 },
-    'M1': { A: 4.44, B: 2.64, C: 0.84 },
-    'M2': { A: 13.86, B: 8.28, C: 2.70 },
-    'M3': { A: 42.50, B: 25.50, C: 8.50 },
-    'L1': { A: 84.80, B: 50.80, C: 16.80 },
-    'L2': { A: 189.60, B: 113.60, C: 37.60 },
-    'L3': { A: 372.00, B: 223.20, C: 74.40 },
-    'L4': { A: 760.00, B: 456.00, C: 152.00 },
-    'L5': { A: 1575.00, B: 945.00, C: 315.00 }
+    S1: { A: 0.44, B: 0.24, C: 0.08 },
+    S2: { A: 1.36, B: 0.8, C: 0.24 },
+    M1: { A: 4.44, B: 2.64, C: 0.84 },
+    M2: { A: 13.86, B: 8.28, C: 2.7 },
+    M3: { A: 42.5, B: 25.5, C: 8.5 },
+    L1: { A: 84.8, B: 50.8, C: 16.8 },
+    L2: { A: 189.6, B: 113.6, C: 37.6 },
+    L3: { A: 372.0, B: 223.2, C: 74.4 },
+    L4: { A: 760.0, B: 456.0, C: 152.0 },
+    L5: { A: 1575.0, B: 945.0, C: 315.0 }
   },
 
   PROMOTION_SALARIES: {
-    'assistente_estagio': { label: 'Assistente de Estágio', value: 600 },
-    'assistente_oficial': { label: 'Assistente Oficial', value: 1200 },
-    'supervisor_junior': { label: 'Supervisor Júnior', value: 3600 },
-    'chefe_marketing': { label: 'Chefe de Marketing', value: 9000 },
-    'gerente_junior': { label: 'Gerente Júnior', value: 15000 },
-    'diretor_marketing': { label: 'Diretor de Marketing', value: 38000 },
-    'socio_assalariado': { label: 'Sócio Assalariado', value: 80000 }
+    assistente_estagio: { label: 'Assistente de Estágio', value: 600 },
+    assistente_oficial: { label: 'Assistente Oficial', value: 1200 },
+    supervisor_junior: { label: 'Supervisor Júnior', value: 3600 },
+    chefe_marketing: { label: 'Chefe de Marketing', value: 9000 },
+    gerente_junior: { label: 'Gerente Júnior', value: 15000 },
+    diretor_marketing: { label: 'Diretor de Marketing', value: 38000 },
+    socio_assalariado: { label: 'Sócio Assalariado', value: 80000 }
   },
 
   WITHDRAWAL_TIERS: [
@@ -53,6 +53,7 @@ export const Calculator = {
       revenueWalletStart,
       futureToggle,
       capitalInicial,
+      simSourceWallet,
       simStartDate,
       diasCiclo,
       taxaDiaria,
@@ -101,6 +102,12 @@ export const Calculator = {
     const lT1 = Formatter.toCents(inputs.limitTier1)
     const bT2 = (parseFloat(inputs.bonusTier2) || 0) / 100
 
+    const isTier3Enabled =
+      inputs.bonusTier3Toggle === 'true' || inputs.bonusTier3Toggle === true
+    const mT2 = Formatter.toCents(inputs.minTier2)
+    const lT2 = Formatter.toCents(inputs.limitTier2)
+    const bT3 = (parseFloat(inputs.bonusTier3) || 0) / 100
+
     // Portfolio Mapping
     const portReleases = {}
     const portMaturingDetails = {}
@@ -144,14 +151,26 @@ export const Calculator = {
         const endStr = Formatter.addDays(p.date, p.days)
         const valCents = Formatter.toCents(p.val)
         const profitCents = Math.floor(valCents * (p.rate / 100) * p.days)
-        return { ...p, endStr, valCents, profitCents, totalCents: valCents + profitCents }
+        return {
+          ...p,
+          endStr,
+          valCents,
+          profitCents,
+          totalCents: valCents + profitCents
+        }
       })
       .filter(p => p.endStr >= todayStr)
       .sort((a, b) => a.endStr.localeCompare(b.endStr))
 
     if (activeInvestments.length > 0) {
-      activePrincipal = activeInvestments.reduce((acc, p) => acc + p.valCents, 0)
-      activePendingProfit = activeInvestments.reduce((acc, p) => acc + p.profitCents, 0)
+      activePrincipal = activeInvestments.reduce(
+        (acc, p) => acc + p.valCents,
+        0
+      )
+      activePendingProfit = activeInvestments.reduce(
+        (acc, p) => acc + p.profitCents,
+        0
+      )
       nextMaturityDate = activeInvestments[0].endStr
       nextMaturityValue = activeInvestments
         .filter(p => p.endStr === nextMaturityDate)
@@ -233,18 +252,10 @@ export const Calculator = {
           stepPortfolioDeduction += valCents
         })
 
-      if (
-        futureToggle === 'true' &&
-        d === simStartIndex &&
-        initialSimCapital > 0
-      ) {
-        currentInv += initialSimCapital
-        simCapitalPure += initialSimCapital
-      }
-
       // 0. Team Income (Mon-Sat, if toggle is active)
       const teamCounts = inputs.teamCounts || {}
-      const isTeamActive = inputs.teamBonusToggle === 'true' || inputs.teamBonusToggle === true
+      const isTeamActive =
+        inputs.teamBonusToggle === 'true' || inputs.teamBonusToggle === true
       const isSunday = Formatter.getDayOfWeek(currentDayStr) === 0
       let stepTeamBonus = 0
 
@@ -287,7 +298,8 @@ export const Calculator = {
 
       // 3. Promotion Salary
       let stepPromotionIncome = 0
-      const isPromotionActive = inputs.promotionToggle === 'true' || inputs.promotionToggle === true
+      const isPromotionActive =
+        inputs.promotionToggle === 'true' || inputs.promotionToggle === true
       if (d > 0 && isPromotionActive) {
         const dayOfMonth = parseInt(currentDayStr.split('-')[2])
         const promoDay = parseInt(inputs.promotionDay || 1)
@@ -331,11 +343,22 @@ export const Calculator = {
         if (currentDayStr === expectedEndDate) {
           let bonusPercCur = 0
           if (currentInv >= mT1 && currentInv <= lT1) bonusPercCur = bT1
-          else if (currentInv > lT1) bonusPercCur = bT2
+          else if (isTier3Enabled && currentInv >= mT2 && currentInv <= lT2)
+            bonusPercCur = bT2
+          else if (isTier3Enabled && currentInv > lT2) bonusPercCur = bT3
+          else if (!isTier3Enabled && currentInv > lT1) bonusPercCur = bT2
+
           let bonusPercPure = 0
           if (simCapitalPure >= mT1 && simCapitalPure <= lT1)
             bonusPercPure = bT1
-          else if (simCapitalPure > lT1) bonusPercPure = bT2
+          else if (
+            isTier3Enabled &&
+            simCapitalPure >= mT2 &&
+            simCapitalPure <= lT2
+          )
+            bonusPercPure = bT2
+          else if (isTier3Enabled && simCapitalPure > lT2) bonusPercPure = bT3
+          else if (!isTier3Enabled && simCapitalPure > lT1) bonusPercPure = bT2
 
           const prevInv = currentInv
           const activeCapCur = Math.floor(prevInv * (1 + bonusPercCur))
@@ -394,6 +417,37 @@ export const Calculator = {
           })
         })
 
+      if (
+        futureToggle === 'true' &&
+        d === simStartIndex &&
+        initialSimCapital > 0
+      ) {
+        const sourceWallet = simSourceWallet || 'revenue'
+        const available =
+          sourceWallet === 'personal'
+            ? currentPersonalWallet
+            : currentRevenueWallet
+
+        const debit = Math.min(available, initialSimCapital)
+        if (debit > 0) {
+          if (sourceWallet === 'personal') {
+            currentPersonalWallet -= debit
+          } else {
+            currentRevenueWallet -= debit
+          }
+          stepOutInvest += debit
+        }
+
+        const missing = initialSimCapital - debit
+        if (missing > 0) {
+          if (sourceWallet === 'personal') stepAdjustmentPersonal += missing
+          else stepAdjustmentRevenue += missing
+        }
+
+        currentInv += initialSimCapital
+        simCapitalPure += initialSimCapital
+      }
+
       let totalPool = currentInv + currentPersonalWallet + currentRevenueWallet
 
       // 5. Withdrawal Logic (Smart Decision)
@@ -411,16 +465,16 @@ export const Calculator = {
       let withdrawalNote = ''
       let isPartial = false
 
-    if (realizedOnDay) {
-      isRealized = true
-      amountToWithdrawCents = Formatter.toCents(realizedOnDay.amount)
-      targetWallet = realizedOnDay.wallet || 'revenue'
-    } else if (
-      isWithdrawalDay &&
-      d > 0 &&
-      withdrawStrategy !== 'none' &&
-      !(inputs.skippedWithdrawals || []).includes(currentDayStr)
-    ) {
+      if (realizedOnDay) {
+        isRealized = true
+        amountToWithdrawCents = Formatter.toCents(realizedOnDay.amount)
+        targetWallet = realizedOnDay.wallet || 'revenue'
+      } else if (
+        isWithdrawalDay &&
+        d > 0 &&
+        withdrawStrategy !== 'none' &&
+        !(inputs.skippedWithdrawals || []).includes(currentDayStr)
+      ) {
         const revTier =
           this.WITHDRAWAL_TIERS.filter(t => t <= currentRevenueWallet).pop() ||
           0
