@@ -823,9 +823,45 @@ export const Renderer = {
             }
           })
         } else {
-          // Probably a manual adjustment (positive outInvest in Calculator means money leaving?)
-          // Wait, manual adjustments were handled below.
-          // Actually, I should check how I implemented outInvest in Calculator.
+          const inputs = window.store?.state.inputs || {}
+          const futureOn =
+            inputs.futureToggle === 'true' || inputs.futureToggle === true
+          const simDate = inputs.simStartDate
+          const simWallet = inputs.simSourceWallet || 'revenue'
+
+          const isSimAporte = futureOn && simDate && simDate === dateStr
+
+          const walletLabel = isSimAporte
+            ? simWallet === 'personal'
+              ? 'Carteira Pessoal'
+              : 'Carteira de Receita'
+            : 'Carteira'
+
+          subItems.push({
+            label: 'Aplicação em Investimento',
+            sub: `Dedução: ${walletLabel}`,
+            val: d.outInvest,
+            type: 'withdraw-planned',
+            dot: isSimAporte
+              ? simWallet === 'personal'
+                ? '#6366f1'
+                : '#10b981'
+              : '#ef4444',
+            tag: 'APORTE'
+          })
+
+          if (isSimAporte) {
+            if (simWallet === 'personal') {
+              debitoPessoal += d.outInvest
+              investPersonal += d.outInvest
+            } else {
+              debitoReceita += d.outInvest
+              investReceita += d.outInvest
+            }
+          } else {
+            debitoReceita += d.outInvest
+            investReceita += d.outInvest
+          }
         }
       }
 

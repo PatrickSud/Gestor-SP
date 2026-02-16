@@ -593,6 +593,11 @@ class App {
     this.updateFutureToggleVisual(futureOn)
     this.updateBonusTierUI()
 
+    const simContent = document.getElementById('content-simulation')
+    if (simContent) {
+      simContent.classList.toggle('collapsed-padding', !futureOn)
+    }
+
     // Render Initial Pieces
     Renderer.renderFixedIncomes(inputs)
     Renderer.renderWithdrawButtons(val => {
@@ -742,6 +747,15 @@ class App {
         content.classList.add('hidden')
       }
     })
+
+    const portfolioDetails = document.getElementById('portfolioDetails')
+    const resourcesContent = document.getElementById('content-resources')
+    if (resourcesContent && portfolioDetails) {
+      resourcesContent.classList.toggle(
+        'collapsed-padding',
+        portfolioDetails.classList.contains('hidden')
+      )
+    }
   }
 
   toggleFuturePlanning() {
@@ -753,6 +767,11 @@ class App {
       .getElementById('futureConfigPanel')
       .classList.toggle('hidden', !newVal)
     this.updateFutureToggleVisual(newVal)
+
+    const simContent = document.getElementById('content-simulation')
+    if (simContent) {
+      simContent.classList.toggle('collapsed-padding', !newVal)
+    }
 
     if (newVal) {
       const today = Formatter.getTodayDate()
@@ -801,6 +820,11 @@ class App {
     const isHidden = content.classList.contains('hidden')
     content.classList.toggle('hidden')
     chevron.classList.toggle('-rotate-90', !isHidden)
+
+    const resourcesContent = document.getElementById('content-resources')
+    if (resourcesContent) {
+      resourcesContent.classList.toggle('collapsed-padding', !isHidden)
+    }
   }
 
   adjustInput(id, delta) {
