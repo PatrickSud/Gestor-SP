@@ -247,7 +247,7 @@ class App {
           }
         }
 
-        if (el.id === 'bonusTier3Toggle') {
+        if (el.id === 'bonusTier3Toggle' || el.id === 'limitTier1') {
           this.updateBonusTierUI()
         }
 
@@ -797,10 +797,25 @@ class App {
     const rangeText = document.getElementById('bonusTier2Range')
     const rangeFields = document.getElementById('bonusTier2RangeFields')
     const tier3Panel = document.getElementById('bonusTier3Panel')
+    const minTier2 = document.getElementById('minTier2')
+    const limitTier1 = document.getElementById('limitTier1')
 
     if (rangeText) rangeText.classList.toggle('hidden', enabled)
     if (rangeFields) rangeFields.classList.toggle('hidden', !enabled)
     if (tier3Panel) tier3Panel.classList.toggle('hidden', !enabled)
+
+    if (enabled && minTier2 && limitTier1) {
+      const newMin = (parseInt(limitTier1.value) || 0) + 1
+      minTier2.value = newMin
+      minTier2.readOnly = true
+      minTier2.classList.add('text-slate-500')
+      minTier2.classList.remove('text-slate-300')
+      store.updateInput('minTier2', String(newMin))
+    } else if (minTier2) {
+      minTier2.readOnly = false
+      minTier2.classList.remove('text-slate-500')
+      minTier2.classList.add('text-slate-300')
+    }
   }
 
   updateFutureToggleVisual(on) {
@@ -1672,6 +1687,12 @@ class App {
     store.setState({ portfolio })
     this.closeModal('commitModal')
     document.getElementById('commitBaseName').value = ''
+
+    // Desabilitar modo simulação automaticamente
+    if (store.state.inputs.futureToggle === 'true') {
+      this.toggleFuturePlanning()
+    }
+
     this.switchTab('resources')
     Renderer.toast('Simulação efetivada com sucesso!', 'success')
     this.runCalculation()
