@@ -264,6 +264,12 @@
                             <option value="28.00">S2 - R$ 28,00/dia</option>
                             <option value="90.00">M1 - R$ 90,00/dia</option>
                             <option value="279.00">M2 - R$ 279,00/dia</option>
+                            <option value="850.00">M3 - R$ 850,00/dia</option>
+                            <option value="1700.00">L1 - R$ 1.700,00/dia</option>
+                            <option value="3800.00">L2 - R$ 3.800,00/dia</option>
+                            <option value="7440.00">L3 - R$ 7.440,00/dia</option>
+                            <option value="15200.00">L4 - R$ 15.200,00/dia</option>
+                            <option value="31500.00">L5 - R$ 31.500,00/dia</option>
                             <option value="custom">Personalizado</option>
                         </select>
                         <div id="customTaskInput" class="hidden relative mt-2">
@@ -655,7 +661,7 @@
                     <i class="fas fa-chevron-left mr-2"></i> Fechar Menu
                 </button>
                 <footer class="text-center text-[10px] text-slate-600 py-4 mt-2">
-                    <p>&copy; 2025 Gestor SP - v2.2.2</p>
+                    <p>&copy; 2025 Gestor SP - v2.2.4</p>
                 </footer>
             </div>
         </div>
@@ -865,12 +871,16 @@
                         <span>Retorno de Contrato</span>
                     </div>
                     <div class="flex items-center gap-1">
-                        <span class="inline-block w-2 h-2 rounded-full bg-violet-500"></span>
-                        <span>Reinvestimento / Fim de Ciclo</span>
+                        <span class="inline-block w-2 h-2 rounded-full bg-amber-700"></span>
+                        <span>Reinvestimento Simulado</span>
                     </div>
                     <div class="flex items-center gap-1">
                         <span class="inline-block w-2 h-2 rounded-full bg-yellow-400"></span>
-                        <span>Saque Planejado</span>
+                        <span>Saque Planejado (Receita)</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="inline-block w-2 h-2 rounded-full bg-orange-500"></span>
+                        <span>Saque Planejado (Pessoal)</span>
                     </div>
                     <div class="flex items-center gap-1">
                         <span class="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
@@ -901,7 +911,7 @@
                     </button>
                 </div>
 
-                <div class="min-h-[300px]">
+                <div class="min-h-[80px] transition-all duration-300" id="investmentsWrapper">
                     <!-- Tab Content: Resources -->
                     <div id="content-resources" class="">
                         <div onclick="app.togglePortfolioDetails()"
@@ -918,12 +928,10 @@
                                         contratos</div>
                                 </div>
                             </div>
-                            <div class="mt-2 text-right">
-                                <div class="text-[10px] text-emerald-400 font-bold" id="summaryInvProfit">Lucro Est:
-                                    R$ 0,00</div>
-                                <div class="text-[10px] text-purple-400 font-bold" id="summaryRealizedProfit">Realizado:
-                                    R$ 0,00</div>
-                                <div class="text-[10px] text-blue-400 font-mono" id="summaryInvTotal">Total: R$ 0,00
+                            <div class="mt-2 grid grid-cols-3 items-center gap-2 text-[10px]">
+                                <div class="text-emerald-400 font-bold text-center" id="summaryInvProfit">Lucro Est: R$ 0,00</div>
+                                <div class="text-purple-400 font-bold text-center" id="summaryRealizedProfit">Realizado: R$ 0,00</div>
+                                <div class="text-blue-400 font-bold font-mono text-center" id="summaryInvTotal">Total Ativo: R$ 0,00
                                 </div>
                             </div>
                         </div>
@@ -1003,46 +1011,122 @@
                                         placeholder="Taxa %"
                                         class="custom-input w-full rounded-lg py-2 px-3 text-xs">
                                 </div>
-                                <div>
-                                    <label
-                                        class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Repetições</label>
-                                    <input type="number" id="repeticoesCiclo" value="1" min="1"
-                                        class="custom-input w-full rounded-lg py-2 px-3 text-xs">
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label
+                                            class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Repetições</label>
+                                        <input type="number" id="repeticoesCiclo" value="1" min="1"
+                                            class="custom-input w-full rounded-lg py-2 px-3 text-xs">
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Carteira Base</label>
+                                        <select id="simWalletBase" class="custom-input w-full rounded-lg py-2 px-3 text-xs">
+                                            <option value="personal">Carteira Pessoal</option>
+                                            <option value="revenue">Carteira de Receita</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div class="bg-slate-900/50 rounded-lg border border-slate-700 p-3 mt-3">
-                                    <label class="text-[10px] font-bold text-slate-400 uppercase mb-2 block">Regras
-                                        de Bônus (Juros Compostos)</label>
-                                    <div class="grid grid-cols-2 gap-2 text-[10px]">
-                                        <div class="p-2 bg-slate-800 rounded border border-slate-600">
-                                            <div class="flex justify-between text-slate-400 mb-1">
-                                                <span>Nível 1</span>
-                                                <div class="flex items-center">
-                                                    <input type="number" id="bonusTier1" value="3"
-                                                        class="w-6 bg-transparent text-right text-yellow-500 font-bold outline-none appearance-none p-0 border-none focus:ring-0">
-                                                    <span>%</span>
+                                    <div class="flex items-center justify-between mb-3">
+                                        <label class="text-[10px] font-bold text-slate-400 uppercase">Regras
+                                            de Bônus (Juros Compostos)</label>
+                                        <label class="flex items-center gap-2 cursor-pointer group">
+                                            <div class="relative">
+                                                <input type="checkbox" id="bonusTier3Toggle" class="peer hidden">
+                                                <div class="w-6 h-3 bg-slate-700 rounded-full peer-checked:bg-emerald-600 transition-colors"></div>
+                                                <div class="absolute left-0.5 top-0.5 w-2 h-2 bg-white rounded-full peer-checked:translate-x-3 transition-transform shadow-sm"></div>
+                                            </div>
+                                            <span class="text-[9px] text-slate-400 font-bold">3 Níveis</span>
+                                        </label>
+                                    </div>
+                                    <div id="bonusTiersContainer">
+                                        <div class="grid grid-cols-2 gap-2 text-[10px]" id="bonusTiers2Levels">
+                                            <div class="p-2 bg-slate-800 rounded border border-slate-600">
+                                                <div class="flex justify-between text-slate-400 mb-1">
+                                                    <span>Nível 1</span>
+                                                    <div class="flex items-center">
+                                                        <input type="number" id="bonusTier1" value="3"
+                                                            class="w-6 bg-transparent text-right text-yellow-500 font-bold outline-none appearance-none p-0 border-none focus:ring-0">
+                                                        <span>%</span>
+                                                    </div>
+                                                </div>
+                                                <div class="flex gap-1 items-center text-slate-500">
+                                                    <input type="number" id="minTier1" value="50"
+                                                        class="w-full bg-transparent text-center border-b border-slate-600 focus:border-yellow-500 outline-none text-slate-300">
+                                                    <span>-</span>
+                                                    <input type="number" id="limitTier1" value="99"
+                                                        class="w-full bg-transparent text-center border-b border-slate-600 focus:border-yellow-500 outline-none text-slate-300">
                                                 </div>
                                             </div>
-                                            <div class="flex gap-1 items-center text-slate-500">
-                                                <input type="number" id="minTier1" value="50"
-                                                    class="w-full bg-transparent text-center border-b border-slate-600 focus:border-yellow-500 outline-none text-slate-300">
-                                                <span>-</span>
-                                                <input type="number" id="limitTier1" value="99"
-                                                    class="w-full bg-transparent text-center border-b border-slate-600 focus:border-yellow-500 outline-none text-slate-300">
+
+                                            <div class="p-2 bg-slate-800 rounded border border-slate-600">
+                                                <div class="flex justify-between text-slate-400 mb-1">
+                                                    <span>Nível 2</span>
+                                                    <div class="flex items-center">
+                                                        <input type="number" id="bonusTier2" value="6"
+                                                            class="w-6 bg-transparent text-right text-yellow-500 font-bold outline-none appearance-none p-0 border-none focus:ring-0">
+                                                        <span>%</span>
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    class="text-center text-slate-500 mt-2 text-[9px] uppercase tracking-wide">
+                                                    > Teto Nível 1
+                                                </div>
                                             </div>
                                         </div>
-
-                                        <div class="p-2 bg-slate-800 rounded border border-slate-600">
-                                            <div class="flex justify-between text-slate-400 mb-1">
-                                                <span>Nível 2</span>
-                                                <div class="flex items-center">
-                                                    <input type="number" id="bonusTier2" value="6"
-                                                        class="w-6 bg-transparent text-right text-yellow-500 font-bold outline-none appearance-none p-0 border-none focus:ring-0">
-                                                    <span>%</span>
+                                        
+                                        <!-- 3 Níveis Layout (inicialmente oculto) -->
+                                        <div class="hidden space-y-2" id="bonusTiers3Levels">
+                                            <div class="p-2 bg-slate-800 rounded border border-slate-600">
+                                                <div class="flex justify-between text-slate-400 mb-1">
+                                                    <span>Nível 1</span>
+                                                    <div class="flex items-center">
+                                                        <input type="number" id="bonusTier1" value="3"
+                                                            class="w-6 bg-transparent text-right text-yellow-500 font-bold outline-none appearance-none p-0 border-none focus:ring-0">
+                                                        <span>%</span>
+                                                    </div>
+                                                </div>
+                                                <div class="flex gap-1 items-center text-slate-500">
+                                                    <input type="number" id="minTier1" value="50"
+                                                        class="w-full bg-transparent text-center border-b border-slate-600 focus:border-yellow-500 outline-none text-slate-300">
+                                                    <span>-</span>
+                                                    <input type="number" id="limitTier1" value="99"
+                                                        class="w-full bg-transparent text-center border-b border-slate-600 focus:border-yellow-500 outline-none text-slate-300">
                                                 </div>
                                             </div>
-                                            <div
-                                                class="text-center text-slate-500 mt-2 text-[9px] uppercase tracking-wide">
-                                                > Teto Nível 1
+
+                                            <div class="p-2 bg-slate-800 rounded border border-slate-600">
+                                                <div class="flex justify-between text-slate-400 mb-1">
+                                                    <span>Nível 2</span>
+                                                    <div class="flex items-center">
+                                                        <input type="number" id="bonusTier2" value="6"
+                                                            class="w-6 bg-transparent text-right text-yellow-500 font-bold outline-none appearance-none p-0 border-none focus:ring-0">
+                                                        <span>%</span>
+                                                    </div>
+                                                </div>
+                                                <div class="flex gap-1 items-center text-slate-500">
+                                                    <input type="number" id="minTier2" value="100"
+                                                        class="w-full bg-transparent text-center border-b border-slate-600 focus:border-yellow-500 outline-none text-slate-300">
+                                                    <span>-</span>
+                                                    <input type="number" id="limitTier2" value="299"
+                                                        class="w-full bg-transparent text-center border-b border-slate-600 focus:border-yellow-500 outline-none text-slate-300">
+                                                </div>
+                                            </div>
+
+                                            <div class="p-2 bg-slate-800 rounded border border-slate-600">
+                                                <div class="flex justify-between text-slate-400 mb-1">
+                                                    <span>Nível 3</span>
+                                                    <div class="flex items-center">
+                                                        <input type="number" id="bonusTier3" value="9"
+                                                            class="w-6 bg-transparent text-right text-yellow-500 font-bold outline-none appearance-none p-0 border-none focus:ring-0">
+                                                        <span>%</span>
+                                                    </div>
+                                                </div>
+                                                <div
+                                                    class="text-center text-slate-500 mt-2 text-[9px] uppercase tracking-wide">
+                                                    > Teto Nível 2
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1126,7 +1210,7 @@
             <div class="flex items-center gap-2">
                 <span>Desenvolvido por <strong class="text-slate-400">Patrick Godoy</strong></span>
                 <span class="hidden md:inline text-slate-700">•</span>
-                <span class="font-mono text-slate-600">v2.2.2</span>
+                <span class="font-mono text-slate-600">v2.2.4</span>
             </div>
 
             <a href="mailto:patricksud96@gmail.com?subject=Gestor%20SP%20-%20Bug%2FSugestão"
@@ -1137,9 +1221,17 @@
         </div>
     </footer>
 
+    <!-- Floating Orientation Button (Mobile Only) -->
+    <button id="orientationToggle" 
+        class="md:hidden fixed bottom-6 left-6 w-14 h-14 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg border-2 border-blue-700 transition-all duration-300 flex items-center justify-center z-40 group"
+        onclick="app.toggleOrientation()"
+        title="Alterar orientação da tela">
+        <i class="fas fa-mobile-alt text-lg group-hover:scale-110 transition-transform"></i>
+    </button>
+
     <!-- Modals (Day, Card, Profile, Commit) -->
     <!-- Day Detail Modal -->
-    <div id="dayModal" class="fixed inset-0 z-[60] hidden modal-overlay flex items-center justify-center p-4">
+    <div id="dayModal" class="fixed inset-0 z-[1100] hidden modal-overlay flex items-center justify-center p-4">
         <div
             class="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl max-w-md w-full p-6 transform transition-all scale-100 animate-fade-in relative max-h-[80vh] overflow-y-auto">
             <button onclick="app.closeModal('dayModal')"
@@ -1454,6 +1546,12 @@
             </div>
         </div>
     </div>
+
+    <button id="orientationToggle"
+        class="fixed bottom-4 left-4 z-[80] hidden px-4 py-2 rounded-full border border-slate-700 bg-slate-900/90 text-[10px] font-bold uppercase tracking-widest text-slate-100 shadow-xl shadow-black/40 flex items-center gap-2 backdrop-blur-md transition hover:bg-slate-800">
+        <i class="fas fa-mobile-screen text-xs"></i>
+        <span>Modo Paisagem</span>
+    </button>
 
     <!-- Main Entry Script -->
     <script type="module" src="js/main.js"></script>

@@ -85,7 +85,8 @@ class App {
       let viewDays = parseInt(store.state.inputs.viewPeriodSelect)
 
       if (store.state.inputs.viewPeriodSelect === 'custom') {
-        const start = store.state.inputs.customViewStartDate || Formatter.getTodayDate()
+        const start =
+          store.state.inputs.customViewStartDate || Formatter.getTodayDate()
         const end = store.state.inputs.customViewEndDate
         viewStartDate = start
         if (end) {
@@ -188,29 +189,34 @@ class App {
           }
         }
 
-        if (el.id === 'monthlyIncomeToggle' || el.id === 'promotionToggle' || el.id === 'teamBonusToggle' || el.id === 'aiAssistantToggle') {
+        if (
+          el.id === 'monthlyIncomeToggle' ||
+          el.id === 'promotionToggle' ||
+          el.id === 'teamBonusToggle' ||
+          el.id === 'aiAssistantToggle'
+        ) {
           const containerMap = {
-            'monthlyIncomeToggle': 'monthlyIncomeContainer',
-            'promotionToggle': 'promotionContainer',
-            'teamBonusToggle': 'teamBonusContainer',
-            'aiAssistantToggle': 'aiSettingsContainer'
+            monthlyIncomeToggle: 'monthlyIncomeContainer',
+            promotionToggle: 'promotionContainer',
+            teamBonusToggle: 'teamBonusContainer',
+            aiAssistantToggle: 'aiSettingsContainer'
           }
           const container = document.getElementById(containerMap[el.id])
           if (container) container.classList.toggle('hidden', !val)
 
           const btnMap = {
-            'monthlyIncomeToggle': 'toggleMonthlyIncome',
-            'promotionToggle': 'togglePromotion',
-            'teamBonusToggle': 'toggleTeamBonus',
-            'aiAssistantToggle': 'toggleAiSettings'
+            monthlyIncomeToggle: 'toggleMonthlyIncome',
+            promotionToggle: 'togglePromotion',
+            teamBonusToggle: 'toggleTeamBonus',
+            aiAssistantToggle: 'toggleAiSettings'
           }
           const btn = document.getElementById(btnMap[el.id])
           if (btn) {
-            btn.innerHTML = val 
+            btn.innerHTML = val
               ? `Recolher <i class="fas fa-chevron-down ml-1 transition-transform rotate-180"></i>`
               : `Expandir <i class="fas fa-chevron-down ml-1 transition-transform"></i>`
           }
-          
+
           if (el.id === 'aiAssistantToggle') {
             this.updateAiButtonVisibility()
           } else {
@@ -287,7 +293,8 @@ class App {
         store.updateInput('geminiApiKey', e.target.value)
         aiService.clearHistory()
         this.updateAiButtonVisibility()
-        if (e.target.value.trim()) Renderer.toast('API Key do Gemini salva', 'success')
+        if (e.target.value.trim())
+          Renderer.toast('API Key do Gemini salva', 'success')
       })
     }
 
@@ -296,7 +303,8 @@ class App {
         store.updateInput('openaiApiKey', e.target.value)
         aiService.clearHistory()
         this.updateAiButtonVisibility()
-        if (e.target.value.trim()) Renderer.toast('API Key da OpenAI salva', 'success')
+        if (e.target.value.trim())
+          Renderer.toast('API Key da OpenAI salva', 'success')
       })
     }
 
@@ -305,14 +313,18 @@ class App {
         store.updateInput('groqApiKey', e.target.value)
         aiService.clearHistory()
         this.updateAiButtonVisibility()
-        if (e.target.value.trim()) Renderer.toast('API Key da Groq salva', 'success')
+        if (e.target.value.trim())
+          Renderer.toast('API Key da Groq salva', 'success')
       })
     }
 
     if (groqModelInp) {
       groqModelInp.addEventListener('change', e => {
         store.updateInput('groqModel', e.target.value)
-        Renderer.toast(`Modelo alterado para ${e.target.options[e.target.selectedIndex].text}`, 'info')
+        Renderer.toast(
+          `Modelo alterado para ${e.target.options[e.target.selectedIndex].text}`,
+          'info'
+        )
       })
     }
 
@@ -320,15 +332,21 @@ class App {
       providerSelect.addEventListener('change', e => {
         const val = e.target.value
         store.updateInput('aiProvider', val)
-        
+
         // Limpar histórico ao trocar de provedor para evitar conflitos de formato
         aiService.clearHistory()
-        
+
         // Toggle visibility of config sections
-        document.getElementById('geminiConfig')?.classList.toggle('hidden', val !== 'gemini')
-        document.getElementById('openaiConfig')?.classList.toggle('hidden', val !== 'openai')
-        document.getElementById('groqConfig')?.classList.toggle('hidden', val !== 'groq')
-        
+        document
+          .getElementById('geminiConfig')
+          ?.classList.toggle('hidden', val !== 'gemini')
+        document
+          .getElementById('openaiConfig')
+          ?.classList.toggle('hidden', val !== 'openai')
+        document
+          .getElementById('groqConfig')
+          ?.classList.toggle('hidden', val !== 'groq')
+
         this.updateAiButtonVisibility()
       })
     }
@@ -358,11 +376,11 @@ class App {
         const chevron = document.getElementById('monthlyIncomeChevron')
         const isHidden = container.classList.contains('hidden')
         container.classList.toggle('hidden')
-        
+
         if (chevron) {
           chevron.classList.toggle('rotate-180', !isHidden)
         }
-        
+
         toggleMonthlyBtn.innerHTML = isHidden
           ? `Recolher <i class="fas fa-chevron-down ml-1 transition-transform rotate-180" id="monthlyIncomeChevron"></i>`
           : `Expandir <i class="fas fa-chevron-down ml-1 transition-transform" id="monthlyIncomeChevron"></i>`
@@ -376,7 +394,7 @@ class App {
         const container = document.getElementById('teamBonusContainer')
         const isHidden = container.classList.contains('hidden')
         container.classList.toggle('hidden')
-        
+
         toggleTeamBtn.innerHTML = isHidden
           ? `Recolher <i class="fas fa-chevron-down ml-1 transition-transform rotate-180"></i>`
           : `Expandir <i class="fas fa-chevron-down ml-1 transition-transform"></i>`
@@ -392,11 +410,11 @@ class App {
         const chevron = document.getElementById('promotionChevron')
         const isHidden = container.classList.contains('hidden')
         container.classList.toggle('hidden')
-        
+
         if (chevron) {
           chevron.classList.toggle('rotate-180', !isHidden)
         }
-        
+
         togglePromoBtn.innerHTML = isHidden
           ? `Recolher <i class="fas fa-chevron-down ml-1 transition-transform rotate-180" id="promotionChevron"></i>`
           : `Expandir <i class="fas fa-chevron-down ml-1 transition-transform" id="promotionChevron"></i>`
@@ -410,17 +428,16 @@ class App {
         const chevron = document.getElementById('aiChevron')
         const isHidden = container.classList.contains('hidden')
         container.classList.toggle('hidden')
-        
+
         if (chevron) {
           chevron.classList.toggle('rotate-180', !isHidden)
         }
-        
+
         toggleAiBtn.innerHTML = isHidden
           ? `Recolher <i class="fas fa-chevron-down ml-1 transition-transform rotate-180" id="aiChevron"></i>`
           : `Expandir <i class="fas fa-chevron-down ml-1 transition-transform" id="aiChevron"></i>`
       }
     }
-
 
     document.querySelectorAll('.team-input').forEach(el => {
       el.addEventListener('input', e => {
@@ -441,21 +458,66 @@ class App {
 
   // --- Orientation Mode ---
   setupOrientationMode() {
-    const mq = window.matchMedia('(orientation: landscape)')
-    const apply = () => {
-      const isLandscape =
-        typeof mq.matches === 'boolean'
-          ? mq.matches
-          : window.innerWidth > window.innerHeight
-      document.body.classList.toggle('landscape-mode', isLandscape)
+    // Only show orientation button on mobile devices
+    const isMobile = window.innerWidth < 768
+    const orientationBtn = document.getElementById('orientationToggle')
+
+    if (orientationBtn) {
+      orientationBtn.style.display = isMobile ? 'flex' : 'none'
     }
-    apply()
-    if (typeof mq.addEventListener === 'function') {
-      mq.addEventListener('change', apply)
-    } else if (typeof mq.addListener === 'function') {
-      mq.addListener(apply)
+
+    // Listen for resize to show/hide button appropriately
+    window.addEventListener('resize', () => {
+      const isMobileNow = window.innerWidth < 768
+      if (orientationBtn) {
+        orientationBtn.style.display = isMobileNow ? 'flex' : 'none'
+      }
+    })
+
+    // Bonus Tiers Toggle
+    const bonusTier3Toggle = document.getElementById('bonusTier3Toggle')
+    if (bonusTier3Toggle) {
+      bonusTier3Toggle.addEventListener('change', e => {
+        const is3Levels = e.target.checked
+        const container2Levels = document.getElementById('bonusTiers2Levels')
+        const container3Levels = document.getElementById('bonusTiers3Levels')
+
+        if (is3Levels) {
+          container2Levels.classList.add('hidden')
+          container3Levels.classList.remove('hidden')
+        } else {
+          container2Levels.classList.remove('hidden')
+          container3Levels.classList.add('hidden')
+        }
+
+        store.updateInput('bonusTier3Toggle', is3Levels)
+        this.runCalculation()
+      })
     }
-    window.addEventListener('resize', apply)
+  }
+
+  toggleOrientation() {
+    const body = document.body
+    const orientationBtn = document.getElementById('orientationToggle')
+    const isCurrentlyLandscape = body.classList.contains('landscape-mode')
+
+    // Toggle the landscape mode
+    body.classList.toggle('landscape-mode', !isCurrentlyLandscape)
+
+    // Update button appearance
+    if (orientationBtn) {
+      orientationBtn.classList.toggle('landscape', !isCurrentlyLandscape)
+      const icon = orientationBtn.querySelector('i')
+      if (icon) {
+        icon.className = !isCurrentlyLandscape
+          ? 'fas fa-expand text-lg'
+          : 'fas fa-mobile-alt text-lg'
+      }
+    }
+
+    // Show toast notification
+    const newOrientation = !isCurrentlyLandscape ? 'paisagem' : 'retrato'
+    Renderer.toast(`Orientação alterada para ${newOrientation}`, 'info')
   }
 
   // --- Push Notification Methods ---
@@ -542,9 +604,15 @@ class App {
 
     // Restore AI Provider visibility
     const provider = inputs.aiProvider || 'gemini'
-    document.getElementById('geminiConfig')?.classList.toggle('hidden', provider !== 'gemini')
-    document.getElementById('openaiConfig')?.classList.toggle('hidden', provider !== 'openai')
-    document.getElementById('groqConfig')?.classList.toggle('hidden', provider !== 'groq')
+    document
+      .getElementById('geminiConfig')
+      ?.classList.toggle('hidden', provider !== 'gemini')
+    document
+      .getElementById('openaiConfig')
+      ?.classList.toggle('hidden', provider !== 'openai')
+    document
+      .getElementById('groqConfig')
+      ?.classList.toggle('hidden', provider !== 'groq')
 
     // Restore Future Toggle Visuals
     const futureOn = inputs.futureToggle === 'true'
@@ -566,7 +634,9 @@ class App {
   }
 
   restoreTeamUI() {
-    const isTeamActive = store.state.inputs.teamBonusToggle === 'true' || store.state.inputs.teamBonusToggle === true
+    const isTeamActive =
+      store.state.inputs.teamBonusToggle === 'true' ||
+      store.state.inputs.teamBonusToggle === true
     const check = document.getElementById('teamBonusToggle')
     if (check) check.checked = isTeamActive
 
@@ -600,7 +670,9 @@ class App {
     })
     const display = document.getElementById('teamDailyIncomeDisplay')
     if (display) {
-      display.innerText = Formatter.currency(Formatter.toCents(totalDaily.toFixed(2)))
+      display.innerText = Formatter.currency(
+        Formatter.toCents(totalDaily.toFixed(2))
+      )
     }
   }
 
@@ -692,6 +764,14 @@ class App {
         btn.className =
           'flex-1 py-3 text-xs font-bold uppercase tracking-wider text-white bg-slate-700/50 border-b-2 border-blue-500 transition-colors'
         content.classList.remove('hidden')
+
+        // Preencher data atual ao ativar o simulador
+        if (t === 'simulation') {
+          const simStartDate = document.getElementById('simStartDate')
+          if (simStartDate && !simStartDate.value) {
+            simStartDate.value = Formatter.getTodayDate()
+          }
+        }
       } else {
         btn.className =
           'flex-1 py-3 text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-white border-b-2 border-transparent transition-colors'
@@ -731,9 +811,11 @@ class App {
   togglePortfolioDetails() {
     const content = document.getElementById('portfolioDetails')
     const chevron = document.getElementById('invChevron')
+    const wrapper = document.getElementById('investmentsWrapper')
     const isHidden = content.classList.contains('hidden')
     content.classList.toggle('hidden')
     chevron.classList.toggle('-rotate-90', !isHidden)
+    wrapper.classList.toggle('expanded', isHidden)
   }
 
   adjustInput(id, delta) {
@@ -1167,23 +1249,27 @@ class App {
       // Limit to last 8 for display
       const displayHistory = history.slice(0, 8)
 
-      const renderList = (isNet) => {
-          if (displayHistory.length === 0) return '<p class="text-xs text-slate-500 italic text-center">Nenhum saque realizado.</p>'
-          return displayHistory.map(w => {
-              // Always realized in this view now
-              const amount = isNet ? Math.floor(Formatter.toCents(w.amount) * 0.9) : Formatter.toCents(w.amount)
-              
-              const colorClass = 'text-blue-400'
-              // Action is always delete for realized withdrawals
-              const action = `app.deleteWithdrawal(${w.index})`
-              
-              const walletLabel = w.wallet === 'personal' ? 'Pessoal' : 'Receita'
-              const isAutomatic = w.isAutomatic === true
-              const typeBadge = isAutomatic 
-                ? '<span class="text-[8px] bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded border border-yellow-500/30 font-bold">AUTO</span>'
-                : '<span class="text-[8px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/30 font-bold">MANUAL</span>'
+      const renderList = isNet => {
+        if (displayHistory.length === 0)
+          return '<p class="text-xs text-slate-500 italic text-center">Nenhum saque realizado.</p>'
+        return displayHistory
+          .map(w => {
+            // Always realized in this view now
+            const amount = isNet
+              ? Math.floor(Formatter.toCents(w.amount) * 0.9)
+              : Formatter.toCents(w.amount)
 
-              return `
+            const colorClass = 'text-blue-400'
+            // Action is always delete for realized withdrawals
+            const action = `app.deleteWithdrawal(${w.index})`
+
+            const walletLabel = w.wallet === 'personal' ? 'Pessoal' : 'Receita'
+            const isAutomatic = w.isAutomatic === true
+            const typeBadge = isAutomatic
+              ? '<span class="text-[8px] bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded border border-yellow-500/30 font-bold">AUTO</span>'
+              : '<span class="text-[8px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/30 font-bold">MANUAL</span>'
+
+            return `
                 <div class="flex justify-between items-center text-xs bg-slate-900/50 p-2 rounded mb-1 group border border-slate-700/30 hover:border-slate-500 transition-colors">
                     <div>
                         <div class="flex items-center gap-2 mb-0.5">
@@ -1199,7 +1285,8 @@ class App {
                         </button>
                     </div>
                 </div>`
-          }).join('')
+          })
+          .join('')
       }
 
       this._historyGrossListHtml = renderList(false)
@@ -1285,9 +1372,11 @@ class App {
             `
     } else if (type === 'breakeven') {
       const reached = results.breakEvenDate !== 'N/A'
-      const statusIcon = reached ? 'fa-check-circle text-emerald-400' : 'fa-hourglass-half text-purple-400'
+      const statusIcon = reached
+        ? 'fa-check-circle text-emerald-400'
+        : 'fa-hourglass-half text-purple-400'
       const statusText = reached ? 'Meta Atingida' : 'Em Andamento'
-      
+
       html = `
                 <h3 class="text-lg font-bold text-purple-400 mb-4"><i class="fas fa-chart-line mr-2"></i>Análise de Retorno</h3>
                 
@@ -1335,36 +1424,55 @@ class App {
                 </div>
             `
     } else if (type === 'active_capital') {
-        const activeInvestments = (store.state.portfolio || [])
-            .map(p => {
-                const endStr = Formatter.addDays(p.date, p.days)
-                const valCents = Formatter.toCents(p.val)
-                const profitCents = Math.floor(valCents * (p.rate / 100) * p.days)
-                return { ...p, endStr, valCents, profitCents, totalCents: valCents + profitCents }
-            })
-            .filter(p => p.endStr >= Formatter.getTodayDate())
-            .sort((a, b) => a.endStr.localeCompare(b.endStr))
-
-        const totalActive = activeInvestments.reduce((acc, p) => acc + p.valCents, 0)
-        const personalActive = activeInvestments.filter(p => p.wallet === 'personal').reduce((acc, p) => acc + p.valCents, 0)
-        const revenueActive = activeInvestments.filter(p => p.wallet === 'revenue').reduce((acc, p) => acc + p.valCents, 0)
-        
-        const persPerc = totalActive > 0 ? (personalActive / totalActive) * 100 : 0
-        const revPerc = totalActive > 0 ? (revenueActive / totalActive) * 100 : 0
-
-        // Groups by day
-        const daysMap = {}
-        activeInvestments.forEach(p => {
-            if (!daysMap[p.endStr]) daysMap[p.endStr] = { total: 0, count: 0 }
-            daysMap[p.endStr].total += p.totalCents
-            daysMap[p.endStr].count++
+      const activeInvestments = (store.state.portfolio || [])
+        .map(p => {
+          const endStr = Formatter.addDays(p.date, p.days)
+          const valCents = Formatter.toCents(p.val)
+          const profitCents = Math.floor(valCents * (p.rate / 100) * p.days)
+          return {
+            ...p,
+            endStr,
+            valCents,
+            profitCents,
+            totalCents: valCents + profitCents
+          }
         })
-        const next3Days = Object.keys(daysMap).sort().slice(0, 3).map(d => ({
-            date: d,
-            ...daysMap[d]
+        .filter(p => p.endStr >= Formatter.getTodayDate())
+        .sort((a, b) => a.endStr.localeCompare(b.endStr))
+
+      const totalActive = activeInvestments.reduce(
+        (acc, p) => acc + p.valCents,
+        0
+      )
+      const personalActive = activeInvestments
+        .filter(p => p.wallet === 'personal')
+        .reduce((acc, p) => acc + p.valCents, 0)
+      const revenueActive = activeInvestments
+        .filter(p => p.wallet === 'revenue')
+        .reduce((acc, p) => acc + p.valCents, 0)
+
+      const persPerc =
+        totalActive > 0 ? (personalActive / totalActive) * 100 : 0
+      const revPerc = totalActive > 0 ? (revenueActive / totalActive) * 100 : 0
+
+      // Groups by day
+      const daysMap = {}
+      activeInvestments.forEach(p => {
+        if (!daysMap[p.endStr]) daysMap[p.endStr] = { total: 0, count: 0 }
+        daysMap[p.endStr].total += p.totalCents
+        daysMap[p.endStr].count++
+      })
+      const next3Days = Object.keys(daysMap)
+        .sort()
+        .slice(0, 3)
+        .map(d => ({
+          date: d,
+          ...daysMap[d]
         }))
 
-        let nextDaysHtml = next3Days.map(d => `
+      let nextDaysHtml = next3Days
+        .map(
+          d => `
             <div class="flex justify-between items-center bg-slate-900/40 p-3 rounded border border-slate-700/50 mb-2">
                 <div>
                     <span class="text-[10px] text-slate-500 block uppercase font-bold">Data de Retorno</span>
@@ -1375,9 +1483,11 @@ class App {
                     <span class="text-sm font-bold text-purple-400">${Formatter.currency(d.total)}</span>
                 </div>
             </div>
-        `).join('')
+        `
+        )
+        .join('')
 
-        html = `
+      html = `
           <h3 class="text-lg font-bold text-purple-400 mb-4"><i class="fas fa-coins mr-2"></i>Carteira de Investimentos</h3>
           
           <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-4">
@@ -1648,11 +1758,11 @@ class App {
         Renderer.toast('Backup restaurado com sucesso!', 'success')
         this.applyStoreToUI()
         this.runCalculation()
-        
+
         // Se o Onboarding estiver aberto, re-renderiza a etapa atual para mostrar os dados importados
         const modal = document.getElementById('onboardingModal')
         if (modal && !modal.classList.contains('hidden')) {
-           this.renderOnboardingStep()
+          this.renderOnboardingStep()
         }
       } else {
         Renderer.toast('Erro ao importar backup. Formato inválido.', 'error')
@@ -1742,7 +1852,7 @@ class App {
       // Refresh the card if it's open
       const card = document.getElementById('cardModal')
       if (card && !card.classList.contains('hidden')) {
-          this.openCardDetails('history')
+        this.openCardDetails('history')
       }
     }
   }
@@ -1762,8 +1872,12 @@ class App {
   }
 
   openBalanceAdjustmentModal() {
-    const todayPersonal = Formatter.fromCents(store.state.results.todayPersonalBalance || 0)
-    const todayRevenue = Formatter.fromCents(store.state.results.todayRevenueBalance || 0)
+    const todayPersonal = Formatter.fromCents(
+      store.state.results.todayPersonalBalance || 0
+    )
+    const todayRevenue = Formatter.fromCents(
+      store.state.results.todayRevenueBalance || 0
+    )
 
     const html = `
       <div class="space-y-6">
@@ -1952,23 +2066,31 @@ class App {
     Renderer.toast('Saque removido')
     this.runCalculation()
     // Refresh the view that called it
-    if (document.getElementById('dayDetailsModal') && !document.getElementById('dayDetailsModal').classList.contains('hidden')) {
-         if(date) this.openDayDetails(date)
+    if (
+      document.getElementById('dayDetailsModal') &&
+      !document.getElementById('dayDetailsModal').classList.contains('hidden')
+    ) {
+      if (date) this.openDayDetails(date)
     } else {
-         this.openCardDetails('history')
+      this.openCardDetails('history')
     }
   }
 
   skipPlannedWithdrawal(date) {
-      if (!confirm(`Deseja pular o saque planejado para ${Formatter.dateDisplay(date)}?`)) return
-      const skipped = [...(store.state.inputs.skippedWithdrawals || [])]
-      if (!skipped.includes(date)) {
-          skipped.push(date)
-          store.updateInput('skippedWithdrawals', skipped)
-          Renderer.toast('Saque planejado ignorado', 'success')
-          this.runCalculation()
-          this.openCardDetails('history') // Refresh history view
-      }
+    if (
+      !confirm(
+        `Deseja pular o saque planejado para ${Formatter.dateDisplay(date)}?`
+      )
+    )
+      return
+    const skipped = [...(store.state.inputs.skippedWithdrawals || [])]
+    if (!skipped.includes(date)) {
+      skipped.push(date)
+      store.updateInput('skippedWithdrawals', skipped)
+      Renderer.toast('Saque planejado ignorado', 'success')
+      this.runCalculation()
+      this.openCardDetails('history') // Refresh history view
+    }
   }
 
   // --- Utils ---
@@ -2079,7 +2201,8 @@ class App {
     if (!btn) return
 
     const { inputs } = store.state
-    const isToggleOn = inputs.aiAssistantToggle === true || inputs.aiAssistantToggle === 'true'
+    const isToggleOn =
+      inputs.aiAssistantToggle === true || inputs.aiAssistantToggle === 'true'
     const isConfigured = aiService.isConfigured()
 
     if (isToggleOn && isConfigured) {
@@ -2115,8 +2238,12 @@ class App {
 
   openAiChat() {
     if (!aiService.isConfigured()) {
-      const providerName = aiService.getProvider() === 'openai' ? 'ChatGPT' : 'Gemini'
-      Renderer.toast(`Configure sua API Key do ${providerName} nas configurações`, 'error')
+      const providerName =
+        aiService.getProvider() === 'openai' ? 'ChatGPT' : 'Gemini'
+      Renderer.toast(
+        `Configure sua API Key do ${providerName} nas configurações`,
+        'error'
+      )
       this.toggleSidebar()
       return
     }
@@ -2136,10 +2263,12 @@ class App {
     const originalContent = btn.innerHTML
     btn.disabled = true
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testando...'
-    
+
     try {
       // Teste rápido sem poluir o histórico principal
-      const response = await aiService.sendMessage('Responda apenas com a palavra OK se estiver me ouvindo.')
+      const response = await aiService.sendMessage(
+        'Responda apenas com a palavra OK se estiver me ouvindo.'
+      )
       if (response) {
         Renderer.toast('Conexão com a IA bem sucedida! ✅', 'success')
       } else {
@@ -2156,12 +2285,12 @@ class App {
 
   async sendAiMessage(event) {
     event?.preventDefault()
-    
+
     const input = document.getElementById('aiChatInput')
     const sendBtn = document.getElementById('aiSendBtn')
     const messagesContainer = document.getElementById('aiChatMessages')
     const message = input?.value?.trim()
-    
+
     if (!message) return
 
     // Clear input and disable button
@@ -2171,10 +2300,12 @@ class App {
 
     // Add user message to chat
     this.appendAiMessage(message, 'user')
-    
+
     // Add typing indicator
     const typingId = 'ai-typing-' + Date.now()
-    messagesContainer.insertAdjacentHTML('beforeend', `
+    messagesContainer.insertAdjacentHTML(
+      'beforeend',
+      `
       <div id="${typingId}" class="ai-message">
         <div class="flex items-start gap-3">
           <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex-shrink-0 flex items-center justify-center">
@@ -2187,22 +2318,22 @@ class App {
           </div>
         </div>
       </div>
-    `)
+    `
+    )
     messagesContainer.scrollTop = messagesContainer.scrollHeight
 
     try {
       const response = await aiService.sendMessage(message)
-      
+
       // Remove typing indicator
       document.getElementById(typingId)?.remove()
-      
+
       // Add AI response
       this.appendAiMessage(response, 'assistant')
-      
     } catch (error) {
       // Remove typing indicator
       document.getElementById(typingId)?.remove()
-      
+
       // Add error message
       this.appendAiMessage(`⚠️ ${error.message}`, 'error')
     }
@@ -2235,16 +2366,23 @@ class App {
     }
 
     if (isUser) {
-      container.insertAdjacentHTML('beforeend', `
+      container.insertAdjacentHTML(
+        'beforeend',
+        `
         <div class="ai-message flex justify-end">
           <div class="max-w-[80%] bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl rounded-tr-sm p-3 shadow-lg">
             <p class="text-sm text-white">${this.escapeHtml(content)}</p>
           </div>
         </div>
-      `)
+      `
+      )
     } else {
-      const bgClass = isError ? 'bg-red-900/30 border-red-700/50' : 'bg-slate-800 border-slate-700'
-      container.insertAdjacentHTML('beforeend', `
+      const bgClass = isError
+        ? 'bg-red-900/30 border-red-700/50'
+        : 'bg-slate-800 border-slate-700'
+      container.insertAdjacentHTML(
+        'beforeend',
+        `
         <div class="ai-message">
           <div class="flex items-start gap-3">
             <div class="w-8 h-8 bg-gradient-to-br ${isError ? 'from-red-500 to-orange-600' : 'from-purple-500 to-indigo-600'} rounded-full flex-shrink-0 flex items-center justify-center">
@@ -2255,7 +2393,8 @@ class App {
             </div>
           </div>
         </div>
-      `)
+      `
+      )
     }
 
     container.scrollTop = container.scrollHeight
@@ -2263,20 +2402,22 @@ class App {
 
   formatAiResponse(text) {
     // Basic markdown formatting
-    return text
-      // Escape HTML first
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      // Bold
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      // Italic
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      // Inline code
-      .replace(/`(.+?)`/g, '<code>$1</code>')
-      // Line breaks
-      .replace(/\n/g, '<br>')
-      // Lists (simple)
-      .replace(/^- (.+)/gm, '• $1')
+    return (
+      text
+        // Escape HTML first
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        // Bold
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        // Italic
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        // Inline code
+        .replace(/`(.+?)`/g, '<code>$1</code>')
+        // Line breaks
+        .replace(/\n/g, '<br>')
+        // Lists (simple)
+        .replace(/^- (.+)/gm, '• $1')
+    )
   }
 
   escapeHtml(text) {
@@ -2335,12 +2476,15 @@ class App {
     alertsList.innerHTML = ''
 
     if (total === 0) {
-      alertsList.innerHTML = '<p class="text-xs text-slate-500 text-center italic">Nenhum alerta pendente</p>'
+      alertsList.innerHTML =
+        '<p class="text-xs text-slate-500 text-center italic">Nenhum alerta pendente</p>'
       return
     }
 
     // Renderizar HTML dos cards dentro do #alertsList
-    alertsList.innerHTML = insights.map((n, idx) => Renderer.renderNotificationCard(n, idx)).join('')
+    alertsList.innerHTML = insights
+      .map((n, idx) => Renderer.renderNotificationCard(n, idx))
+      .join('')
   }
 
   async refreshInsights() {
@@ -2355,7 +2499,7 @@ class App {
     if (icon) {
       icon.classList.remove('spin-animation')
     }
-    
+
     Renderer.toast('Insights atualizados', 'success')
   }
 
@@ -2365,14 +2509,18 @@ class App {
         this.openCardDetails('next_withdrawals')
         break
       case 'Ir para Investimentos':
-        document.getElementById('investmentsSection')?.scrollIntoView({ behavior: 'smooth' })
+        document
+          .getElementById('investmentsSection')
+          ?.scrollIntoView({ behavior: 'smooth' })
         break
       case 'Abrir Simulador':
         const futureToggle = document.getElementById('futureToggle')
         if (futureToggle && !futureToggle.checked) {
           futureToggle.click()
         }
-        document.getElementById('futureSection')?.scrollIntoView({ behavior: 'smooth' })
+        document
+          .getElementById('futureSection')
+          ?.scrollIntoView({ behavior: 'smooth' })
         break
       default:
         // Open AI chat for more details
@@ -2402,7 +2550,7 @@ class App {
     if (marcoKey) {
       aiService.markMilestoneAchieved(marcoKey)
     }
-    
+
     // Animate out
     const card = element.closest('.insight-card')
     if (card) {
@@ -2428,7 +2576,10 @@ class App {
     this.closeModal('onboardingModal')
     this.applyStoreToUI()
     this.runCalculation()
-    Renderer.toast('Configuração ignorada. Você pode alterar tudo nas Configurações.', 'info')
+    Renderer.toast(
+      'Configuração ignorada. Você pode alterar tudo nas Configurações.',
+      'info'
+    )
   }
 
   renderOnboardingStep() {
@@ -2442,23 +2593,30 @@ class App {
     if (!body || !title || !progress) return
 
     const totalSteps = 8
-    
+
     // Progress Dots
-    progress.innerHTML = Array.from({ length: totalSteps }).map((_, i) => `
+    progress.innerHTML = Array.from({ length: totalSteps })
+      .map(
+        (_, i) => `
       <div class="w-2 h-2 rounded-full transition-all duration-300 ${i === this.onboardingStep ? 'bg-blue-500 w-6' : i < this.onboardingStep ? 'bg-emerald-500' : 'bg-slate-700'}"></div>
-    `).join('')
+    `
+      )
+      .join('')
 
     // Navigation Buttons Logic
     if (this.onboardingStep === 0) {
       backBtn.classList.remove('hidden')
-      backBtn.innerHTML = '<i class="fas fa-file-import mr-2"></i> Restaurar Backup'
-      backBtn.className = 'text-slate-400 hover:text-white text-xs font-bold flex items-center gap-2 transition-colors'
+      backBtn.innerHTML =
+        '<i class="fas fa-file-import mr-2"></i> Restaurar Backup'
+      backBtn.className =
+        'text-slate-400 hover:text-white text-xs font-bold flex items-center gap-2 transition-colors'
       backBtn.onclick = () => document.getElementById('importFile').click()
     } else {
       const isLastStep = this.onboardingStep === totalSteps - 1
       backBtn.classList.toggle('hidden', isLastStep)
       backBtn.innerHTML = '<i class="fas fa-chevron-left mr-2"></i> Voltar'
-      backBtn.className = 'px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold transition-all border border-slate-600'
+      backBtn.className =
+        'px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold transition-all border border-slate-600'
       backBtn.onclick = () => this.prevOnboardingStep()
     }
 
@@ -2550,14 +2708,18 @@ class App {
                   <span>Nível</span><span>Equipe A</span><span>Equipe B</span><span>Equipe C</span>
                 </div>
                 <div class="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar pr-2">
-                  ${Object.keys(state.teamCounts).map(level => `
+                  ${Object.keys(state.teamCounts)
+                    .map(
+                      level => `
                     <div class="grid grid-cols-4 gap-2 items-center">
                       <span class="text-[11px] font-bold text-slate-300">${level}</span>
                       <input type="number" min="0" id="onb_team_${level}_A" value="${state.teamCounts[level].A}" class="bg-slate-800 border border-slate-700 rounded-lg p-2 text-center text-xs text-white">
                       <input type="number" min="0" id="onb_team_${level}_B" value="${state.teamCounts[level].B}" class="bg-slate-800 border border-slate-700 rounded-lg p-2 text-center text-xs text-white">
                       <input type="number" min="0" id="onb_team_${level}_C" value="${state.teamCounts[level].C}" class="bg-slate-800 border border-slate-700 rounded-lg p-2 text-center text-xs text-white">
                     </div>
-                  `).join('')}
+                  `
+                    )
+                    .join('')}
                 </div>
              </div>
           </div>
@@ -2763,31 +2925,49 @@ class App {
     const state = { ...store.state.inputs }
 
     if (step === 0) {
-      state.personalWalletStart = document.getElementById('onb_personalWalletStart').value || '0'
-      state.revenueWalletStart = document.getElementById('onb_revenueWalletStart').value || '0'
+      state.personalWalletStart =
+        document.getElementById('onb_personalWalletStart').value || '0'
+      state.revenueWalletStart =
+        document.getElementById('onb_revenueWalletStart').value || '0'
     } else if (step === 1) {
       state.taskLevel = document.getElementById('onb_taskLevel').value
-      state.taskDailyValue = document.getElementById('onb_taskDailyValue').value || '0'
+      state.taskDailyValue =
+        document.getElementById('onb_taskDailyValue').value || '0'
     } else if (step === 2) {
-      state.teamBonusToggle = document.getElementById('onb_teamBonusToggle').checked
+      state.teamBonusToggle = document.getElementById(
+        'onb_teamBonusToggle'
+      ).checked
       const teamCounts = { ...state.teamCounts }
       Object.keys(teamCounts).forEach(level => {
-        teamCounts[level].A = parseInt(document.getElementById(`onb_team_${level}_A`).value) || 0
-        teamCounts[level].B = parseInt(document.getElementById(`onb_team_${level}_B`).value) || 0
-        teamCounts[level].C = parseInt(document.getElementById(`onb_team_${level}_C`).value) || 0
+        teamCounts[level].A =
+          parseInt(document.getElementById(`onb_team_${level}_A`).value) || 0
+        teamCounts[level].B =
+          parseInt(document.getElementById(`onb_team_${level}_B`).value) || 0
+        teamCounts[level].C =
+          parseInt(document.getElementById(`onb_team_${level}_C`).value) || 0
       })
       state.teamCounts = teamCounts
     } else if (step === 3) {
-      state.promotionToggle = document.getElementById('onb_promotionToggle').checked
+      state.promotionToggle = document.getElementById(
+        'onb_promotionToggle'
+      ).checked
       state.promotionLevel = document.getElementById('onb_promotionLevel').value
-      state.promotionDay = document.getElementById('onb_promotionDay').value || '1'
+      state.promotionDay =
+        document.getElementById('onb_promotionDay').value || '1'
     } else if (step === 4) {
-      state.monthlyIncomeToggle = document.getElementById('onb_monthlyIncomeToggle').checked
+      state.monthlyIncomeToggle = document.getElementById(
+        'onb_monthlyIncomeToggle'
+      ).checked
       // Fixed incomes are saved in internal state already via helper
     } else if (step === 5) {
-      state.withdrawStrategy = document.getElementById('onb_withdrawStrategy').value
-      state.withdrawTarget = document.getElementById('onb_withdrawTarget').value || '0'
-      state.withdrawalDaySelect = document.getElementById('onb_withdrawalDaySelect').value
+      state.withdrawStrategy = document.getElementById(
+        'onb_withdrawStrategy'
+      ).value
+      state.withdrawTarget =
+        document.getElementById('onb_withdrawTarget').value || '0'
+      state.withdrawalDaySelect = document.getElementById(
+        'onb_withdrawalDaySelect'
+      ).value
     }
 
     store.setState({ inputs: state })
@@ -2804,14 +2984,16 @@ class App {
 
   // --- Onboarding Helpers ---
   addOnbFixedIncome() {
-    const amount = parseFloat(document.getElementById('onb_addIncomeAmount').value)
+    const amount = parseFloat(
+      document.getElementById('onb_addIncomeAmount').value
+    )
     const day = parseInt(document.getElementById('onb_addIncomeDay').value)
     if (isNaN(amount) || isNaN(day)) return
 
     const incomes = [...(store.state.inputs.fixedIncomes || [])]
     incomes.push({ amount, day })
     store.updateInput('fixedIncomes', incomes)
-    
+
     document.getElementById('onb_addIncomeAmount').value = ''
     document.getElementById('onb_addIncomeDay').value = ''
     this.renderOnbFixedIncomeList()
@@ -2827,17 +3009,23 @@ class App {
     const container = document.getElementById('onb_fixedIncomeList')
     if (!container) return
     const incomes = store.state.inputs.fixedIncomes || []
-    container.innerHTML = incomes.map((it, i) => `
+    container.innerHTML = incomes
+      .map(
+        (it, i) => `
       <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-lg px-3 py-2">
         <span class="text-xs text-slate-300 font-bold">R$ ${it.amount.toFixed(2)} <span class="text-slate-500 ml-1">• Dia ${it.day}</span></span>
         <button onclick="app.removeOnbFixedIncome(${i})" class="text-red-500 hover:text-red-400 p-1"><i class="fas fa-trash-alt text-[10px]"></i></button>
       </div>
-    `).join('')
+    `
+      )
+      .join('')
   }
 
   setOnbWithdrawTarget(val, btn) {
     document.getElementById('onb_withdrawTarget').value = val
-    document.querySelectorAll('.onb-tier-btn').forEach(b => b.classList.remove('selected'))
+    document
+      .querySelectorAll('.onb-tier-btn')
+      .forEach(b => b.classList.remove('selected'))
     btn.classList.add('selected')
   }
 
@@ -2847,12 +3035,21 @@ class App {
     const date = document.getElementById('onb_newInvDate').value
     const days = parseInt(document.getElementById('onb_newInvDays').value)
     const rate = parseFloat(document.getElementById('onb_newInvRate').value)
-    
-    if (!name || isNaN(val) || !date || isNaN(days)) return Renderer.toast('Dados incompletos', 'error')
 
-    const newInv = { id: Date.now(), name, val, date, days, rate, wallet: 'none' }
+    if (!name || isNaN(val) || !date || isNaN(days))
+      return Renderer.toast('Dados incompletos', 'error')
+
+    const newInv = {
+      id: Date.now(),
+      name,
+      val,
+      date,
+      days,
+      rate,
+      wallet: 'none'
+    }
     store.setState({ portfolio: [...store.state.portfolio, newInv] })
-    
+
     // Reset inputs
     document.getElementById('onb_newInvName').value = ''
     document.getElementById('onb_newInvVal').value = ''
@@ -2870,7 +3067,9 @@ class App {
     const container = document.getElementById('onb_portfolioList')
     if (!container) return
     const portfolio = store.state.portfolio || []
-    container.innerHTML = portfolio.map(p => `
+    container.innerHTML = portfolio
+      .map(
+        p => `
       <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-xl px-4 py-3">
         <div>
           <span class="text-xs font-bold text-white block">${p.name}</span>
@@ -2878,10 +3077,11 @@ class App {
         </div>
         <button onclick="app.removeOnbInvestment(${p.id})" class="text-red-500 hover:text-red-400 p-2"><i class="fas fa-trash-alt"></i></button>
       </div>
-    `).join('')
+    `
+      )
+      .join('')
   }
 }
-
 
 // Start the app
 window.addEventListener('DOMContentLoaded', () => {

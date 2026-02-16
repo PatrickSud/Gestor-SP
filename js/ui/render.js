@@ -29,15 +29,17 @@ export const Renderer = {
     // Summaries
     summaryInvCount: () => document.getElementById('summaryInvCount'),
     summaryInvProfit: () => document.getElementById('summaryInvProfit'),
-    summaryRealizedProfit: () => document.getElementById('summaryRealizedProfit'),
+    summaryRealizedProfit: () =>
+      document.getElementById('summaryRealizedProfit'),
     summaryInvTotal: () => document.getElementById('summaryInvTotal'),
-    
+
     // Today's Closing
     todayBalanceDisplay: () => document.getElementById('todayBalanceDisplay'),
     todayChangesDisplay: () => document.getElementById('todayChangesDisplay'),
     todayInDisplay: () => document.getElementById('todayInDisplay'),
     todayOutDisplay: () => document.getElementById('todayOutDisplay'),
-    todayTransactionsList: () => document.getElementById('todayTransactionsList')
+    todayTransactionsList: () =>
+      document.getElementById('todayTransactionsList')
   },
 
   // --- Render Methods ---
@@ -65,14 +67,14 @@ export const Renderer = {
 
       if (aExpired && !bExpired) return 1
       if (!aExpired && bExpired) return -1
-      
+
       const aEnd = new Date(aEndStr)
       const bEnd = new Date(bEndStr)
-      
-       // For active: closest end date first
+
+      // For active: closest end date first
       if (!aExpired) return aEnd - bEnd
 
-       // For expired: most recent end date first (top of the expired list)
+      // For expired: most recent end date first (top of the expired list)
       return bEnd - aEnd
     })
 
@@ -84,7 +86,7 @@ export const Renderer = {
 
       const endDateStr = Formatter.addDays(p.date, p.days)
       const isExpired = endDateStr < todayStr
-      
+
       const retornoStr = Formatter.dateDisplay(endDateStr)
 
       const walletLabel =
@@ -94,8 +96,8 @@ export const Renderer = {
             ? ' • <span class="text-emerald-400">Rec.</span>'
             : ''
 
-      const containerClass = isExpired 
-        ? 'bg-slate-800/50 p-2.5 rounded-lg flex justify-between items-center text-xs border border-slate-700/30 hover:bg-slate-700/50 transition-colors group relative overflow-hidden opacity-60' 
+      const containerClass = isExpired
+        ? 'bg-slate-800/50 p-2.5 rounded-lg flex justify-between items-center text-xs border border-slate-700/30 hover:bg-slate-700/50 transition-colors group relative overflow-hidden opacity-60'
         : 'bg-slate-800 p-2.5 rounded-lg flex justify-between items-center text-xs border border-slate-700/50 hover:bg-slate-700 transition-colors group relative overflow-hidden'
 
       const nameClass = isExpired
@@ -135,41 +137,44 @@ export const Renderer = {
     let activeCount = 0
 
     portfolio.forEach(p => {
-        const valCents = Formatter.toCents(p.val)
-        const profitCents = Math.floor(valCents * (p.rate / 100) * p.days)
-        const endStr = Formatter.addDays(p.date, p.days)
-        const isExpired = endStr < todayStr
+      const valCents = Formatter.toCents(p.val)
+      const profitCents = Math.floor(valCents * (p.rate / 100) * p.days)
+      const endStr = Formatter.addDays(p.date, p.days)
+      const isExpired = endStr < todayStr
 
-        if (isExpired) {
-            realizedProfit += profitCents
-        } else {
-            activeVal += valCents
-            activeProfit += profitCents
-            activeCount++
-        }
+      if (isExpired) {
+        realizedProfit += profitCents
+      } else {
+        activeVal += valCents
+        activeProfit += profitCents
+        activeCount++
+      }
     })
 
     this.els.summaryInvCount().innerText = `${activeCount} ativos`
     this.els.summaryInvTotal().innerText = `Total Ativo: ${Formatter.currency(activeVal)}`
     this.els.summaryInvProfit().innerText = `Lucro Est: ${Formatter.currency(activeProfit)}`
-    
-    if(this.els.summaryRealizedProfit()) {
-        this.els.summaryRealizedProfit().innerText = `Realizado: ${Formatter.currency(realizedProfit)}`
+
+    if (this.els.summaryRealizedProfit()) {
+      this.els.summaryRealizedProfit().innerText = `Realizado: ${Formatter.currency(realizedProfit)}`
     }
   },
 
   renderResults(results) {
     // Card 1: Lucro Líquido
     this.els.resLucroLiquido().innerText = Formatter.currency(results.netProfit)
-    
+
     // Updates for requested detail view
     // Updates for requested detail view
     if (this.els.resCardIncome()) {
-        this.els.resCardIncome().innerText = `Renda: ${Formatter.currency(results.totalIncome || 0)}`
+      this.els.resCardIncome().innerText = `Renda: ${Formatter.currency(results.totalIncome || 0)}`
     }
     if (this.els.resCardInvestProfit()) {
-        const profit = results.totalInvestmentProfit !== undefined ? results.totalInvestmentProfit : 0
-        this.els.resCardInvestProfit().innerText = `Lucro: ${Formatter.currency(profit)}`
+      const profit =
+        results.totalInvestmentProfit !== undefined
+          ? results.totalInvestmentProfit
+          : 0
+      this.els.resCardInvestProfit().innerText = `Lucro: ${Formatter.currency(profit)}`
     }
 
     // Card 2: Histórico de Saques
@@ -193,16 +198,18 @@ export const Renderer = {
     // Card 3: Break-Even / Payback
     const resBreakEvenDate = document.getElementById('resBreakEvenDate')
     if (resBreakEvenDate) {
-      resBreakEvenDate.innerText = results.breakEvenDate !== 'N/A' 
-        ? Formatter.dateDisplay(results.breakEvenDate) 
-        : '---'
+      resBreakEvenDate.innerText =
+        results.breakEvenDate !== 'N/A'
+          ? Formatter.dateDisplay(results.breakEvenDate)
+          : '---'
     }
 
     const resPaybackDays = document.getElementById('resPaybackDays')
     if (resPaybackDays) {
-      resPaybackDays.innerText = results.paybackDays !== '---'
-        ? `${results.paybackDays} dias para o Retorno`
-        : 'Calculando...'
+      resPaybackDays.innerText =
+        results.paybackDays !== '---'
+          ? `${results.paybackDays} dias para o Retorno`
+          : 'Calculando...'
     }
 
     const projectedBalanceDisplay = document.getElementById(
@@ -228,21 +235,26 @@ export const Renderer = {
     // Card: Active Capital / Investments Highlights
     const resNextMaturityDate = document.getElementById('resNextMaturityDate')
     if (resNextMaturityDate) {
-        resNextMaturityDate.innerText = results.nextMaturityDate !== '---' 
-            ? Formatter.dateDisplay(results.nextMaturityDate).substring(0, 5) 
-            : '--/--'
+      resNextMaturityDate.innerText =
+        results.nextMaturityDate !== '---'
+          ? Formatter.dateDisplay(results.nextMaturityDate).substring(0, 5)
+          : '--/--'
     }
     const resNextMaturityValue = document.getElementById('resNextMaturityValue')
     if (resNextMaturityValue) {
-        resNextMaturityValue.innerText = Formatter.currency(results.nextMaturityValue || 0)
+      resNextMaturityValue.innerText = Formatter.currency(
+        results.nextMaturityValue || 0
+      )
     }
     const resActivePrincipal = document.getElementById('resActivePrincipal')
     if (resActivePrincipal) {
-        resActivePrincipal.innerText = Formatter.currency(results.activePrincipal || 0)
+      resActivePrincipal.innerText = Formatter.currency(
+        results.activePrincipal || 0
+      )
     }
     const resPendingProfit = document.getElementById('resPendingProfit')
     if (resPendingProfit) {
-        resPendingProfit.innerText = `+${Formatter.currency(results.activePendingProfit || 0)}`
+      resPendingProfit.innerText = `+${Formatter.currency(results.activePendingProfit || 0)}`
     }
 
     const headerPersonal = document.getElementById('headerPersonalBalance')
@@ -269,31 +281,35 @@ export const Renderer = {
   renderTodayClosing(dailyData) {
     const today = Formatter.getTodayDate()
     const data = dailyData[today]
-    
+
     const balanceEl = this.els.todayBalanceDisplay()
     const changesEl = this.els.todayChangesDisplay()
     const inEl = this.els.todayInDisplay()
     const outEl = this.els.todayOutDisplay()
 
     if (!balanceEl || !data) {
-        if(balanceEl) balanceEl.innerText = Formatter.currency(0)
-        if(inEl) inEl.innerText = '+R$ 0,00'
-        if(outEl) outEl.innerText = '-R$ 0,00'
-        if(changesEl) changesEl.innerText = '0 movimentações'
-        return
+      if (balanceEl) balanceEl.innerText = Formatter.currency(0)
+      if (inEl) inEl.innerText = '+R$ 0,00'
+      if (outEl) outEl.innerText = '-R$ 0,00'
+      if (changesEl) changesEl.innerText = '0 movimentações'
+      return
     }
 
     // Total Entradas = inIncome + inReturn + inAdjustmentPersonal (if > 0) + inAdjustmentRevenue (if > 0)
-    const totalIn = (data.inIncome || 0) + 
-                    (data.inReturn || 0) + 
-                    (data.inAdjustmentPersonal > 0 ? data.inAdjustmentPersonal : 0) + 
-                    (data.inAdjustmentRevenue > 0 ? data.inAdjustmentRevenue : 0)
+    const totalIn =
+      (data.inIncome || 0) +
+      (data.inReturn || 0) +
+      (data.inAdjustmentPersonal > 0 ? data.inAdjustmentPersonal : 0) +
+      (data.inAdjustmentRevenue > 0 ? data.inAdjustmentRevenue : 0)
 
     // Total Saídas = outWithdraw + outInvest + adjustments (if < 0)
-    const totalOut = (data.outWithdraw || 0) + 
-                     (data.outInvest || 0) + 
-                     (data.inAdjustmentPersonal < 0 ? Math.abs(data.inAdjustmentPersonal) : 0) + 
-                     (data.inAdjustmentRevenue < 0 ? Math.abs(data.inAdjustmentRevenue) : 0)
+    const totalOut =
+      (data.outWithdraw || 0) +
+      (data.outInvest || 0) +
+      (data.inAdjustmentPersonal < 0
+        ? Math.abs(data.inAdjustmentPersonal)
+        : 0) +
+      (data.inAdjustmentRevenue < 0 ? Math.abs(data.inAdjustmentRevenue) : 0)
 
     // Count operations
     let ops = 0
@@ -308,7 +324,7 @@ export const Renderer = {
     balanceEl.innerText = Formatter.currency(data.endBal)
     inEl.innerText = `+${Formatter.currency(totalIn)}`
     outEl.innerText = `-${Formatter.currency(totalOut)}`
-    
+
     // Removido contador de movimentações conforme solicitado
     changesEl.innerText = ''
 
@@ -320,12 +336,12 @@ export const Renderer = {
 
     // Helper to add specialized items
     const addItem = (icon, label, val, type) => {
-        const isPositive = type === 'in'
-        const colorClass = isPositive ? 'text-emerald-400' : 'text-red-400'
-        const iconColor = isPositive ? 'text-emerald-500' : 'text-red-500'
-        const sign = isPositive ? '+' : '-'
-        
-        transactionItems.push(`
+      const isPositive = type === 'in'
+      const colorClass = isPositive ? 'text-emerald-400' : 'text-red-400'
+      const iconColor = isPositive ? 'text-emerald-500' : 'text-red-500'
+      const sign = isPositive ? '+' : '-'
+
+      transactionItems.push(`
             <div class="flex justify-between items-center text-[10px] text-slate-300 bg-slate-900/40 p-2 rounded-lg border border-slate-700/30 hover:bg-slate-700/40 transition-colors">
                 <div class="flex items-center gap-2">
                     <i class="fas ${icon} ${iconColor} w-3 text-center"></i>
@@ -336,39 +352,57 @@ export const Renderer = {
         `)
     }
 
-    if (data.inIncomeTeam > 0) addItem('fa-users', 'Bônus de Equipe', data.inIncomeTeam, 'in')
-    if (data.inIncomeTask > 0) addItem('fa-check-circle', 'Renda de Tarefas', data.inIncomeTask, 'in')
-    if (data.inIncomeRecurring > 0) addItem('fa-calendar-check', 'Renda Fixa', data.inIncomeRecurring, 'in')
-    if (data.inIncomePromotion > 0) addItem('fa-award', 'Bônus de Promoção', data.inIncomePromotion, 'in')
-    
+    if (data.inIncomeTeam > 0)
+      addItem('fa-users', 'Bônus de Equipe', data.inIncomeTeam, 'in')
+    if (data.inIncomeTask > 0)
+      addItem('fa-check-circle', 'Renda de Tarefas', data.inIncomeTask, 'in')
+    if (data.inIncomeRecurring > 0)
+      addItem('fa-calendar-check', 'Renda Fixa', data.inIncomeRecurring, 'in')
+    if (data.inIncomePromotion > 0)
+      addItem('fa-award', 'Bônus de Promoção', data.inIncomePromotion, 'in')
+
     if (data.inReturn > 0) {
-        const names = (data.maturing || []).map(m => m.name).join(', ')
-        addItem('fa-undo', `Retorno de Contrato ${names ? '('+names+')' : ''}`, data.inReturn, 'in')
+      const names = (data.maturing || []).map(m => m.name).join(', ')
+      addItem(
+        'fa-undo',
+        `Retorno de Contrato ${names ? '(' + names + ')' : ''}`,
+        data.inReturn,
+        'in'
+      )
     }
 
-    if (data.outInvest > 0) addItem('fa-arrow-up-right-from-square', 'Novo Aporte', data.outInvest, 'out')
-    
+    if (data.outInvest > 0)
+      addItem(
+        'fa-arrow-up-right-from-square',
+        'Novo Aporte',
+        data.outInvest,
+        'out'
+      )
+
     if (data.outWithdraw > 0) {
-        const label = data.status === 'realized' ? 'Saque Realizado' : 'Saque Planejado'
-        addItem('fa-hand-holding-usd', label, data.outWithdraw, 'out')
+      const label =
+        data.status === 'realized' ? 'Saque Realizado' : 'Saque Planejado'
+      addItem('fa-hand-holding-usd', label, data.outWithdraw, 'out')
     }
 
     // Manual Adjustments List
     if (data.adjustments && data.adjustments.length > 0) {
-        data.adjustments.forEach(adj => {
-            const val = Math.abs(adj.amount || 0)
-            const isPositive = adj.amount > 0
-            const colorClass = isPositive ? 'text-emerald-400' : 'text-red-400'
-            const sign = isPositive ? '+' : '-'
-            const walletLabel = adj.wallet === 'personal' ? 'Pessoal' : 'Receita'
-            const desc = adj.description || `Ajuste (${walletLabel})`
-            
-            const deleteBtn = adj.id ? `
+      data.adjustments.forEach(adj => {
+        const val = Math.abs(adj.amount || 0)
+        const isPositive = adj.amount > 0
+        const colorClass = isPositive ? 'text-emerald-400' : 'text-red-400'
+        const sign = isPositive ? '+' : '-'
+        const walletLabel = adj.wallet === 'personal' ? 'Pessoal' : 'Receita'
+        const desc = adj.description || `Ajuste (${walletLabel})`
+
+        const deleteBtn = adj.id
+          ? `
                 <button onclick="app.deleteManualAdjustment(${adj.id})" class="text-slate-500 hover:text-red-400 p-1 ml-2 transition-colors">
                     <i class="fas fa-trash-alt text-[9px]"></i>
-                </button>` : '';
+                </button>`
+          : ''
 
-            transactionItems.push(`
+        transactionItems.push(`
                 <div class="flex justify-between items-center text-[10px] text-slate-300 bg-slate-900/40 p-2 rounded-lg border border-slate-700/30 hover:bg-slate-700/40 transition-colors">
                     <div class="flex items-center gap-2">
                         <i class="fas fa-pen text-orange-400 w-3 text-center"></i>
@@ -380,13 +414,14 @@ export const Renderer = {
                     </div>
                 </div>
             `)
-        })
+      })
     }
 
     if (transactionItems.length > 0) {
-        listEl.innerHTML = transactionItems.join('')
+      listEl.innerHTML = transactionItems.join('')
     } else {
-        listEl.innerHTML = '<p class="text-[10px] text-slate-500 italic text-center py-2">Nenhuma movimentação registrada hoje.</p>'
+      listEl.innerHTML =
+        '<p class="text-[10px] text-slate-500 italic text-center py-2">Nenhuma movimentação registrada hoje.</p>'
     }
   },
 
@@ -484,7 +519,9 @@ export const Renderer = {
     const limitDateStr = Formatter.addDays(startDateStr, viewDays)
     const includePast = startDateStr.endsWith('-01') && viewDays >= 28
 
-    const isTeamActive = window.store?.state.inputs.teamBonusToggle === 'true' || window.store?.state.inputs.teamBonusToggle === true
+    const isTeamActive =
+      window.store?.state.inputs.teamBonusToggle === 'true' ||
+      window.store?.state.inputs.teamBonusToggle === true
     const thTeam = document.getElementById('thTeamBonus')
     if (thTeam) {
       thTeam.classList.toggle('hidden', !isTeamActive)
@@ -493,16 +530,19 @@ export const Renderer = {
     Object.keys(dailyData)
       .sort()
       .forEach(dateStr => {
-        if ((!includePast && dateStr < startDateStr) || dateStr > limitDateStr) return
+        if ((!includePast && dateStr < startDateStr) || dateStr > limitDateStr)
+          return
         const d = dailyData[dateStr]
         const isSignificant =
           d.status !== 'none' || d.inReturn > 0 || dateStr === limitDateStr
 
         if (isSignificant) {
-          const teamCol = isTeamActive 
+          const teamCol = isTeamActive
             ? `<td class="p-2 text-right text-cyan-400 font-bold col-money">${d.inIncomeTeam > 0 ? '+' + Formatter.currency(d.inIncomeTeam) : '-'}</td>`
             : ''
-          const rendaVal = isTeamActive ? (d.inIncome - (d.inIncomeTeam || 0)) : d.inIncome
+          const rendaVal = isTeamActive
+            ? d.inIncome - (d.inIncomeTeam || 0)
+            : d.inIncome
 
           html += `
                     <tr class="hover:bg-slate-700/50 border-b border-slate-700/50 transition-colors cursor-pointer" onclick="app.openDayDetails('${dateStr}')">
@@ -589,7 +629,9 @@ export const Renderer = {
           }
         }
         if (isCycle)
-          markers.push('<div class="w-1.5 h-1.5 rounded-full bg-white"></div>')
+          markers.push(
+            '<div class="w-1.5 h-1.5 rounded-full bg-amber-700"></div>'
+          )
 
         const cell = document.createElement('div')
         cell.className = classes
@@ -629,17 +671,22 @@ export const Renderer = {
 
     // Filter dates to view range
     const visibleDates = sortedDates.filter(d => d <= limitDateStr)
-    
+
     // Calculate initial balances relative to the VIEW start date, not necessarily Data Inicio
     // If startDateStr == Data Inicio, it uses initial inputs.
     // If startDateStr > Data Inicio (e.g. Today), it uses the calculated startBal of that day.
-    
+
     const startData = dailyData[startDateStr] || dailyData[sortedDates[0]]
-    const isStartOfManagement = (dailyData[sortedDates[0]] ? sortedDates[0] : null) === startDateStr
-    
+    const isStartOfManagement =
+      (dailyData[sortedDates[0]] ? sortedDates[0] : null) === startDateStr
+
     // We only show "Initial Setup" values if we are at the very beginning of the management history
-    const initialPersonal = isStartOfManagement ? Formatter.toCents(window.store?.state.inputs.personalWalletStart || 0) : 0
-    const initialRevenue = isStartOfManagement ? Formatter.toCents(window.store?.state.inputs.revenueWalletStart || 0) : 0
+    const initialPersonal = isStartOfManagement
+      ? Formatter.toCents(window.store?.state.inputs.personalWalletStart || 0)
+      : 0
+    const initialRevenue = isStartOfManagement
+      ? Formatter.toCents(window.store?.state.inputs.revenueWalletStart || 0)
+      : 0
 
     visibleDates.forEach((dateStr, index) => {
       const d = dailyData[dateStr]
@@ -649,20 +696,22 @@ export const Renderer = {
         // Show opening balance for the view period
         subItems.push({
           label: isStartOfManagement ? 'Saldo de Abertura' : 'Saldo do Dia',
-          sub: isStartOfManagement ? 'Configuração inicial da gestão' : 'Saldo acumulado anterior',
+          sub: isStartOfManagement
+            ? 'Configuração inicial da gestão'
+            : 'Saldo acumulado anterior',
           val: d.startBal, // showing total in the list
           type: 'manual',
           dot: '#f97316',
           tag: 'SALDO'
         })
-        
+
         if (isStartOfManagement) {
-             creditoPessoal += initialPersonal
-             creditoReceita += initialRevenue
+          creditoPessoal += initialPersonal
+          creditoReceita += initialRevenue
         }
       }
 
-      const taskIncome = d.inIncomeTask ?? (d.inIncome - (d.inIncomeTeam || 0))
+      const taskIncome = d.inIncomeTask ?? d.inIncome - (d.inIncomeTeam || 0)
       const teamIncome = d.inIncomeTeam ?? 0
       const recurringIncome = d.inIncomeRecurring ?? 0
 
@@ -701,8 +750,6 @@ export const Renderer = {
         })
         creditoReceita += recurringIncome
       }
-
-
 
       const promotionIncome = d.inIncomePromotion ?? 0
       if (promotionIncome > 0) {
@@ -751,27 +798,48 @@ export const Renderer = {
       if (d.outInvest > 0) {
         // If we have specific portfolio deductions this day
         const dayPort = (window.store?.state.portfolio || []).filter(
-          p => p.date === dateStr && p.wallet && p.wallet !== 'none'
+          p => p.date === dateStr
         )
         if (dayPort.length > 0) {
           dayPort.forEach(p => {
             const valCents = Formatter.toCents(p.val)
+            let subLabel = 'Novo investimento'
+            let dotColor = '#6366f1' // default blue
+
+            if (p.wallet && p.wallet !== 'none') {
+              subLabel = `Dedução: ${p.wallet === 'personal' ? 'Carteira Pessoal' : 'Carteira de Receita'}`
+              dotColor = p.wallet === 'personal' ? '#6366f1' : '#10b981'
+
+              if (p.wallet === 'personal') debitoPessoal += valCents
+              else debitoReceita += valCents
+            } else {
+              // When wallet is 'none', it's money already invested, no wallet deduction
+              subLabel = 'Saldo já investido'
+              dotColor = '#8b5cf6' // purple
+            }
+
             subItems.push({
-              label: `Novo Investimento: ${p.name}`,
-              sub: `Dedução: ${p.wallet === 'personal' ? 'Carteira Pessoal' : 'Carteira de Receita'}`,
+              label: `Aplicação: ${p.name}`,
+              sub: subLabel,
               val: valCents,
               type: 'withdraw-planned', // reuse styling
-              dot: p.wallet === 'personal' ? '#6366f1' : '#10b981',
+              dot: dotColor,
               tag: 'APORTE'
             })
-
-            if (p.wallet === 'personal') debitoPessoal += valCents
-            else debitoReceita += valCents
           })
         } else {
-          // Probably a manual adjustment (positive outInvest in Calculator means money leaving?)
-          // Wait, manual adjustments were handled below.
-          // Actually, I should check how I implemented outInvest in Calculator.
+          // Generic investment deduction when no specific portfolio found
+          subItems.push({
+            label: 'Aplicação de Investimento',
+            sub: 'Dedução automática',
+            val: d.outInvest,
+            type: 'withdraw-planned',
+            dot: '#6366f1',
+            tag: 'APORTE'
+          })
+
+          // Default to personal wallet for generic deductions
+          debitoPessoal += d.outInvest
         }
       }
 
@@ -851,35 +919,37 @@ export const Renderer = {
 
       // Always render if date is within view, regardless of subItems
       // if (subItems.length > 0) { // Removed check to show all days
-        const dateObj = new Date(dateStr + 'T12:00:00Z')
-        const dayNum = dateStr.split('-')[2]
-        const weekday = dateObj
-          .toLocaleDateString('pt-BR', { weekday: 'short' })
-          .toUpperCase()
-        const monthShort = dateObj
-          .toLocaleDateString('pt-BR', { month: 'short' })
-          .toUpperCase()
-        const isToday = dateStr === todayStr
-        
-        // Definição de Cores (Amarelo para Hoje, Azul para os demais)
-        const theme = isToday ? {
+      const dateObj = new Date(dateStr + 'T12:00:00Z')
+      const dayNum = dateStr.split('-')[2]
+      const weekday = dateObj
+        .toLocaleDateString('pt-BR', { weekday: 'short' })
+        .toUpperCase()
+      const monthShort = dateObj
+        .toLocaleDateString('pt-BR', { month: 'short' })
+        .toUpperCase()
+      const isToday = dateStr === todayStr
+
+      // Definição de Cores (Amarelo para Hoje, Azul para os demais)
+      const theme = isToday
+        ? {
             bg: 'bg-yellow-500/10',
             border: 'border-yellow-500',
             text: 'text-yellow-500',
             pillBg: 'bg-yellow-500',
             pillText: 'text-slate-900',
             pillBorder: 'border-yellow-400'
-        } : {
+          }
+        : {
             bg: 'bg-slate-800/60', // Fundo sutil para dias normais
             border: 'border-blue-500',
             text: 'text-blue-400',
             pillBg: 'bg-slate-700',
             pillText: 'text-blue-400',
             pillBorder: 'border-blue-500/30'
-        }
+          }
 
-        // HTML do Cabeçalho Padronizado
-        const headerHtml = `
+      // HTML do Cabeçalho Padronizado
+      const headerHtml = `
             <div ${isToday ? 'id="timeline-today"' : ''} class="flex items-center gap-3 p-3 rounded-r-xl border-l-4 mb-4 mt-6 shadow-sm backdrop-blur-sm transition-all ${theme.bg} ${theme.border}">
                 <div class="w-8 h-8 flex items-center justify-center rounded-full font-bold text-xs shadow-sm border-2 ${theme.pillBg} ${theme.pillText} ${theme.pillBorder}">
                     ${dayNum}
@@ -890,30 +960,29 @@ export const Renderer = {
             </div>
         `
 
-        // Adiciona cabeçalho de mês se necessário (mantém lógica existente)
-        const isMonthStart = dateStr.endsWith('-01')
-        if (isMonthStart) {
-          const monthLabel = dateObj
-            .toLocaleDateString('pt-BR', {
-              month: 'long',
-              year: 'numeric'
-            })
-            .toUpperCase()
-          html += `<div class="timeline-month-header">${monthLabel}</div>`
-        }
+      // Adiciona cabeçalho de mês se necessário (mantém lógica existente)
+      const isMonthStart = dateStr.endsWith('-01')
+      if (isMonthStart) {
+        const monthLabel = dateObj
+          .toLocaleDateString('pt-BR', {
+            month: 'long',
+            year: 'numeric'
+          })
+          .toUpperCase()
+        html += `<div class="timeline-month-header">${monthLabel}</div>`
+      }
 
-        // Adiciona o cabeçalho gerado
-        html += headerHtml
+      // Adiciona o cabeçalho gerado
+      html += headerHtml
 
-        subItems.forEach((item, idx) => {
-          const isWithdraw =
-            item.type === 'withdraw-realized' ||
-            item.type === 'withdraw-planned'
-          const isManualDebit = item.type === 'manual' && item.tag === 'DÉBITO'
-          const sign = item.forceSign || (isWithdraw || isManualDebit ? '-' : '+')
-          const showValue = item.val > 0
+      subItems.forEach((item, idx) => {
+        const isWithdraw =
+          item.type === 'withdraw-realized' || item.type === 'withdraw-planned'
+        const isManualDebit = item.type === 'manual' && item.tag === 'DÉBITO'
+        const sign = item.forceSign || (isWithdraw || isManualDebit ? '-' : '+')
+        const showValue = item.val > 0
 
-          html += `
+        html += `
                         <div class="timeline-item">
                             <div class="timeline-marker">
                                 <div class="timeline-dot" style="background: ${item.dot}"></div>
@@ -927,29 +996,29 @@ export const Renderer = {
                                 </div>
                             </div>
                         </div>`
-        })
+      })
 
-        const dayCreditoPessoal =
-          (d.inReturnPrincipal || 0) +
-          (index === 0 ? initialPersonal : 0) +
-          (adjPersonal > 0 ? adjPersonal : 0)
-        const dayCreditoReceita =
-          (taskIncome || 0) +
-          (recurringIncome || 0) +
-          (d.inReturnProfit || 0) +
-          (index === 0 ? initialRevenue : 0) +
-          (adjRevenue > 0 ? adjRevenue : 0)
-        const dayDebitoPessoal =
-          (d.outWithdrawPersonal || 0) +
-          (adjPersonal < 0 ? Math.abs(adjPersonal) : 0)
-        const dayDebitoReceita =
-          (d.outWithdrawRevenue || 0) +
-          (adjRevenue < 0 ? Math.abs(adjRevenue) : 0)
+      const dayCreditoPessoal =
+        (d.inReturnPrincipal || 0) +
+        (index === 0 ? initialPersonal : 0) +
+        (adjPersonal > 0 ? adjPersonal : 0)
+      const dayCreditoReceita =
+        (taskIncome || 0) +
+        (recurringIncome || 0) +
+        (d.inReturnProfit || 0) +
+        (index === 0 ? initialRevenue : 0) +
+        (adjRevenue > 0 ? adjRevenue : 0)
+      const dayDebitoPessoal =
+        (d.outWithdrawPersonal || 0) +
+        (adjPersonal < 0 ? Math.abs(adjPersonal) : 0)
+      const dayDebitoReceita =
+        (d.outWithdrawRevenue || 0) +
+        (adjRevenue < 0 ? Math.abs(adjRevenue) : 0)
 
-        const dayTotalCredito = dayCreditoPessoal + dayCreditoReceita
-        const dayTotalDebito = dayDebitoPessoal + dayDebitoReceita
+      const dayTotalCredito = dayCreditoPessoal + dayCreditoReceita
+      const dayTotalDebito = dayDebitoPessoal + dayDebitoReceita
 
-        html += `
+      html += `
           <div class="bg-slate-800/30 border border-slate-700/50 rounded-lg p-2 mt-2 mb-4">
             <!-- Resumo Geral -->
             <div class="flex justify-between items-center text-[10px] pb-2 border-b border-slate-700/30 mb-2">
@@ -1066,11 +1135,9 @@ export const Renderer = {
       '<p class="text-center text-[10px] text-slate-500 italic">Nenhuma meta ativa</p>'
   },
 
-
-
   renderNotificationCard(n, idx = 0) {
-    const iconHtml = n.icon.startsWith('fa-') 
-      ? `<i class="fas ${n.icon}"></i>` 
+    const iconHtml = n.icon.startsWith('fa-')
+      ? `<i class="fas ${n.icon}"></i>`
       : n.icon
 
     return `
@@ -1085,19 +1152,27 @@ export const Renderer = {
           <div class="flex-1 min-w-0">
             <h4 class="text-xs font-bold text-white mb-0.5">${n.title}</h4>
             <p class="text-[10px] text-slate-400 leading-relaxed">${n.message}</p>
-            ${n.action ? `
+            ${
+              n.action
+                ? `
               <button onclick="app.handleInsightAction('${n.action}', '${n.marcoKey || ''}')" 
                 class="insight-action mt-2">
                 ${n.action}
               </button>
-            ` : ''}
+            `
+                : ''
+            }
           </div>
-          ${n.type === 'achievement' ? `
+          ${
+            n.type === 'achievement'
+              ? `
             <button onclick="app.dismissInsight(this, '${n.marcoKey}')" 
               class="text-slate-500 hover:text-white text-xs p-1" title="Marcar como visto">
               <i class="fas fa-check"></i>
             </button>
-          ` : ''}
+          `
+              : ''
+          }
         </div>
       </div>
     `
