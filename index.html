@@ -1,3 +1,4 @@
+<<<<<<< C:/DEV/Gestor-SP/index.html
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -1471,3 +1472,1478 @@
 </body>
 
 </html>
+=======
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor SP | Gestão Financeira Inteligente</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description"
+        content="Plataforma avançada de gestão financeira estratégica e projeção de investimentos.">
+    <meta name="keywords" content="finanças, investimentos, projeção, simulador, gestão estratégica">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="shortcut icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
+
+    <!-- PWA Manifest and Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Gestor SP">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
+
+    <!-- Dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Chart.js and Date Adaptor -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@1.0.1"></script>
+
+    <!-- Export Libraries: jsPDF and SheetJS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        dark: { 900: '#0f172a', 800: '#1e293b', 700: '#334155' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="min-h-screen relative selection:bg-blue-500 selection:text-white pb-20 bg-[#0f172a] text-[#e2e8f0]">
+
+    <!-- Navbar Sticky -->
+    <nav
+        class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-700 h-16 flex items-center justify-between px-4 lg:px-8 shadow-lg">
+        <div class="flex items-center gap-4">
+            <button onclick="app.toggleSidebar()"
+                class="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+                id="sidebarBtn">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            <div class="flex items-center gap-2">
+                <div
+                    class="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg flex items-center justify-center shadow-lg shadow-blue-900/50">
+                    <i class="fas fa-chart-pie text-white text-xs"></i>
+                </div>
+                <h1 class="text-sm md:text-base font-bold text-white tracking-tight hidden sm:block">Gestor
+                    <span class="text-blue-500">SP</span>
+                </h1>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <!-- Auth & Alerts -->
+            <div class="flex items-center gap-3">
+                <!-- Login Button (Desktop Only) -->
+                <button id="loginBtn"
+                    class="hidden md:flex bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-1.5 rounded-lg transition-colors shadow-lg shadow-blue-900/50">
+                    <i class="fab fa-google mr-2"></i> Entrar
+                </button>
+
+                <!-- User Profile Area (Desktop Only) -->
+                <div id="userProfileArea"
+                    class="hidden items-center gap-3 mr-2 bg-slate-800/50 py-1 px-2 rounded-full border border-slate-700">
+                    <img id="userAvatar" src="" alt="User" class="w-6 h-6 rounded-full border border-slate-600">
+                    <span id="userNameDisplay"
+                        class="text-[10px] font-bold text-slate-300 max-w-[80px] truncate hidden md:block">User</span>
+                    <button id="logoutBtn" class="text-slate-400 hover:text-red-400 ml-1" title="Sair">
+                        <i class="fas fa-sign-out-alt text-xs"></i>
+                    </button>
+                    <!-- Cloud Saved Indicator -->
+                    <i id="savedIndicator"
+                        class="fas fa-cloud-upload-alt text-emerald-500 text-xs opacity-0 transition-opacity"
+                        title="Salvo na nuvem"></i>
+                </div>
+
+                <div id="alertsContainer" class="hidden md:flex items-center">
+                    <button id="pushNotificationBtn" onclick="app.requestNotificationPermission()"
+                        class="hidden p-2 text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 rounded-lg border border-indigo-500/20 mr-2"
+                        title="Ativar Notificações">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <button onclick="app.openAlertsModal()"
+                        class="relative p-2 text-yellow-500 hover:text-yellow-400 bg-yellow-500/10 rounded-lg border border-yellow-500/20 mr-2">
+                        <i class="fas fa-bell"></i>
+                        <span id="alertsBadge"
+                            class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[8px] flex items-center justify-center rounded-full border-2 border-[#0f172a] hidden">0</span>
+                    </button>
+                </div>
+
+                <button onclick="app.openProfileModal()"
+                    class="hidden md:flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700 transition-colors text-xs font-bold"
+                    id="profileBtn">
+                    <i class="fas fa-user-circle"></i>
+                    <span id="currentProfileName">Padrão</span>
+                    <i class="fas fa-chevron-down text-[10px] ml-1 opacity-50"></i>
+                </button>
+
+                <div onclick="app.openBalanceAdjustmentModal()" class="flex items-center gap-4 bg-slate-800 py-1.5 px-4 rounded-full border border-slate-700 cursor-pointer hover:bg-slate-700 transition-colors group">
+                    <div class="flex flex-col items-end leading-none border-r border-slate-700 pr-3">
+                        <span class="text-[8px] text-indigo-400 font-bold uppercase mb-0.5">Pessoal</span>
+                        <span class="text-xs font-bold text-white" id="headerPersonalBalance">R$ 0,00</span>
+                    </div>
+                    <div class="flex flex-col items-end leading-none">
+                        <span class="text-[8px] text-emerald-400 font-bold uppercase mb-0.5">Receita</span>
+                        <span class="text-xs font-bold text-white" id="headerRevenueBalance">R$ 0,00</span>
+                    </div>
+                    <i class="fas fa-sliders h text-slate-500 group-hover:text-blue-400 transition-colors ml-1"></i>
+                </div>
+            </div>
+    </nav>
+
+    <!-- Overlay Backdorp -->
+    <div id="sidebarOverlay" onclick="app.toggleSidebar()"
+        class="fixed inset-0 bg-black/60 z-40 hidden transition-opacity opacity-0"></div>
+
+    <!-- Sidebar Drawer -->
+    <aside id="sidebar"
+        class="fixed inset-y-0 left-0 w-80 md:w-96 bg-slate-900 z-50 transform -translate-x-full sidebar-transition shadow-2xl border-r border-slate-700 flex flex-col h-full">
+        <!-- Sidebar Header -->
+        <div class="h-16 flex items-center justify-between px-6 border-b border-slate-800 bg-slate-900">
+            <h2 class="text-lg font-bold text-white">Configurações</h2>
+            <div class="flex items-center gap-2">
+                <button onclick="app.resetData()"
+                    class="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 border border-red-900/30 bg-red-900/10 px-2 py-1 rounded"
+                    id="resetBtn">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Sidebar Content -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+
+            <!-- Mobile Auth Section (Moved from Header) -->
+            <div class="md:hidden space-y-3 pb-4 border-b border-slate-700/50">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-1">Conta & Sincronização</label>
+                
+                <!-- Login Button Mobile -->
+                <button id="loginBtnMobile"
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-colors shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2">
+                    <i class="fab fa-google"></i> Entrar com Google
+                </button>
+
+                <!-- User Profile Mobile -->
+                <div id="userProfileMobile" class="hidden bg-slate-800 p-3 rounded-xl border border-slate-700 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                         <img id="userAvatarMobile" src="" alt="User" class="w-10 h-10 rounded-full border border-slate-600">
+                         <div class="flex flex-col">
+                             <span id="userNameMobile" class="text-xs font-bold text-white">User</span>
+                             <span class="text-[10px] text-emerald-400 flex items-center gap-1">
+                                 <i class="fas fa-cloud-upload-alt"></i> Sincronizado
+                             </span>
+                         </div>
+                    </div>
+                    <button id="logoutBtnMobile" class="text-slate-400 hover:text-red-400 p-2" title="Sair">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+                
+                <div class="md:hidden bg-slate-800 p-3 rounded-xl border border-slate-700 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-user-circle text-slate-400"></i>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase">Perfil Atual</span>
+                        <span id="mobileCurrentProfileName" class="text-xs font-bold text-white">Padrão</span>
+                    </div>
+                    <button onclick="app.openProfileModal()" class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg">
+                        Gerenciar
+                    </button>
+                </div>
+            </div>
+
+
+
+            <!-- Section: Caixa & Renda -->
+            <div class="space-y-3">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-1">Meu Caixa &
+                    Renda</label>
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-4 shadow-lg shadow-black/20">
+                    
+                    <div class="flex items-center justify-between border-b border-slate-700/50 pb-2 mb-2 cursor-pointer group" 
+                         onclick="document.getElementById('initialConfigContainer').classList.toggle('hidden'); document.getElementById('initialConfigChevron').classList.toggle('rotate-180')">
+                        <span class="text-[9px] font-bold text-blue-400 uppercase tracking-widest pl-1 group-hover:text-blue-300 transition-colors">Início da Gestão (Data Base)</span>
+                        <i class="fas fa-chevron-down text-blue-400 text-xs transition-transform duration-300" id="initialConfigChevron"></i>
+                    </div>
+
+                    <div id="initialConfigContainer" class="hidden space-y-3 animate-slide-down">
+                        <div>
+                            <label class="text-[10px] text-slate-400 font-bold mb-1 block">Data de Início</label>
+                            <input type="date" id="dataInicio"
+                                class="custom-input w-full rounded-lg py-2 px-3 text-xs font-bold text-slate-200 border border-slate-700 bg-slate-900/50">
+                        </div>
+
+                        <div class="bg-slate-900/50 p-3 rounded-lg border border-indigo-500/30 relative overflow-hidden group">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-[10px] text-indigo-300 font-bold uppercase block">Carteira Pessoal</label>
+                                <div class="flex gap-1">
+                                    <button onclick="app.adjustInput('personalWalletStart', -10)" class="text-[9px] bg-slate-800 hover:bg-slate-700 px-1.5 rounded border border-slate-700">-10</button>
+                                    <button onclick="app.adjustInput('personalWalletStart', 10)" class="text-[9px] bg-slate-800 hover:bg-slate-700 px-1.5 rounded border border-slate-700">+10</button>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-indigo-400 font-bold text-xs">R$</span>
+                                <input type="number" id="personalWalletStart" step="0.01"
+                                    class="bg-transparent w-full text-base font-bold text-white outline-none placeholder-slate-600"
+                                    placeholder="0.00">
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-900/50 p-3 rounded-lg border border-emerald-500/30 relative overflow-hidden group">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-[10px] text-emerald-300 font-bold uppercase block">Carteira de Receita</label>
+                                <div class="flex gap-1">
+                                    <button onclick="app.adjustInput('revenueWalletStart', -10)" class="text-[9px] bg-slate-800 hover:bg-slate-700 px-1.5 rounded border border-slate-700">-10</button>
+                                    <button onclick="app.adjustInput('revenueWalletStart', 10)" class="text-[9px] bg-slate-800 hover:bg-slate-700 px-1.5 rounded border border-slate-700">+10</button>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-emerald-400 font-bold text-xs">R$</span>
+                                <input type="number" id="revenueWalletStart" step="0.01"
+                                    class="bg-transparent w-full text-base font-bold text-white outline-none placeholder-slate-600"
+                                    placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div>
+                        <label class="text-[10px] text-slate-400 font-bold uppercase mb-2 block">Nível de Tarefas
+                            (Diário)</label>
+                        <select id="taskLevel" class="custom-input w-full rounded-lg p-2 text-xs border-slate-700">
+                            <option value="0">Nível 0 (Sem renda)</option>
+                            <option value="9.00">S1 - R$ 9,00/dia</option>
+                            <option value="28.00">S2 - R$ 28,00/dia</option>
+                            <option value="90.00">M1 - R$ 90,00/dia</option>
+                            <option value="279.00">M2 - R$ 279,00/dia</option>
+                            <option value="custom">Personalizado</option>
+                        </select>
+                        <div id="customTaskInput" class="hidden relative mt-2">
+                            <input type="number" id="taskDailyValue" step="0.01" placeholder="Valor Diário"
+                                class="custom-input w-full rounded-lg p-2 pl-8 text-xs border-slate-700">
+                            <span class="absolute left-3 top-2 text-xs text-slate-500">R$</span>
+                        </div>
+                    </div>
+
+                    <div class="border border-slate-700 rounded-lg p-3 bg-slate-900/30">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <label class="flex items-center gap-2 cursor-pointer group">
+                                    <div class="relative">
+                                        <input type="checkbox" id="teamBonusToggle" class="peer hidden">
+                                        <div class="w-8 h-4 bg-slate-700 rounded-full peer-checked:bg-blue-600 transition-colors"></div>
+                                        <div class="absolute left-1 top-1 w-2 h-2 bg-white rounded-full peer-checked:translate-x-4 transition-transform shadow-sm"></div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <i class="fas fa-users text-blue-400 text-xs"></i>
+                                        <span class="text-[10px] text-slate-400 font-bold uppercase">Bônus de Equipe</span>
+                                    </div>
+                                </label>
+                            </div>
+                            <button id="toggleTeamBonus" class="text-[10px] text-blue-400 hover:text-blue-300 font-bold">
+                                Expandir <i class="fas fa-chevron-down ml-1"></i>
+                            </button>
+                        </div>
+
+                        <div id="teamBonusContainer" class="hidden mt-4 space-y-4 animate-slide-down">
+                            <div class="grid grid-cols-4 gap-2 text-center border-b border-slate-700 pb-2">
+                                <span class="text-[8px] font-bold text-slate-500 uppercase">Nível</span>
+                                <span class="text-[8px] font-bold text-slate-500 uppercase">Equipe A</span>
+                                <span class="text-[8px] font-bold text-slate-500 uppercase">Equipe B</span>
+                                <span class="text-[8px] font-bold text-slate-500 uppercase">Equipe C</span>
+                            </div>
+                            
+                            <div id="teamBonusGrid" class="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
+                                <!-- Grid items will be injected or hardcoded -->
+                                <div class="grid grid-cols-4 gap-2 items-center">
+                                    <span class="text-[10px] font-bold text-slate-300">S1</span>
+                                    <input type="number" min="0" data-level="S1" data-team="A" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                    <input type="number" min="0" data-level="S1" data-team="B" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                    <input type="number" min="0" data-level="S1" data-team="C" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                </div>
+                                <div class="grid grid-cols-4 gap-2 items-center">
+                                    <span class="text-[10px] font-bold text-slate-300">S2</span>
+                                    <input type="number" min="0" data-level="S2" data-team="A" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                    <input type="number" min="0" data-level="S2" data-team="B" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                    <input type="number" min="0" data-level="S2" data-team="C" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                </div>
+                                <div class="grid grid-cols-4 gap-2 items-center">
+                                    <span class="text-[10px] font-bold text-slate-300">M1</span>
+                                    <input type="number" min="0" data-level="M1" data-team="A" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                    <input type="number" min="0" data-level="M1" data-team="B" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                    <input type="number" min="0" data-level="M1" data-team="C" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                </div>
+                                <div class="grid grid-cols-4 gap-2 items-center">
+                                    <span class="text-[10px] font-bold text-slate-300">M2</span>
+                                    <input type="number" min="0" data-level="M2" data-team="A" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                    <input type="number" min="0" data-level="M2" data-team="B" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                    <input type="number" min="0" data-level="M2" data-team="C" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                </div>
+                                <div class="grid grid-cols-4 gap-2 items-center">
+                                    <span class="text-[10px] font-bold text-slate-300">M3</span>
+                                    <input type="number" min="0" data-level="M3" data-team="A" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                    <input type="number" min="0" data-level="M3" data-team="B" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                    <input type="number" min="0" data-level="M3" data-team="C" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                </div>
+                                <div class="grid grid-cols-4 gap-2 items-center">
+                                    <span class="text-[10px] font-bold text-slate-300">L1</span>
+                                    <input type="number" min="0" data-level="L1" data-team="A" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                    <input type="number" min="0" data-level="L1" data-team="B" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                    <input type="number" min="0" data-level="L1" data-team="C" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                </div>
+                                <div class="grid grid-cols-4 gap-2 items-center">
+                                    <span class="text-[10px] font-bold text-slate-300">L2</span>
+                                    <input type="number" min="0" data-level="L2" data-team="A" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                    <input type="number" min="0" data-level="L2" data-team="B" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                    <input type="number" min="0" data-level="L2" data-team="C" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                </div>
+                                <div class="grid grid-cols-4 gap-2 items-center">
+                                    <span class="text-[10px] font-bold text-slate-300">L3</span>
+                                    <input type="number" min="0" data-level="L3" data-team="A" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                    <input type="number" min="0" data-level="L3" data-team="B" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                    <input type="number" min="0" data-level="L3" data-team="C" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                </div>
+                                <div class="grid grid-cols-4 gap-2 items-center">
+                                    <span class="text-[10px] font-bold text-slate-300">L4</span>
+                                    <input type="number" min="0" data-level="L4" data-team="A" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                    <input type="number" min="0" data-level="L4" data-team="B" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                    <input type="number" min="0" data-level="L4" data-team="C" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                </div>
+                                <div class="grid grid-cols-4 gap-2 items-center">
+                                    <span class="text-[10px] font-bold text-slate-300">L5</span>
+                                    <input type="number" min="0" data-level="L5" data-team="A" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                    <input type="number" min="0" data-level="L5" data-team="B" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                    <input type="number" min="0" data-level="L5" data-team="C" class="team-input custom-input px-1 py-1 text-center text-[10px]" placeholder="0">
+                                </div>
+                            </div>
+
+                            <div class="pt-3 border-t border-slate-700 flex justify-between items-center">
+                                <span class="text-[9px] font-bold text-slate-500 uppercase">Renda Diária Est:</span>
+                                <span id="teamDailyIncomeDisplay" class="text-xs font-bold text-emerald-400">R$ 0,00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border border-slate-700 rounded-lg p-3 bg-slate-900/30">
+                        <div class="flex items-center justify-between">
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <div class="relative">
+                                    <input type="checkbox" id="promotionToggle" class="peer hidden">
+                                    <div class="w-8 h-4 bg-slate-700 rounded-full peer-checked:bg-blue-600 transition-colors"></div>
+                                    <div class="absolute left-1 top-1 w-2 h-2 bg-white rounded-full peer-checked:translate-x-4 transition-transform shadow-sm"></div>
+                                </div>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase">
+                                    Benefícios de Promoção
+                                </span>
+                            </label>
+                            <button id="togglePromotion" class="text-[10px] text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1">
+                                Expandir <i class="fas fa-chevron-down ml-1 transition-transform" id="promotionChevron"></i>
+                            </button>
+                        </div>
+
+                        <div id="promotionContainer" class="hidden mt-4 space-y-4 animate-slide-down">
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="text-[9px] text-slate-500 font-bold uppercase mb-1 block">Cargo de Promoção</label>
+                                    <select id="promotionLevel" class="custom-input w-full rounded-lg p-2 text-xs border-slate-700">
+                                        <option value="assistente_estagio">Assistente de Estágio (R$ 600)</option>
+                                        <option value="assistente_oficial">Assistente Oficial (R$ 1.200)</option>
+                                        <option value="supervisor_junior">Supervisor Júnior (R$ 3.600)</option>
+                                        <option value="chefe_marketing">Chefe de Marketing (R$ 9.000)</option>
+                                        <option value="gerente_junior">Gerente Júnior (R$ 15.000)</option>
+                                        <option value="diretor_marketing">Diretor de Marketing (R$ 38.000)</option>
+                                        <option value="socio_assalariado">Sócio Assalariado (R$ 80.000)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[9px] text-slate-500 font-bold uppercase mb-1 block">Dia do Recebimento</label>
+                                    <input type="number" id="promotionDay" min="1" max="31"
+                                        class="custom-input w-full rounded-lg py-2 px-3 text-xs text-white placeholder-slate-600 border-slate-700"
+                                        placeholder="Dia (1-31)">
+                                </div>
+                                <div class="pt-2 border-t border-slate-700/50 flex justify-between items-center">
+                                    <span class="text-[9px] font-bold text-slate-500 uppercase">Renda Mensal:</span>
+                                    <span id="promotionMonthlyIncomeDisplay" class="text-xs font-bold text-blue-400">R$ 0,00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border border-slate-700 rounded-lg p-3 bg-slate-900/30">
+                        <div class="flex items-center justify-between">
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <div class="relative">
+                                    <input type="checkbox" id="monthlyIncomeToggle" class="peer hidden">
+                                    <div class="w-8 h-4 bg-slate-700 rounded-full peer-checked:bg-blue-600 transition-colors"></div>
+                                    <div class="absolute left-1 top-1 w-2 h-2 bg-white rounded-full peer-checked:translate-x-4 transition-transform shadow-sm"></div>
+                                </div>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase">
+                                    Renda Fixa Mensal
+                                </span>
+                            </label>
+                            <button id="toggleMonthlyIncome" class="text-[10px] text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1">
+                                Expandir <i class="fas fa-chevron-down ml-1 transition-transform" id="monthlyIncomeChevron"></i>
+                            </button>
+                        </div>
+
+                        <div id="monthlyIncomeContainer" class="hidden mt-4 relative animate-slide-down">
+                            <div class="space-y-2">
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div class="relative col-span-2">
+                                        <span class="absolute left-3 top-2.5 text-slate-500 text-xs font-bold">R$</span>
+                                        <input type="number" id="monthlyIncomeAmount" step="0.01"
+                                            class="custom-input w-full rounded-lg py-2 pl-8 text-xs text-white placeholder-slate-600 border-slate-700"
+                                            placeholder="Valor">
+                                    </div>
+                                    <div>
+                                        <input type="number" id="monthlyIncomeDay" min="1" max="31"
+                                            class="custom-input w-full rounded-lg py-2 px-3 text-xs text-white placeholder-slate-600 border-slate-700"
+                                            placeholder="Dia (1-31)">
+                                    </div>
+                                </div>
+                                <div class="flex justify-end">
+                                    <button id="addMonthlyIncomeBtn"
+                                        class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded transition-colors border border-emerald-600/50">
+                                        <i class="fas fa-plus mr-1"></i> Adicionar Renda
+                                    </button>
+                                </div>
+                                <div id="fixedIncomeList" class="space-y-1"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section: Estratégia -->
+            <div class="space-y-3">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-1">Estratégia de
+                    Saque</label>
+                <div
+                    class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3 bg-gradient-to-br from-slate-800 to-yellow-900/10">
+                    <select id="withdrawStrategy"
+                        class="custom-input w-full rounded-lg p-2.5 text-xs text-yellow-100 bg-slate-900 border-yellow-600/30 focus:border-yellow-500">
+                        <option value="none">Sem Saque Automático</option>
+                        <option value="max">Sacar Teto Máximo (Sempre)</option>
+                        <option value="fixed">Meta Fixa (Selecionar Alvo)</option>
+                        <option value="weekly">Semanas Específicas</option>
+                    </select>
+
+                    <div id="withdrawFixedOptions" class="hidden animate-fade-in">
+                        <p class="text-[9px] text-slate-400 mb-2 uppercase font-bold">Meta de Saque:</p>
+                        <div id="tiersGrid" class="grid grid-cols-4 gap-1.5"></div>
+                        <input type="hidden" id="withdrawTarget" value="0">
+                    </div>
+
+                    <div id="withdrawWeeklyOptions" class="hidden animate-fade-in">
+                        <p class="text-[9px] text-slate-400 mb-2 uppercase font-bold">Sacar nas Semanas:</p>
+                        <div class="grid grid-cols-5 gap-1">
+                            <div class="week-btn">S1</div>
+                            <div class="week-btn">S2</div>
+                            <div class="week-btn">S3</div>
+                            <div class="week-btn">S4</div>
+                            <div class="week-btn">S5</div>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-700/50 mt-2">
+                        <label class="text-[10px] text-slate-400 font-bold uppercase mb-2 block">Dia Preferencial de Saque</label>
+                        <select id="withdrawalDaySelect"
+                            class="custom-input w-full rounded-lg py-2 px-3 text-xs font-bold text-yellow-500 bg-slate-900 border-slate-700 selection:bg-yellow-500">
+                            <option value="0">Domingo</option>
+                            <option value="1">Segunda</option>
+                            <option value="2">Terça</option>
+                            <option value="3">Quarta</option>
+                            <option value="4">Quinta</option>
+                            <option value="5">Sexta</option>
+                            <option value="6">Sábado</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Section: Utils & Backup -->
+            <div class="space-y-3 pt-2">
+                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-1">Sistema &
+                    Dados</label>
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 grid grid-cols-2 gap-2">
+                    <button onclick="app.exportBackup()"
+                        class="flex flex-col items-center justify-center p-3 bg-slate-900/50 hover:bg-slate-700 rounded-lg border border-slate-700 transition-all group">
+                        <i class="fas fa-file-export text-blue-400 mb-2 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[10px] text-slate-300 font-bold uppercase">Exportar</span>
+                    </button>
+                    <label
+                        class="flex flex-col items-center justify-center p-3 bg-slate-900/50 hover:bg-slate-700 rounded-lg border border-slate-700 transition-all group cursor-pointer">
+                        <i
+                            class="fas fa-file-import text-emerald-400 mb-2 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[10px] text-slate-300 font-bold uppercase">Importar</span>
+                        <input type="file" id="importFile" class="hidden" accept=".json">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Section: AI Assistant -->
+            <div class="space-y-3 pt-2">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <input type="checkbox" id="aiAssistantToggle" class="peer hidden">
+                            <div class="w-8 h-4 bg-slate-700 rounded-full peer-checked:bg-blue-600 transition-colors"></div>
+                            <div class="absolute left-1 top-1 w-2 h-2 bg-white rounded-full peer-checked:translate-x-4 transition-transform shadow-sm"></div>
+                        </div>
+                        <label class="text-[10px] text-slate-400 font-bold uppercase cursor-pointer" for="aiAssistantToggle">
+                            Assistente IA
+                        </label>
+                    </div>
+                    <button id="toggleAiSettings" class="text-[10px] text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1">
+                        Expandir <i class="fas fa-chevron-down ml-1 transition-transform" id="aiChevron"></i>
+                    </button>
+                </div>
+
+                <div id="aiSettingsContainer" class="hidden bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3 animate-slide-down">
+                    <!-- Provider Selection -->
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-slate-400 font-bold uppercase pl-1">Provedor de IA</label>
+                        <select id="aiProvider" class="custom-input w-full rounded-lg py-2 px-3 text-xs text-slate-200 border border-slate-700 bg-slate-900/50">
+                            <option value="gemini">Google Gemini (Flash 2.0)</option>
+                            <option value="openai">OpenAI ChatGPT (GPT-4o mini)</option>
+                            <option value="groq">Groq (DeepSeek / Llama 3)</option>
+                        </select>
+                    </div>
+
+                    <!-- Gemini Config -->
+                    <div id="geminiConfig" class="bg-slate-900/50 p-3 rounded-lg border border-purple-500/30 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-purple-500"></div>
+                        <label class="text-[10px] text-purple-300 font-bold uppercase mb-2 block">API Key do Gemini</label>
+                        <input type="password" id="geminiApiKey" 
+                            placeholder="Cole sua API Key do Gemini aqui..."
+                            class="custom-input w-full rounded-lg py-2 px-3 text-xs text-slate-200 border border-slate-700 bg-slate-900/50">
+                        <div class="flex items-center justify-between mt-2">
+                            <a href="https://aistudio.google.com/apikey" target="_blank" 
+                               class="text-[9px] text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1">
+                                <i class="fas fa-external-link-alt"></i> Obter Gemini Key
+                            </a>
+                            <span id="aiKeyStatusGemini" class="text-[9px] font-bold"></span>
+                        </div>
+                    </div>
+
+                    <!-- OpenAI Config -->
+                    <div id="openaiConfig" class="hidden bg-slate-900/50 p-3 rounded-lg border border-emerald-500/30 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                        <label class="text-[10px] text-emerald-300 font-bold uppercase mb-2 block">API Key do ChatGPT</label>
+                        <input type="password" id="openaiApiKey" 
+                            placeholder="Cole sua API Key da OpenAI aqui..."
+                            class="custom-input w-full rounded-lg py-2 px-3 text-xs text-slate-200 border border-slate-700 bg-slate-900/50">
+                        <div class="flex items-center justify-between mt-2">
+                            <a href="https://platform.openai.com/api-keys" target="_blank" 
+                               class="text-[9px] text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1">
+                                <i class="fas fa-external-link-alt"></i> Obter OpenAI Key
+                            </a>
+                            <span id="aiKeyStatusOpenai" class="text-[9px] font-bold"></span>
+                        </div>
+                    </div>
+
+                    <!-- Groq Config -->
+                    <div id="groqConfig" class="hidden space-y-3">
+                        <div class="bg-slate-900/50 p-3 rounded-lg border border-orange-500/30 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-orange-500"></div>
+                            <label class="text-[10px] text-orange-300 font-bold uppercase mb-2 block">API Key da Groq</label>
+                            <input type="password" id="groqApiKey" 
+                                placeholder="Cole sua API Key da Groq aqui..."
+                                class="custom-input w-full rounded-lg py-2 px-3 text-xs text-slate-200 border border-slate-700 bg-slate-900/50">
+                            <div class="flex items-center justify-between mt-2">
+                                <a href="https://console.groq.com/keys" target="_blank" 
+                                   class="text-[9px] text-blue-400 hover:text-blue-300 hover:underline flex items-center gap-1">
+                                    <i class="fas fa-external-link-alt"></i> Obter Groq Key
+                                </a>
+                                <span id="aiKeyStatusGroq" class="text-[9px] font-bold"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-1">
+                            <label class="text-[10px] text-slate-400 font-bold uppercase pl-1">Modelo Groq</label>
+                            <select id="groqModel" class="custom-input w-full rounded-lg py-2 px-3 text-xs text-slate-200 border border-slate-700 bg-slate-900/50">
+                                <option value="qwen-qwq-32b">Qwen QwQ 32B (Reasoning)</option>
+                                <option value="llama-3.3-70b-versatile">Llama 3.3 (70B) High-Performance</option>
+                                <option value="llama-3.1-8b-instant">Llama 3.1 (8B) Instant (Mais rápido)</option>
+                                <option value="mixtral-8x7b-32768">Mixtral 8x7b</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Test Button -->
+                    <div class="pt-1">
+                        <button id="testAiBtn" class="w-full py-2 bg-slate-700/50 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 border border-slate-600/50">
+                            <i class="fas fa-vial"></i> Testar Conexão
+                        </button>
+                    </div>
+
+                    <!-- Sync Option -->
+                    <div class="pt-2 border-t border-slate-700/50 mt-2">
+                        <label class="flex items-center gap-2 cursor-pointer group">
+                            <div class="relative">
+                                <input type="checkbox" id="syncAiKeys" class="peer hidden">
+                                <div class="w-8 h-4 bg-slate-700 rounded-full peer-checked:bg-indigo-600 transition-colors"></div>
+                                <div class="absolute left-1 top-1 w-2 h-2 bg-white rounded-full peer-checked:translate-x-4 transition-transform shadow-sm"></div>
+                            </div>
+                            <span class="text-[10px] text-slate-400 group-hover:text-slate-300 transition-colors">Sincronizar chaves na nuvem (Firestore)</span>
+                        </label>
+                        <p class="text-[8px] text-slate-500 mt-1 pl-1">
+                            Ative para manter suas chaves iguais em todos os dispositivos.
+                        </p>
+                    </div>
+
+                    <p class="text-[9px] text-slate-500 leading-relaxed">
+                        <i class="fas fa-info-circle text-slate-600 mr-1"></i>
+                        A IA ajudará você a analisar finanças e sugerir otimizações personalizadas.
+                    </p>
+                </div>
+            </div>
+
+            <div class="pb-8 text-center mt-auto">
+                <button onclick="app.toggleSidebar()"
+                    class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs rounded-lg font-bold border border-slate-700 transition-colors">
+                    <i class="fas fa-chevron-left mr-2"></i> Fechar Menu
+                </button>
+                <footer class="text-center text-[10px] text-slate-600 py-4 mt-2">
+                    <p>&copy; 2025 Gestor SP - v2.2.2</p>
+                </footer>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-6">
+
+        <!-- Global Control Bar -->
+        <div class="flex items-center justify-between bg-slate-800 p-3 rounded-xl border border-slate-700 shadow-sm mb-4">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-filter text-blue-500"></i>
+                <span class="text-xs font-bold text-slate-300 uppercase tracking-wide">Período de Análise</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div id="customDateRange" class="hidden flex items-center gap-1 animate-fade-in">
+                    <input type="date" id="customViewStartDate"
+                        class="bg-slate-800 border border-slate-600 text-[10px] rounded px-2 py-1 text-slate-300 w-24 focus:outline-none focus:border-blue-500 transition-colors">
+                    <span class="text-slate-500 text-[10px] font-bold">-</span>
+                    <input type="date" id="customViewEndDate"
+                        class="bg-slate-800 border border-slate-600 text-[10px] rounded px-2 py-1 text-slate-300 w-24 focus:outline-none focus:border-blue-500 transition-colors">
+                </div>
+                <select id="viewPeriodSelect"
+                    class="bg-slate-800 border border-slate-600 text-xs rounded-lg px-2 py-1 text-slate-300 focus:outline-none focus:border-blue-500 transition-colors">
+                    <option value="month">Mês Atual</option>
+                    <option value="15">15 Dias</option>
+                    <option value="30" selected>30 Dias</option>
+                    <option value="60">60 Dias</option>
+                    <option value="90">90 Dias</option>
+                    <option value="365">1 Ano</option>
+                    <option value="custom">Personalizado</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 1. Dashboard Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Card 1: Lucro Líquido -->
+            <div onclick="app.openCardDetails('profit')"
+                class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm relative overflow-hidden group bg-gradient-to-br from-slate-800 to-emerald-900/20 border-emerald-900/30">
+                <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><i
+                        class="fas fa-chart-line text-4xl text-emerald-500"></i></div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Lucro Líquido</p>
+                <h3 class="text-lg md:text-xl font-bold text-white mt-1" id="resLucroLiquido">R$ 0,00</h3>
+                <p class="text-[9px] font-bold mt-1">
+                    <span class="text-slate-400" id="resCardIncome">Renda: 0,00</span>
+                    <span class="text-slate-600 mx-1">-</span>
+                    <span class="text-emerald-400" id="resCardInvestProfit">Lucro: 0,00</span>
+                </p>
+            </div>
+
+            <!-- Card 2: Próximo Vencimento (Focado em Investimentos) -->
+            <div onclick="app.openCardDetails('active_capital')"
+                class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm relative overflow-hidden group bg-gradient-to-br from-slate-800 to-purple-900/20 border-purple-900/30">
+                <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <i class="fas fa-coins text-4xl text-purple-500"></i>
+                </div>
+                
+                <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Próximo Vencimento</p>
+                
+                <div class="flex items-baseline gap-2 mb-1">
+                    <h3 class="text-lg md:text-xl font-bold text-white" id="resNextMaturityDate">--/--</h3>
+                    <span class="text-xs font-bold text-purple-400" id="resNextMaturityValue">R$ 0,00</span>
+                </div>
+                
+                <div class="space-y-0.5">
+                    <p class="text-[9px] text-slate-500 flex justify-between">
+                        <span>Investido:</span>
+                        <span class="font-bold text-slate-300" id="resActivePrincipal">R$ 0,00</span>
+                    </p>
+                    <p class="text-[9px] text-slate-500 flex justify-between">
+                        <span>Lucro Pendente:</span>
+                        <span class="font-bold text-emerald-400" id="resPendingProfit">+R$ 0,00</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Card 3: Histórico de Saques -->
+            <div onclick="app.openCardDetails('history')"
+                class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm relative overflow-hidden group bg-gradient-to-br from-slate-800 to-blue-900/20 border-blue-900/30">
+                <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><i
+                        class="fas fa-history text-4xl text-blue-500"></i></div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase">Histórico de Saques</p>
+                <h3 class="text-lg md:text-xl font-bold text-blue-400 mt-1" id="resMonthWithdraw">R$ 0,00</h3>
+                <p class="text-[9px] text-slate-500">Sacado Mês Corrente</p>
+            </div>
+
+            <!-- Card 4: Próximo Saque -->
+            <div onclick="app.openCardDetails('next_withdrawals')"
+                class="dashboard-card bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm bg-gradient-to-br from-slate-800 to-yellow-900/20 border-yellow-900/30 relative overflow-hidden group">
+                <div class="absolute right-0 top-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"><i
+                        class="fas fa-piggy-bank text-4xl text-yellow-500"></i></div>
+                <p class="text-[10px] font-bold text-yellow-500 uppercase">Próximo Saque</p>
+                <h3 class="text-lg md:text-xl font-bold text-yellow-400 mt-1" id="resNextDate">---</h3>
+                <p class="text-[9px] text-yellow-600/70" id="resNextValue">Est: R$ 0,00</p>
+            </div>
+        </div>
+
+
+
+        <!-- Today's Closing Section -->
+        <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 shadow-lg mb-4 flex flex-col">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <!-- Botões aparecem primeiro no mobile, mas ficam à direita no desktop -->
+                <div class="flex flex-col-reverse md:flex-row items-center justify-between gap-4 w-full">
+                    <div class="flex items-center gap-6 w-full md:w-auto justify-between md:justify-start">
+                        <div>
+                            <span class="text-[10px] text-slate-500 uppercase font-bold tracking-wider block">Fechamento (Hoje)</span>
+                            <div class="flex items-baseline gap-2">
+                                <span id="todayBalanceDisplay" class="text-xl font-bold text-white">R$ 0,00</span>
+                                <span id="todayChangesDisplay" class="text-xs font-bold text-slate-400">0 movimentações</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-3 text-xs border-l border-slate-700 pl-4">
+                            <div>
+                                <span class="block text-[8px] text-emerald-500 uppercase font-bold">Entradas</span>
+                                <span id="todayInDisplay" class="font-mono text-emerald-400 font-bold">+R$ 0,00</span>
+                            </div>
+                            <div>
+                                <span class="block text-[8px] text-red-500 uppercase font-bold">Saídas</span>
+                                <span id="todayOutDisplay" class="font-mono text-red-400 font-bold">-R$ 0,00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-row gap-2 w-full md:w-auto">
+                        <button onclick="app.openBalanceAdjustmentModal()" 
+                            class="flex-1 md:flex-none px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold uppercase rounded-lg border border-slate-600 transition-all flex items-center justify-center gap-2">
+                            <i class="fas fa-sliders-h"></i> Ajuste Manual
+                        </button>
+                        <button onclick="app.openTimelineModal()" 
+                            class="flex-1 md:flex-none px-4 py-2 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 hover:text-indigo-300 text-xs font-bold uppercase rounded-lg border border-indigo-500/30 transition-all flex items-center justify-center gap-2">
+                            <i class="fas fa-list-ul"></i> Extrato Detalhado
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-slate-700/50 my-3">
+            
+            <!-- List of specific transactions for the day -->
+            <div id="todayTransactionsList" class="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar">
+                <p class="text-[10px] text-slate-500 italic text-center py-2">Nenhuma movimentação registrada hoje.</p>
+            </div>
+        </div>
+
+        <!-- 3. Financial Detailing (Table) -->
+        <div class="space-y-4">
+        <!-- View Controls removed from here -->
+
+
+            <div id="financialDetailSection" class="bg-slate-800 rounded-2xl border border-slate-700 shadow-lg flex flex-col max-h-[500px] transition-all duration-300">
+                <div class="p-3 border-b border-slate-700 bg-slate-800 flex justify-between items-center sticky top-0 z-20">
+                    <div class="flex items-center gap-2">
+                        <h4 class="text-xs font-bold text-slate-300 uppercase">Detalhamento Financeiro</h4>
+                        <button onclick="app.toggleExpandSection()" 
+                            class="text-slate-500 hover:text-indigo-400 transition-colors p-1"
+                            title="Expandir/Recolher Visualização">
+                            <i id="expandIcon" class="fas fa-expand-alt"></i>
+                        </button>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="app.exportToPDF()"
+                            class="text-[10px] bg-red-600 hover:bg-red-500 text-white px-3 py-1.5 rounded transition-colors border border-red-500 font-bold flex items-center gap-1">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </button>
+                        <button onclick="app.exportToExcel()"
+                            class="text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded transition-colors border border-emerald-500 font-bold flex items-center gap-1">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-auto custom-scrollbar flex-1">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="text-[10px] text-slate-300 bg-slate-900 uppercase font-bold sticky top-0 z-10">
+                            <tr>
+                                <th class="p-2 border-b border-slate-700">Data</th>
+                                <th class="p-2 border-b border-slate-700 text-right hidden md:table-cell">Ant.</th>
+                                <th class="p-2 border-b border-slate-700 text-right text-emerald-400">+Retorno</th>
+                                <th id="thTeamBonus" class="p-2 border-b border-slate-700 text-right text-cyan-400">+Equipe</th>
+                                <th class="p-2 border-b border-slate-700 text-right text-indigo-400">+Renda</th>
+                                <th class="p-2 border-b border-slate-700 text-right text-blue-400">-Aporte</th>
+                                <th class="p-2 border-b border-slate-700 text-right text-yellow-500">-Saque</th>
+                                <th class="p-2 border-b border-slate-700 text-right text-white">Saldo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaBody"
+                            class="text-[11px] font-medium text-slate-200 divide-y divide-slate-700/50"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Calendar & Details -->
+        <div>
+             <h3 class="font-bold text-white flex items-center gap-2 mb-4"><i
+                            class="far fa-calendar-alt text-yellow-500"></i> Calendário</h3>
+            <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-xl flex flex-col h-[450px]">
+                <div id="calendarContainer"
+                    class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-900/50 overflow-y-auto custom-scrollbar flex-1">
+                </div>
+                <div
+                    class="border-t border-slate-700/70 bg-slate-900/80 px-4 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[9px] text-slate-400">
+                    <div class="flex items-center gap-1">
+                        <span class="inline-block w-2 h-2 rounded-full bg-purple-500"></span>
+                        <span>Retorno de Contrato</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="inline-block w-2 h-2 rounded-full bg-violet-500"></span>
+                        <span>Reinvestimento / Fim de Ciclo</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="inline-block w-2 h-2 rounded-full bg-yellow-400"></span>
+                        <span>Saque Planejado</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="inline-block w-2 h-2 rounded-full bg-blue-500"></span>
+                        <span>Saque Realizado</span>
+                    </div>
+                    <div class="flex items-center gap-1 ml-auto">
+                        <span
+                            class="inline-flex items-center justify-center rounded-md border border-blue-500/70 px-1.5 py-0.5 text-[8px] text-blue-400 bg-blue-500/5">
+                            Hoje
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Investments / Simulator -->
+        <div>
+            <!-- Action Tabs -->
+            <div class="bg-slate-800 rounded-xl border border-slate-700 shadow-lg overflow-hidden">
+                <div class="flex border-b border-slate-700">
+                    <button onclick="app.switchTab('resources')" id="tab-resources"
+                        class="flex-1 py-3 text-xs font-bold uppercase tracking-wider text-white bg-slate-700/50 border-b-2 border-blue-500 transition-colors">
+                        <i class="fas fa-list-ul mr-1"></i> Investimentos
+                    </button>
+                    <button onclick="app.switchTab('simulation')" id="tab-simulation"
+                        class="flex-1 py-3 text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-white border-b-2 border-transparent transition-colors">
+                        <i class="fas fa-rocket mr-1"></i> Simulador
+                    </button>
+                </div>
+
+                <div class="min-h-[100px] transition-all duration-300" id="investmentsContainer">
+                    <!-- Tab Content: Resources -->
+                    <div id="content-resources" class="">
+                        <div onclick="app.togglePortfolioDetails()"
+                            class="p-4 bg-slate-900/50 cursor-pointer hover:bg-slate-800 transition-colors border-b border-slate-700 group">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-chevron-down text-slate-500 transition-transform duration-300 -rotate-90"
+                                        id="invChevron"></i>
+                                    <h3 class="text-xs font-bold text-white uppercase tracking-wider">Carteira Ativa
+                                    </h3>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-[10px] text-slate-400 font-bold" id="summaryInvCount">0
+                                        contratos</div>
+                                </div>
+                            </div>
+                            <div class="mt-2 flex justify-between items-center gap-2">
+                                <div class="text-[10px] text-emerald-400 font-bold" id="summaryInvProfit">Lucro Est:
+                                    R$ 0,00</div>
+                                <div class="text-[10px] text-purple-400 font-bold" id="summaryRealizedProfit">Realizado:
+                                    R$ 0,00</div>
+                                <div class="text-[10px] text-blue-400 font-mono" id="summaryInvTotal">Total: R$ 0,00
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="portfolioDetails"
+                            class="p-5 space-y-4 animate-fade-in border-b border-slate-700 hidden">
+                            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3 shadow-inner">
+                                <input type="text" id="newInvName" placeholder="Nome do Ativo"
+                                    class="custom-input w-full rounded px-3 py-2 text-xs">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="number" id="newInvVal" step="0.01" placeholder="Valor R$"
+                                        class="custom-input w-full rounded px-3 py-2 text-xs">
+                                    <input type="date" id="newInvDate"
+                                        class="custom-input rounded px-2 py-2 text-xs text-slate-400">
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="number" id="newInvDays" value="3"
+                                        class="custom-input rounded px-3 py-2 text-xs w-full">
+                                    <input type="number" id="newInvRate" value="1.2" step="0.1"
+                                        class="custom-input rounded px-3 py-2 text-xs w-full">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Abater de qual carteira?</label>
+                                    <select id="newInvWallet" class="custom-input w-full rounded px-2 py-2 text-xs">
+                                        <option value="none">Nenhuma (Saldo já investido)</option>
+                                        <option value="personal">Carteira Pessoal</option>
+                                        <option value="revenue">Carteira de Receita</option>
+                                    </select>
+                                </div>
+                                <button id="addInvBtn"
+                                    class="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded-lg transition-colors shadow-lg shadow-blue-900/20">
+                                    <i class="fas fa-plus mr-1"></i> Adicionar
+                                </button>
+                            </div>
+                            <div class="max-h-[300px] overflow-y-auto custom-scrollbar">
+                                <ul id="portfolioList" class="space-y-2"></ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab Content: Simulation -->
+                    <div id="content-simulation" class="hidden p-5 space-y-5 animate-fade-in">
+                        <div class="flex items-center justify-between bg-emerald-900/10 p-3 rounded-xl border border-emerald-500/20 cursor-pointer select-none hover:bg-emerald-900/20 transition-colors"
+                            onclick="app.toggleFuturePlanning()">
+                            <div>
+                                <label
+                                    class="text-xs text-emerald-400 font-bold uppercase flex items-center gap-2 cursor-pointer pointer-events-none">
+                                    <i class="fas fa-lightbulb"></i> Modo Simulação
+                                </label>
+                                <p class="text-[9px] text-slate-500 mt-0.5">Projeta reinvestimentos futuros</p>
+                            </div>
+                            <div id="futureToggleVisual"
+                                class="w-10 h-5 rounded-full border border-slate-600 bg-slate-800 relative transition-all">
+                                <div class="w-3 h-3 bg-slate-400 rounded-full absolute top-0.5 left-1 transition-all"
+                                    id="futureToggleKnob"></div>
+                            </div>
+                            <input type="hidden" id="futureToggle" value="false">
+                        </div>
+
+                        <div id="futureConfigPanel" class="hidden space-y-4 pt-2">
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Aporte
+                                        Simulado (R$)</label>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <input type="number" id="capitalInicial" value="50" step="0.01"
+                                            class="custom-input w-full rounded-xl py-2 px-3 font-bold text-sm">
+                                        <input type="date" id="simStartDate"
+                                            class="custom-input w-full rounded-xl py-2 px-3 text-xs text-slate-400">
+                                    </div>
+                                    <span class="text-[9px] text-slate-500">Data de início da simulação</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <input type="number" id="diasCiclo" value="3" placeholder="Dias"
+                                        class="custom-input w-full rounded-lg py-2 px-3 text-xs">
+                                    <input type="number" id="taxaDiaria" value="1.2" step="0.01"
+                                        placeholder="Taxa %"
+                                        class="custom-input w-full rounded-lg py-2 px-3 text-xs">
+                                </div>
+                                <div>
+                                    <label
+                                        class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Repetições</label>
+                                    <input type="number" id="repeticoesCiclo" value="1" min="1"
+                                        class="custom-input w-full rounded-lg py-2 px-3 text-xs">
+                                </div>
+                                <div class="bg-slate-900/50 rounded-lg border border-slate-700 p-3 mt-3">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase mb-2 block">Regras
+                                        de Bônus (Juros Compostos)</label>
+                                    <div class="grid grid-cols-2 gap-2 text-[10px]">
+                                        <div class="p-2 bg-slate-800 rounded border border-slate-600">
+                                            <div class="flex justify-between text-slate-400 mb-1">
+                                                <span>Nível 1</span>
+                                                <div class="flex items-center">
+                                                    <input type="number" id="bonusTier1" value="3"
+                                                        class="w-6 bg-transparent text-right text-yellow-500 font-bold outline-none appearance-none p-0 border-none focus:ring-0">
+                                                    <span>%</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex gap-1 items-center text-slate-500">
+                                                <input type="number" id="minTier1" value="50"
+                                                    class="w-full bg-transparent text-center border-b border-slate-600 focus:border-yellow-500 outline-none text-slate-300">
+                                                <span>-</span>
+                                                <input type="number" id="limitTier1" value="99"
+                                                    class="w-full bg-transparent text-center border-b border-slate-600 focus:border-yellow-500 outline-none text-slate-300">
+                                            </div>
+                                        </div>
+
+                                        <div class="p-2 bg-slate-800 rounded border border-slate-600">
+                                            <div class="flex justify-between text-slate-400 mb-1">
+                                                <span>Nível 2</span>
+                                                <div class="flex items-center">
+                                                    <input type="number" id="bonusTier2" value="6"
+                                                        class="w-6 bg-transparent text-right text-yellow-500 font-bold outline-none appearance-none p-0 border-none focus:ring-0">
+                                                    <span>%</span>
+                                                </div>
+                                            </div>
+                                            <div
+                                                class="text-center text-slate-500 mt-2 text-[9px] uppercase tracking-wide">
+                                                > Teto Nível 1
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="simSummaryCard"
+                                    class="bg-slate-900/60 rounded-lg border border-emerald-700/40 p-3 mt-3 hidden">
+                                    <div class="flex justify-between items-center gap-3 text-xs">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="w-1 h-10 rounded-full bg-gradient-to-b from-emerald-400 to-blue-500">
+                                            </div>
+                                            <div>
+                                                <div class="text-[11px] font-bold text-slate-100">Investimento
+                                                    Simulado</div>
+                                                <div id="simSummaryMeta"
+                                                    class="text-[10px] text-slate-400 mt-0.5"></div>
+                                            </div>
+                                        </div>
+                                        <div class="text-right space-y-0.5">
+                                            <div>
+                                                <span
+                                                    class="block text-[9px] uppercase tracking-wide text-slate-500">Inicial</span>
+                                                <span id="simSummaryInitial"
+                                                    class="block text-[11px] font-bold text-slate-100">R$ 0,00</span>
+                                            </div>
+                                            <div>
+                                                <span
+                                                    class="block text-[9px] uppercase tracking-wide text-slate-500 mt-1">Final</span>
+                                                <span id="simSummaryFinal"
+                                                    class="block text-[11px] font-bold text-emerald-400">R$ 0,00</span>
+                                            </div>
+                                            <div>
+                                                <span
+                                                    class="block text-[9px] uppercase tracking-wide text-slate-500 mt-1">Lucro</span>
+                                                <span id="simSummaryProfit"
+                                                    class="block text-[11px] font-bold text-emerald-300">R$ 0,00</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="simSummaryCycleEnds"></div>
+                                </div>
+                                <button onclick="app.openCommitModal()"
+                                    class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-3 rounded-lg transition-colors flex items-center justify-center gap-2">
+                                    <i class="fas fa-check-circle"></i> Efetivar Simulação
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Evolução Patrimonial (Chart) -->
+        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-2">
+                    <h3 class="font-bold text-white flex items-center gap-2"><i
+                            class="fas fa-chart-area text-blue-500"></i> Evolução Patrimonial</h3>
+                </div>
+            </div>
+            <div class="h-[300px] w-full">
+                <canvas id="balanceChart"></canvas>
+            </div>
+            <!-- Chart Legend -->
+            <div class="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-slate-700/50 pt-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-0.5 bg-[#f59e0b] rounded-full"></div>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Saque Planejado</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-0.5 bg-[#8b5cf6] rounded-full"></div>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Retorno de Contrato</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="w-full py-4 mt-8 border-t border-slate-800/50">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-2 text-[9px] text-slate-500 uppercase tracking-wider font-medium">
+            
+            <div class="flex items-center gap-2">
+                <span>Desenvolvido por <strong class="text-slate-400">Patrick Godoy</strong></span>
+                <span class="hidden md:inline text-slate-700">•</span>
+                <span class="font-mono text-slate-600">v2.2.2</span>
+            </div>
+
+            <a href="mailto:patricksud96@gmail.com?subject=Gestor%20SP%20-%20Bug%2FSugestão"
+               class="hover:text-indigo-400 transition-colors flex items-center gap-1.5 group">
+               <i class="fas fa-envelope group-hover:animate-pulse"></i> 
+               Reportar Bugs / Sugestões
+            </a>
+        </div>
+    </footer>
+
+    <!-- Modals (Day, Card, Profile, Commit) -->
+    <!-- Day Detail Modal -->
+    <div id="dayModal" class="fixed inset-0 z-[60] hidden modal-overlay flex items-center justify-center p-4">
+        <div
+            class="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl max-w-md w-full p-6 transform transition-all scale-100 animate-fade-in relative max-h-[80vh] overflow-y-auto">
+            <button onclick="app.closeModal('dayModal')"
+                class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
+            <h3 class="text-xl font-bold text-white mb-1 flex items-center gap-2"><i
+                    class="far fa-calendar-check text-emerald-500"></i> <span id="modalDate">Data</span></h3>
+            <div class="space-y-4 mt-6">
+                <div class="grid grid-cols-2 gap-2 text-center">
+                    <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-700">
+                        <span class="text-[10px] text-slate-500 font-bold uppercase block">Inicial</span>
+                        <span class="text-slate-300 font-bold font-mono" id="modalStartBal">R$ 0,00</span>
+                    </div>
+                    <div class="bg-slate-900/50 p-3 rounded-lg border border-emerald-900/30">
+                        <span class="text-[10px] text-emerald-500 font-bold uppercase block">Final</span>
+                        <span class="text-white font-bold font-mono text-lg" id="modalEndBal">R$ 0,00</span>
+                    </div>
+                </div>
+                <div id="modalFlowsGrid" class="border-t border-slate-700/50 pt-3">
+                    <!-- Dynamic Content Injected Here -->
+                </div>
+                <div id="modalMaturingSection" class="border-t border-slate-700/50 pt-3 hidden">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase mb-2">Contratos Finalizados</p>
+                    <div id="modalMaturingList" class="bg-slate-900 rounded-lg p-2 max-h-[150px] overflow-y-auto"></div>
+                </div>
+                <div id="modalWithdrawSection" class="pt-3 border-t border-dashed border-slate-600 hidden">
+                    <div
+                        class="text-center bg-gradient-to-br from-yellow-900/20 to-slate-900 rounded-xl p-3 border border-yellow-900/30">
+                        <div class="text-2xl font-black text-white" id="modalWithdrawVal">R$ 0,00</div>
+                        <div class="text-[10px] mt-1" id="modalWithdrawStatus">Pendente</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generic Card Modal -->
+    <div id="cardModal" class="fixed inset-0 z-[60] hidden modal-overlay flex items-center justify-center p-4">
+        <div
+            class="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl max-w-sm w-full p-6 transform transition-all scale-100 animate-fade-in relative">
+            <button onclick="app.closeModal('cardModal')"
+                class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
+            <div id="cardModalContent"></div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profileModal" class="fixed inset-0 z-[60] hidden modal-overlay flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl max-w-sm w-full p-6 relative">
+            <button onclick="app.closeModal('profileModal')"
+                class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
+            <h3 class="text-lg font-bold text-white mb-4">Gerenciar Perfis</h3>
+            <div class="space-y-4">
+                <div class="flex gap-2">
+                    <input type="text" id="editCurrentProfileName"
+                        class="custom-input flex-1 rounded-lg px-3 py-2 text-xs">
+                    <button onclick="app.saveProfileName()" class="bg-emerald-600 text-white px-3 rounded-lg text-xs"><i
+                            class="fas fa-save"></i></button>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] text-slate-400 font-bold uppercase">Novo Perfil</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="newProfileName" class="custom-input flex-1 rounded-lg px-3 py-2 text-xs">
+                        <button onclick="app.createProfile()" class="bg-blue-600 text-white px-3 rounded-lg text-xs"><i
+                                class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+                <div id="profileList"
+                    class="max-h-[200px] overflow-y-auto border border-slate-700 rounded-lg divide-y divide-slate-700">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Commit Modal -->
+    <div id="commitModal" class="fixed inset-0 z-[70] hidden modal-overlay flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl max-w-sm w-full p-6 relative">
+            <button onclick="app.closeModal('commitModal')"
+                class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
+            <h3 class="text-lg font-bold text-white mb-2">Efetivar Simulação</h3>
+            <div class="space-y-4 pt-2">
+                <input type="text" id="commitBaseName" placeholder="Nome base dos aportes"
+                    class="custom-input w-full rounded-lg px-3 py-2 text-xs">
+                <div>
+                    <label class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Abater de qual carteira?</label>
+                    <select id="commitWallet" class="custom-input w-full rounded-lg px-3 py-2 text-xs">
+                        <option value="none">Nenhuma (Simulação apenas)</option>
+                        <option value="personal">Carteira Pessoal</option>
+                        <option value="revenue">Carteira de Receita</option>
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="app.closeModal('commitModal')"
+                        class="flex-1 bg-slate-700 text-white text-xs py-2 rounded-lg">Cancelar</button>
+                    <button onclick="app.confirmCommit()"
+                        class="flex-1 bg-emerald-600 text-white text-xs py-2 rounded-lg">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Selective Modal -->
+    <div id="exportModal" class="fixed inset-0 z-[70] hidden modal-overlay flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl max-w-sm w-full p-6 relative">
+            <button onclick="app.closeModal('exportModal')"
+                class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
+            <h3 class="text-lg font-bold text-white mb-2"><i class="fas fa-file-export text-blue-500 mr-2"></i>Exportar Backup</h3>
+            <p class="text-[10px] text-slate-400 font-bold uppercase mb-4 tracking-wider">Selecionar Perfis</p>
+            
+            <div id="exportProfileList" class="space-y-2 mb-6 max-h-[250px] overflow-y-auto custom-scrollbar pr-2">
+                <!-- Profiles with checkboxes will be injected here -->
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="app.closeModal('exportModal')"
+                    class="flex-1 bg-slate-700 hover:bg-slate-600 text-white text-xs py-3 rounded-xl font-bold transition-colors">Cancelar</button>
+                <button onclick="app.confirmExport()"
+                    class="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-xs py-3 rounded-xl font-bold shadow-lg shadow-blue-900/40 transition-colors">Exportar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts Modal -->
+    <div id="alertsModal" class="fixed inset-0 z-[70] hidden modal-overlay flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl max-w-sm w-full p-6 relative">
+            <button onclick="app.closeModal('alertsModal')"
+                class="absolute top-4 right-4 text-slate-500 hover:text-white"><i class="fas fa-times"></i></button>
+            <h3 class="text-lg font-bold text-white mb-2"><i class="fas fa-bell text-yellow-500 mr-2"></i>Alertas do
+                Sistema</h3>
+            <div id="alertsList" class="space-y-3 mt-4 max-h-[300px] overflow-y-auto custom-scrollbar">
+                <p class="text-xs text-slate-500 text-center italic">Nenhum alerta pendente</p>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Auth Modal -->
+    <div id="authModal"
+        class="fixed inset-0 z-[80] hidden modal-overlay flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div
+            class="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl max-w-sm w-full p-8 relative flex flex-col items-center text-center">
+            <button id="closeAuthModal" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i
+                    class="fas fa-times"></i></button>
+
+            <div
+                class="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-900/50 mb-4">
+                <i class="fas fa-chart-pie text-white text-2xl"></i>
+            </div>
+
+            <h3 class="text-2xl font-bold text-white mb-1">Bem-vindo(a)</h3>
+            <p class="text-sm text-slate-400 mb-6">Faça login para salvar seus dados na nuvem e acessar de qualquer
+                lugar.</p>
+
+            <button id="loginGoogleBtn"
+                class="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-100 text-slate-900 font-bold py-3 rounded-xl transition-all mb-4">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5">
+                Continuar com Google
+            </button>
+
+            <p class="text-[10px] text-slate-500">Seus dados são sincronizados automaticamente e criptografados.</p>
+        </div>
+    </div>
+
+    <!-- Timeline Modal (Extrato Style) -->
+    <div id="timelineModal" class="fixed inset-0 z-[70] hidden modal-overlay flex items-center justify-center p-4">
+        <div
+            class="bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl max-w-2xl w-full h-[85vh] flex flex-col overflow-hidden animate-fade-in relative">
+            <!-- Modal Header -->
+            <div class="p-6 bg-slate-900 border-b border-slate-800 flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-white">Extrato Detalhado</h3>
+                    <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-1">Evolução Patrimonial
+                        Dia a Dia</p>
+                </div>
+                <button onclick="app.closeModal('timelineModal')"
+                    class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-700 transition-all">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body (Custom Scrollbar) -->
+            <div id="timelineContent"
+                class="flex-1 overflow-y-auto p-6 space-y-8 scroll-smooth custom-scrollbar bg-slate-900">
+                <!-- Timeline items will be injected here -->
+            </div>
+
+            <!-- Modal Footer (Cumulative Summary) -->
+            <div id="timelineFooter" class="p-6 bg-slate-900 border-t border-slate-800">
+                <!-- Detailed summary injected here via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Assistant Floating Button -->
+    <button id="aiAssistantBtn" onclick="app.openAiChat()"
+        class="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-purple-600 to-indigo-700 rounded-full shadow-lg shadow-purple-900/50 z-40 hidden items-center justify-center hover:scale-110 transition-transform ai-pulse-btn group">
+        <i class="fas fa-robot text-white text-xl group-hover:animate-bounce"></i>
+    </button>
+
+    <!-- AI Chat Modal -->
+    <div id="aiChatModal" class="fixed inset-0 z-[80] hidden modal-overlay flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-slate-900 sm:rounded-2xl border-t sm:border border-slate-700 shadow-2xl w-full sm:max-w-lg h-[85vh] sm:h-[600px] flex flex-col overflow-hidden animate-slide-up">
+            <!-- Chat Header -->
+            <div class="p-4 bg-gradient-to-r from-purple-900/50 to-indigo-900/50 border-b border-slate-700 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
+                        <i class="fas fa-robot text-white"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-white">Assistente Financeiro</h3>
+                        <p class="text-[10px] text-slate-400">Powered by Gemini AI</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="app.clearAiChat()" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors" title="Limpar conversa">
+                        <i class="fas fa-trash-alt text-sm"></i>
+                    </button>
+                    <button onclick="app.closeModal('aiChatModal')" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chat Messages -->
+            <div id="aiChatMessages" class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-slate-900">
+                <!-- Welcome Message -->
+                <div class="ai-message">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex-shrink-0 flex items-center justify-center">
+                            <i class="fas fa-robot text-white text-xs"></i>
+                        </div>
+                        <div class="flex-1 bg-slate-800 rounded-2xl rounded-tl-sm p-3 border border-slate-700">
+                            <p class="text-sm text-slate-200">Olá! 👋 Sou seu assistente financeiro. Posso analisar suas finanças, explicar funcionalidades e sugerir otimizações.</p>
+                            <p class="text-[10px] text-slate-500 mt-2">Experimente perguntar:</p>
+                            <div class="flex flex-wrap gap-1 mt-1">
+                                <button onclick="app.sendQuickAiMessage('Como está minha situação financeira?')" class="text-[10px] bg-slate-700 hover:bg-slate-600 text-slate-300 px-2 py-1 rounded-full transition-colors">
+                                    📊 Situação financeira
+                                </button>
+                                <button onclick="app.sendQuickAiMessage('Qual o melhor momento para sacar?')" class="text-[10px] bg-slate-700 hover:bg-slate-600 text-slate-300 px-2 py-1 rounded-full transition-colors">
+                                    💰 Quando sacar?
+                                </button>
+                                <button onclick="app.sendQuickAiMessage('Como funciona o simulador?')" class="text-[10px] bg-slate-700 hover:bg-slate-600 text-slate-300 px-2 py-1 rounded-full transition-colors">
+                                    🚀 Usar simulador
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Input -->
+            <div class="p-4 bg-slate-800 border-t border-slate-700">
+                <form id="aiChatForm" onsubmit="app.sendAiMessage(event)" class="flex items-center gap-2">
+                    <input type="text" id="aiChatInput" 
+                        placeholder="Digite sua pergunta..." 
+                        class="flex-1 bg-slate-900 border border-slate-700 rounded-xl py-3 px-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-colors"
+                        autocomplete="off">
+                    <button type="submit" id="aiSendBtn"
+                        class="w-12 h-12 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl flex items-center justify-center transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onboarding Modal (Wizard) -->
+    <div id="onboardingModal" class="fixed inset-0 z-[100] hidden modal-overlay flex items-center justify-center p-4 backdrop-blur-md">
+        <div class="bg-slate-900 rounded-3xl border border-slate-700 shadow-2xl max-w-lg w-full overflow-hidden animate-slide-up flex flex-col max-h-[90vh]">
+            <!-- Wizard Header -->
+            <div class="p-6 bg-gradient-to-r from-blue-900/40 to-indigo-900/40 border-b border-slate-800">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-900/50">
+                            <i class="fas fa-magic text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white leading-tight" id="onboardingTitle">Boas-vindas</h3>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Configuração Inicial Guiada</p>
+                        </div>
+                    </div>
+                    <button onclick="app.dismissOnboarding()" class="text-slate-500 hover:text-white transition-colors p-2" title="Pular configuração">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
+                <!-- Progress Indicator -->
+                <div class="flex items-center gap-1" id="onboardingProgress">
+                    <!-- Dots will be injected here -->
+                </div>
+            </div>
+
+            <!-- Wizard Body -->
+            <div id="onboardingBody" class="flex-1 overflow-y-auto p-8 custom-scrollbar bg-slate-900">
+                <!-- Content injected here -->
+            </div>
+
+            <!-- Wizard Footer -->
+            <div class="p-6 bg-slate-800/50 border-t border-slate-800 flex items-center justify-between gap-4">
+                <button id="onboardingBackBtn" onclick="app.prevOnboardingStep()" 
+                    class="hidden px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold transition-all border border-slate-600">
+                    <i class="fas fa-chevron-left mr-2"></i> Voltar
+                </button>
+                <div class="flex-1"></div>
+                <button id="onboardingNextBtn" onclick="app.nextOnboardingStep()" 
+                    class="px-8 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-blue-900/50 flex items-center gap-2">
+                    Continuar <i class="fas fa-chevron-right ml-1"></i>
+                </button>
+                <button id="onboardingFinishBtn" onclick="app.finishOnboarding()" 
+                    class="hidden px-8 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-900/50 flex items-center gap-2">
+                    Começar a Usar <i class="fas fa-check ml-1"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Entry Script -->
+    <script type="module" src="js/main.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker registado!', reg))
+            .catch(err => console.log('Falha no registo do SW:', err));
+        });
+      }
+    </script>
+</body>
+
+</html>
+>>>>>>> C:/Users/Patrick Godoy/.windsurf/worktrees/Gestor-SP/Gestor-SP-184f9fbc/index.html
