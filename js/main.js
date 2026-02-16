@@ -733,6 +733,17 @@ class App {
     const newVal = !current
     store.updateInput('futureToggle', String(newVal))
 
+    // Preencher campo de data com data atual ao ativar simulador
+    if (newVal) {
+      const simStartDateInput = document.getElementById('simStartDate')
+      if (simStartDateInput && !simStartDateInput.value) {
+        const today = new Date()
+        const todayStr = today.toISOString().split('T')[0]
+        simStartDateInput.value = todayStr
+        store.updateInput('simStartDate', todayStr)
+      }
+    }
+
     document
       .getElementById('futureConfigPanel')
       .classList.toggle('hidden', !newVal)
