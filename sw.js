@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gestor-sp-v2.2.4'
+const CACHE_NAME = 'gestor-sp-v2.2.2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -13,63 +13,58 @@ const ASSETS_TO_CACHE = [
   './js/utils/formatter.js',
   './js/ai-service.js',
   './js/utils/exporter.js'
-]
+];
 
-self.addEventListener('install', event => {
-  self.skipWaiting()
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      console.log('Abrindo cache v2.2.4')
-      return cache.addAll(ASSETS_TO_CACHE)
-    })
-  )
-})
-
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      // Cache hit - retorna a resposta do cache
-      if (response) {
-        return response
-      }
-      return fetch(event.request)
-    })
-  )
-})
-
-self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME]
-  event.waitUntil(
-    caches
-      .keys()
-      .then(cacheNames => {
-        return Promise.all(
-          cacheNames.map(cacheName => {
-            if (cacheWhitelist.indexOf(cacheName) === -1) {
-              return caches.delete(cacheName)
-            }
-          })
-        )
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        console.log('Abrindo cache v2.2.2');
+        return cache.addAll(ASSETS_TO_CACHE);
       })
-      .then(() => self.clients.claim())
-  )
-})
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request)
+      .then((response) => {
+        // Cache hit - retorna a resposta do cache
+        if (response) {
+          return response;
+        }
+        return fetch(event.request);
+      })
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
+});
 
 // --- Push Notification Listeners ---
 
-self.addEventListener('push', event => {
-  let data = {
-    title: 'Gestor SP',
-    body: 'Nova atualização disponível!',
-    icon: 'assets/icons/icon-192x192.png'
-  }
+self.addEventListener('push', (event) => {
+  let data = { title: 'Gestor SP', body: 'Nova atualização disponível!', icon: 'assets/icons/icon-192x192.png' };
 
   if (event.data) {
     try {
-      const pushData = event.data.json()
-      data = { ...data, ...pushData }
+      const pushData = event.data.json();
+      data = { ...data, ...pushData };
     } catch (e) {
-      data.body = event.data.text()
+      data.body = event.data.text();
     }
   }
 
@@ -82,30 +77,29 @@ self.addEventListener('push', event => {
       dateOfArrival: Date.now(),
       primaryKey: '1'
     }
-  }
-
-  event.waitUntil(self.registration.showNotification(data.title, options))
-})
-
-self.addEventListener('notificationclick', event => {
-  event.notification.close()
+  };
 
   event.waitUntil(
-    clients
-      .matchAll({ type: 'window', includeUncontrolled: true })
-      .then(clientList => {
+    self.registration.showNotification(data.title, options)
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
         if (clientList.length > 0) {
-          let client = clientList[0]
+          let client = clientList[0];
           for (let i = 0; i < clientList.length; i++) {
             if (clientList[i].focused) {
-              client = clientList[i]
+              client = clientList[i];
             }
           }
-          return client.focus()
+          return client.focus();
         }
-        return clients.openWindow('./')
+        return clients.openWindow('./');
       })
-  )
-})
-
-
+  );
+});
