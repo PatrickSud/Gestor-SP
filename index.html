@@ -661,7 +661,7 @@
                     <i class="fas fa-chevron-left mr-2"></i> Fechar Menu
                 </button>
                 <footer class="text-center text-[10px] text-slate-600 py-4 mt-2">
-                    <p>&copy; 2025 Gestor SP - v2.2.8</p>
+                    <p>&copy; 2025 Gestor SP - v2.2.9</p>
                 </footer>
             </div>
         </div>
@@ -1171,7 +1171,7 @@
             <div class="flex items-center gap-2">
                 <span>Desenvolvido por <strong class="text-slate-400">Patrick Godoy</strong></span>
                 <span class="hidden md:inline text-slate-700">•</span>
-                <span class="font-mono text-slate-600">v2.2.8</span>
+                <span class="font-mono text-slate-600">v2.2.9</span>
             </div>
 
             <a href="mailto:patricksud96@gmail.com?subject=Gestor%20SP%20-%20Bug%2FSugestão"
@@ -1216,6 +1216,33 @@
                         <div class="text-[10px] mt-1" id="modalWithdrawStatus">Pendente</div>
                     </div>
                 </div>
+                <div id="modalActionsSection" class="pt-3 border-t border-slate-700/50">
+                    <div id="modalActionsContainer" class="space-y-2">
+                        <!-- Dynamic action buttons will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Withdrawal Modal -->
+    <div id="manualWithdrawModal" class="fixed inset-0 z-[60] hidden modal-overlay flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl max-w-md w-full p-6 transform transition-all scale-100 animate-fade-in relative max-h-[80vh] overflow-y-auto">
+            <button onclick="app.closeModal('manualWithdrawModal')" class="absolute top-4 right-4 text-slate-500 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fas fa-wallet text-blue-400"></i>
+                Saque Manual
+            </h3>
+            <p class="text-xs text-slate-400 mb-4">Selecione o valor para saque manual em <span id="manualWithdrawDate" class="text-emerald-400 font-bold"></span></p>
+            <div id="manualWithdrawTiers" class="grid grid-cols-4 gap-1.5 mb-4">
+                <!-- Withdrawal tiers will be populated here -->
+            </div>
+            <div class="flex gap-2">
+                <button onclick="app.closeModal('manualWithdrawModal')" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-2 px-4 rounded-lg text-xs font-bold transition-colors">
+                    Cancelar
+                </button>
             </div>
         </div>
     </div>
@@ -1451,13 +1478,7 @@
         </div>
     </div>
 
-    <!-- Botão de orientação (mobile) -->
-    <button id="orientationToggleBtn"
-        class="fixed bottom-4 left-4 z-50 bg-slate-900/90 border border-slate-600 text-white text-[10px] font-bold px-3 py-2 rounded-full shadow-lg flex items-center gap-2 md:hidden hidden">
-        <i class="fas fa-expand-arrows-alt text-xs"></i>
-        <span>Modo horizontal</span>
-    </button>
-
+    
     <!-- Onboarding Modal (Wizard) -->
     <div id="onboardingModal" class="fixed inset-0 z-[100] hidden modal-overlay flex items-center justify-center p-4 backdrop-blur-md">
         <div class="bg-slate-900 rounded-3xl border border-slate-700 shadow-2xl max-w-lg w-full overflow-hidden animate-slide-up flex flex-col max-h-[90vh]">

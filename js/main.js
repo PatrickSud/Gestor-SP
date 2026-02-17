@@ -1166,6 +1166,93 @@ class App {
     } else {
       wSec.classList.add('hidden')
     }
+
+    // Action buttons section
+    this.renderDayModalActions(data, dateStr)
+  }
+
+  renderDayModalActions(data, dateStr) {
+    const container = document.getElementById('modalActionsContainer')
+    if (!container) return
+
+    let actionsHtml = ''
+
+    // If there's a planned withdrawal, add "Desconsiderar Saque Planejado" button
+    if (data.status === 'planned') {
+      actionsHtml += `
+        <button onclick="app.dismissPlannedWithdrawal('${dateStr}')" 
+          class="w-full bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 border border-amber-600/40 text-[10px] font-bold py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-2">
+          <i class="fas fa-times-circle"></i>
+          Desconsiderar Saque Planejado
+        </button>
+      `
+    }
+
+    // For all days (except realized withdrawals), add "Saque Manual" button
+    if (data.status !== 'realized') {
+      const hasBalance =
+        (data.endPersonal || 0) > 0 || (data.endRevenue || 0) > 0
+      if (hasBalance) {
+        actionsHtml += `
+          <button onclick="app.openManualWithdrawalModal('${dateStr}')" 
+            class="w-full bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-600/40 text-[10px] font-bold py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-2">
+            <i class="fas fa-hand-holding-usd"></i>
+            Saque Manual
+          </button>
+        `
+      }
+    }
+
+    container.innerHTML = actionsHtml
+  }
+
+  dismissPlannedWithdrawal(dateStr) {
+    const skippedWithdrawals = store.state.inputs.skippedWithdrawals || []
+    if (!skippedWithdrawals.includes(dateStr)) {
+      store.updateInput('skippedWithdrawals', [...skippedWithdrawals, dateStr])
+      this.runCalculation()
+      this.openDayDetails(dateStr) // Refresh modal
+      Renderer.toast('Saque planejado desconsiderado', 'success')
+    }
+  }
+
+  openManualWithdrawalModal(dateStr) {
+    const modal = document.getElementById('manualWithdrawModal')
+    const dateEl = document.getElementById('manualWithdrawDate')
+    const tiersContainer = document.getElementById('manualWithdrawTiers')
+
+    if (dateEl) dateEl.innerText = Formatter.dateDisplay(dateStr)
+
+    // Populate withdrawal tiers
+    if (tiersContainer) {
+      tiersContainer.innerHTML = Calculator.WITHDRAWAL_TIERS.map(t => {
+        const v = Formatter.fromCents(t)
+        return `<button class="tier-btn" onclick="app.executeManualWithdrawal('${dateStr}', ${v})">${v.toLocaleString('pt-BR')}</button>`
+      }).join('')
+    }
+
+    this.openModal('manualWithdrawModal')
+  }
+
+  executeManualWithdrawal(dateStr, amount) {
+    // Find the best wallet based on available balance
+    const data = store.state.dailyData[dateStr]
+    if (!data) return
+
+    let wallet = 'revenue'
+    if (data.endRevenue < amount && data.endPersonal >= amount) {
+      wallet = 'personal'
+    } else if (
+      data.endPersonal >= amount &&
+      data.endPersonal > data.endRevenue
+    ) {
+      wallet = 'personal'
+    }
+
+    // Execute the withdrawal
+    this.executeWithdrawal(dateStr, amount, wallet, false)
+    this.closeModal('manualWithdrawModal')
+    this.openDayDetails(dateStr) // Refresh modal
   }
 
   getColorStyle(type) {
