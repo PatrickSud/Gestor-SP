@@ -661,7 +661,7 @@
                     <i class="fas fa-chevron-left mr-2"></i> Fechar Menu
                 </button>
                 <footer class="text-center text-[10px] text-slate-600 py-4 mt-2">
-                    <p>&copy; 2025 Gestor SP - v2.2.9</p>
+                    <p>&copy; 2025 Gestor SP - v2.2.10</p>
                 </footer>
             </div>
         </div>
@@ -917,22 +917,21 @@
                     <div id="content-resources" class="">
                         <div onclick="app.togglePortfolioDetails()"
                             class="p-4 bg-slate-900/50 cursor-pointer hover:bg-slate-800 transition-colors border-b border-slate-700 group">
-                            <div class="flex justify-between items-center">
-                                <div class="flex items-center gap-2">
-                                    <i class="fas fa-chevron-down text-slate-500 transition-transform duration-300 -rotate-90"
-                                        id="invChevron"></i>
-                                    <h3 class="text-xs font-bold text-white uppercase tracking-wider">Carteira Ativa
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                                        <i class="fas fa-wallet text-blue-400"></i>
+                                        Carteira Ativa
                                     </h3>
                                 </div>
-                                <div class="text-right">
-                                    <div class="text-[10px] text-slate-400 font-bold" id="summaryInvCount">0
-                                        contratos</div>
+                                <div class="text-right flex items-center gap-4">
+                                    <div class="text-[10px] text-slate-400 font-bold" id="summaryInvCount">0 contratos</div>
+                                    <div class="text-blue-400 font-mono whitespace-nowrap font-bold text-sm bg-slate-900/50 px-2 py-1 rounded-md border border-slate-700" id="summaryInvTotal">R$ 0,00</div>
                                 </div>
                             </div>
                             <div class="mt-2 flex items-center justify-end gap-4 text-[10px]">
                                 <div class="text-emerald-400 font-bold whitespace-nowrap" id="summaryInvProfit">Lucro Est: R$ 0,00</div>
                                 <div class="text-purple-400 font-bold whitespace-nowrap" id="summaryRealizedProfit">Realizado: R$ 0,00</div>
-                                <div class="text-blue-400 font-mono whitespace-nowrap" id="summaryInvTotal">Total: R$ 0,00</div>
                             </div>
                         </div>
 
@@ -1171,7 +1170,7 @@
             <div class="flex items-center gap-2">
                 <span>Desenvolvido por <strong class="text-slate-400">Patrick Godoy</strong></span>
                 <span class="hidden md:inline text-slate-700">•</span>
-                <span class="font-mono text-slate-600">v2.2.9</span>
+                <span class="font-mono text-slate-600">v2.2.10</span>
             </div>
 
             <a href="mailto:patricksud96@gmail.com?subject=Gestor%20SP%20-%20Bug%2FSugestão"

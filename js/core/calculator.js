@@ -373,6 +373,18 @@ export const Calculator = {
           isCycleEnd = true
           cycleEnds.push(currentDayStr)
           completedReps++
+
+          // Devolve o capital ao final do último ciclo da simulação
+          if (completedReps === totalReps) {
+            if (simSourceWallet === 'personal') {
+              currentPersonalWallet += currentInv
+            } else {
+              currentRevenueWallet += currentInv
+            }
+            // Adiciona ao montante de retornos do dia para refletir no UI
+            stepReturns += currentInv
+            currentInv = 0
+          }
         }
       }
 
