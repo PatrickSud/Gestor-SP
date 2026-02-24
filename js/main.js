@@ -496,9 +496,21 @@ class App {
   }
 
   // --- Push Notification Methods ---
+  // Helper: returns true if the Notifications API is supported in this browser/context
+  _isNotificationSupported() {
+    return typeof Notification !== 'undefined'
+  }
+
   checkNotificationPermission() {
     const btn = document.getElementById('pushNotificationBtn')
     if (!btn) return
+
+    // iOS Safari and some Android browsers do not support the Notification API at all.
+    // Guard against ReferenceError by checking for existence first.
+    if (!this._isNotificationSupported()) {
+      btn.classList.add('hidden') // Hide the button on unsupported platforms
+      return
+    }
 
     if (Notification.permission === 'granted') {
       btn.classList.add('hidden')
@@ -508,6 +520,10 @@ class App {
   }
 
   async requestNotificationPermission() {
+    if (!this._isNotificationSupported()) {
+      Renderer.toast('Notificações não são suportadas neste dispositivo/browser.', 'warning')
+      return
+    }
     try {
       const permission = await Notification.requestPermission()
       if (permission === 'granted') {
@@ -524,20 +540,39 @@ class App {
   }
 
   checkWithdrawalNotification(results) {
-    if (Notification.permission !== 'granted' || !results.nextWithdrawDate)
-      return
+    // Wrap entirely in try-catch so any notification error never crashes the app
+    try {
+      if (!this._isNotificationSupported()) return
+      if (Notification.permission !== 'granted' || !results.nextWithdrawDate) return
 
-    const today = Formatter.getTodayDate()
-    if (results.nextWithdrawDate === today) {
+      const today = Formatter.getTodayDate()
+      if (results.nextWithdrawDate !== today) return
+
       // Check if we already notified today to avoid spam
       const lastNotify = localStorage.getItem('lastWithdrawNotify')
-      if (lastNotify !== today) {
-        new Notification('💰 Gestor SP: Dia de Saque!', {
-          body: `Hoje é dia de saque estimado de ${Formatter.currency(results.nextWithdraw)}. Acesse o app para confirmar!`,
-          icon: 'assets/icons/icon-192x192.png'
-        })
-        localStorage.setItem('lastWithdrawNotify', today)
+      if (lastNotify === today) return
+
+      const title = '💰 Gestor SP: Dia de Saque!'
+      const options = {
+        body: `Hoje é dia de saque estimado de ${Formatter.currency(results.nextWithdraw)}. Acesse o app para confirmar!`,
+        icon: 'assets/icons/icon-192x192.png'
       }
+
+      // Mobile browsers (especially iOS) require notifications to be sent via
+      // the Service Worker. Direct `new Notification()` throws in mobile context.
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.ready
+          .then(registration => registration.showNotification(title, options))
+          .catch(err => console.warn('SW notification failed:', err))
+      } else {
+        // Fallback for desktop browsers that support direct Notification
+        new Notification(title, options)
+      }
+
+      localStorage.setItem('lastWithdrawNotify', today)
+    } catch (error) {
+      // Silently swallow notification errors — they must never crash the app
+      console.warn('Notificação de saque ignorada:', error)
     }
   }
 
