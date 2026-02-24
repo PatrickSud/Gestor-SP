@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gestor-sp-v2.2.14'
+const CACHE_NAME = 'gestor-sp-v2.2.16'
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

@@ -903,11 +903,11 @@
                 <div class="flex border-b border-slate-700">
                     <button onclick="app.switchTab('resources')" id="tab-resources"
                         class="flex-1 py-3 text-xs font-bold uppercase tracking-wider text-white bg-slate-700/50 border-b-2 border-blue-500 transition-colors">
-                        <i class="fas fa-list-ul mr-1"></i> Investimentos
+                        <i class="fas fa-wallet mr-1"></i> Investimentos
                     </button>
                     <button onclick="app.switchTab('simulation')" id="tab-simulation"
                         class="relative flex-1 py-3 text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-white border-b-2 border-transparent transition-colors">
-                        <i class="fas fa-rocket mr-1"></i> Simulador
+                        <i class="fas fa-rocket mr-1"></i> Investir
                         <span id="simActiveIndicator" class="hidden inline-block ml-1 w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-lg shadow-emerald-400/50"></span>
                     </button>
                 </div>
@@ -915,17 +915,14 @@
                 <div>
                     <!-- Tab Content: Resources -->
                     <div id="content-resources" class="">
-                        <div onclick="app.togglePortfolioDetails()"
-                            class="p-4 bg-slate-900/50 cursor-pointer hover:bg-slate-800 transition-colors border-b border-slate-700 group">
+                        <!-- Header sempre estático, sem recolher -->
+                        <div class="p-4 bg-slate-900/50 border-b border-slate-700">
                             <div class="flex justify-between items-start">
-                                <div>
-                                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                                        <i class="fas fa-wallet text-blue-400"></i>
-                                        Carteira
-                                    </h3>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-wallet text-blue-400"></i>
+                                    <div class="text-[10px] text-slate-400 font-bold" id="summaryInvCount">0 contratos</div>
                                 </div>
                                 <div class="text-right flex items-center gap-4">
-                                    <div class="text-[10px] text-slate-400 font-bold" id="summaryInvCount">0 contratos</div>
                                     <div class="text-blue-400 font-mono whitespace-nowrap font-bold text-xs bg-slate-900/50 px-2 py-1 rounded-md border border-slate-700" id="summaryInvTotal">R$ 0,00</div>
                                 </div>
                             </div>
@@ -935,22 +932,54 @@
                             </div>
                         </div>
 
-                        <div id="portfolioDetails"
-                            class="p-5 space-y-4 animate-fade-in border-b border-slate-700 hidden">
-                            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3 shadow-inner">
+                        <!-- Lista de contratos sempre expandida -->
+                        <div id="portfolioDetails" class="p-5 space-y-4 animate-fade-in border-b border-slate-700">
+                            <div class="max-h-[300px] overflow-y-auto custom-scrollbar">
+                                <ul id="portfolioList" class="space-y-2"></ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab Content: Simulation -->
+                    <div id="content-simulation" class="hidden p-5 space-y-5 animate-fade-in">
+
+                        <!-- Formulário de Adicionar Investimento (recolhido por padrão) -->
+                        <div class="bg-slate-800 rounded-xl border border-slate-700 shadow-inner overflow-hidden">
+                            <!-- Header clicável para expandir/recolher -->
+                            <div onclick="app.toggleNewInvForm()"
+                                class="p-3 flex items-center justify-between cursor-pointer hover:bg-slate-700/50 transition-colors select-none">
+                                <h4 class="text-xs font-bold text-slate-300 uppercase flex items-center gap-2">
+                                    <i class="fas fa-plus-circle text-blue-400"></i> Novo Investimento
+                                </h4>
+                                <i id="newInvChevron" class="fas fa-chevron-down text-slate-500 text-xs transition-transform duration-200"></i>
+                            </div>
+                            <!-- Conteúdo recolhido por padrão -->
+                            <div id="newInvFormBody" class="hidden p-4 pt-0 space-y-3 border-t border-slate-700">
                                 <input type="text" id="newInvName" placeholder="Nome do Ativo"
-                                    class="custom-input w-full rounded px-3 py-2 text-xs">
+                                    class="custom-input w-full rounded px-3 py-2 text-xs mt-3">
                                 <div class="grid grid-cols-2 gap-2">
-                                    <input type="number" id="newInvVal" step="0.01" placeholder="Valor R$"
-                                        class="custom-input w-full rounded px-3 py-2 text-xs">
-                                    <input type="date" id="newInvDate"
-                                        class="custom-input rounded px-2 py-2 text-xs text-slate-400">
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Valor R$</label>
+                                        <input type="number" id="newInvVal" step="0.01" placeholder="Valor R$"
+                                            class="custom-input w-full rounded px-3 py-2 text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Data</label>
+                                        <input type="date" id="newInvDate"
+                                            class="custom-input w-full rounded px-2 py-2 text-xs text-slate-400">
+                                    </div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-2">
-                                    <input type="number" id="newInvDays" value="3"
-                                        class="custom-input rounded px-3 py-2 text-xs w-full">
-                                    <input type="number" id="newInvRate" value="1.2" step="0.1"
-                                        class="custom-input rounded px-3 py-2 text-xs w-full">
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Dias</label>
+                                        <input type="number" id="newInvDays" value="3"
+                                            class="custom-input rounded px-3 py-2 text-xs w-full">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Taxa %</label>
+                                        <input type="number" id="newInvRate" value="1.2" step="0.1"
+                                            class="custom-input rounded px-3 py-2 text-xs w-full">
+                                    </div>
                                 </div>
                                 <div>
                                     <label class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Abater de qual carteira?</label>
@@ -962,17 +991,12 @@
                                 </div>
                                 <button id="addInvBtn"
                                     class="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded-lg transition-colors shadow-lg shadow-blue-900/20">
-                                    <i class="fas fa-plus mr-1"></i> Adicionar
+                                    <i class="fas fa-plus mr-1"></i> Adicionar Investimento
                                 </button>
                             </div>
-                            <div class="max-h-[300px] overflow-y-auto custom-scrollbar">
-                                <ul id="portfolioList" class="space-y-2"></ul>
-                            </div>
                         </div>
-                    </div>
 
-                    <!-- Tab Content: Simulation -->
-                    <div id="content-simulation" class="hidden p-5 space-y-5 animate-fade-in">
+                        <!-- Simulador de Reinvestimento -->
                         <div class="flex items-center justify-between bg-emerald-900/10 p-3 rounded-xl border border-emerald-500/20 cursor-pointer select-none hover:bg-emerald-900/20 transition-colors"
                             onclick="app.toggleFuturePlanning()">
                             <div>
@@ -980,7 +1004,7 @@
                                     class="text-xs text-emerald-400 font-bold uppercase flex items-center gap-2 cursor-pointer pointer-events-none">
                                     <i class="fas fa-lightbulb"></i> Modo Simulação
                                 </label>
-                                <p class="text-[9px] text-slate-500 mt-0.5">Projeta reinvestimentos futuros</p>
+                                <p class="text-[9px] text-slate-500 mt-0.5">Projeta investimentos futuros</p>
                             </div>
                             <div id="futureToggleVisual"
                                 class="w-10 h-5 rounded-full border border-slate-600 bg-slate-800 relative transition-all">
@@ -993,22 +1017,31 @@
                         <div id="futureConfigPanel" class="hidden space-y-4 pt-2">
                             <div class="space-y-3">
                                 <div>
-                                    <label class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Aporte
-                                        Simulado (R$)</label>
                                     <div class="grid grid-cols-2 gap-2">
-                                        <input type="number" id="capitalInicial" value="50" step="0.01"
-                                            class="custom-input w-full rounded-xl py-2 px-3 font-bold text-sm">
-                                        <input type="date" id="simStartDate"
-                                            class="custom-input w-full rounded-xl py-2 px-3 text-xs text-slate-400">
+                                        <div>
+                                            <label class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Aporte Simulado (R$)</label>
+                                            <input type="number" id="capitalInicial" value="50" step="0.01"
+                                                class="custom-input w-full rounded-xl py-2 px-3 font-bold text-sm">
+                                        </div>
+                                        <div>
+                                            <label class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Data de Início</label>
+                                            <input type="date" id="simStartDate"
+                                                class="custom-input w-full rounded-xl py-2 px-3 text-xs text-slate-400">
+                                        </div>
                                     </div>
-                                    <span class="text-[9px] text-slate-500">Data de início da simulação</span>
                                 </div>
                                 <div class="grid grid-cols-2 gap-3">
-                                    <input type="number" id="diasCiclo" value="3" placeholder="Dias"
-                                        class="custom-input w-full rounded-lg py-2 px-3 text-xs">
-                                    <input type="number" id="taxaDiaria" value="1.2" step="0.01"
-                                        placeholder="Taxa %"
-                                        class="custom-input w-full rounded-lg py-2 px-3 text-xs">
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Dias</label>
+                                        <input type="number" id="diasCiclo" value="3" placeholder="Dias"
+                                            class="custom-input w-full rounded-lg py-2 px-3 text-xs">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] text-slate-400 font-bold uppercase mb-1 block">Taxa %</label>
+                                        <input type="number" id="taxaDiaria" value="1.2" step="0.01"
+                                            placeholder="Taxa %"
+                                            class="custom-input w-full rounded-lg py-2 px-3 text-xs">
+                                    </div>
                                 </div>
                                 <div class="grid grid-cols-2 gap-3">
                                     <div>

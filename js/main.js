@@ -875,17 +875,17 @@ class App {
     }
   }
 
-  togglePortfolioDetails() {
-    const content = document.getElementById('portfolioDetails')
-    const chevron = document.getElementById('invChevron')
-    const isHidden = content.classList.contains('hidden')
-    content.classList.toggle('hidden')
-    chevron.classList.toggle('-rotate-90', !isHidden)
+  // Portfolio is always expanded now — function kept as no-op for safety
+  togglePortfolioDetails() {}
 
-    const resourcesContent = document.getElementById('content-resources')
-    if (resourcesContent) {
-      resourcesContent.classList.toggle('collapsed-padding', !isHidden)
-    }
+  // Toggles the "Novo Investimento" collapsible form in the Investir tab
+  toggleNewInvForm() {
+    const body = document.getElementById('newInvFormBody')
+    const chevron = document.getElementById('newInvChevron')
+    if (!body) return
+    const isHidden = body.classList.contains('hidden')
+    body.classList.toggle('hidden', !isHidden)
+    if (chevron) chevron.classList.toggle('rotate-180', isHidden)
   }
 
   adjustInput(id, delta) {
