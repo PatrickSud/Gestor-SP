@@ -247,8 +247,20 @@ class App {
           }
         }
 
-        if (el.id === 'bonusTier3Toggle' || el.id === 'limitTier1') {
+        if (
+          el.id === 'bonusTier3Toggle' ||
+          el.id === 'limitTier1' ||
+          el.id === 'bonusRulesToggle'
+        ) {
           this.updateBonusTierUI()
+          // Quando bonusRulesToggle é desativado, recolhe o painel automaticamente
+          if (el.id === 'bonusRulesToggle') {
+            const body = document.getElementById('bonusRulesBody')
+            const chevron = document.getElementById('bonusRulesChevron')
+            const isEnabled = el.checked
+            if (body) body.classList.toggle('hidden', !isEnabled)
+            if (chevron) chevron.classList.toggle('rotate-180', !isEnabled)
+          }
         }
 
         this.runCalculation() // Force immediate calculation on change
@@ -521,7 +533,10 @@ class App {
 
   async requestNotificationPermission() {
     if (!this._isNotificationSupported()) {
-      Renderer.toast('Notificações não são suportadas neste dispositivo/browser.', 'warning')
+      Renderer.toast(
+        'Notificações não são suportadas neste dispositivo/browser.',
+        'warning'
+      )
       return
     }
     try {
@@ -543,7 +558,8 @@ class App {
     // Wrap entirely in try-catch so any notification error never crashes the app
     try {
       if (!this._isNotificationSupported()) return
-      if (Notification.permission !== 'granted' || !results.nextWithdrawDate) return
+      if (Notification.permission !== 'granted' || !results.nextWithdrawDate)
+        return
 
       const today = Formatter.getTodayDate()
       if (results.nextWithdrawDate !== today) return
@@ -650,6 +666,7 @@ class App {
 
     this.restoreWeeksUI()
     this.restoreTeamUI()
+    this.restoreBonusRulesUI()
   }
 
   restoreTeamUI() {
@@ -672,6 +689,19 @@ class App {
       }
     })
     this.updateTeamDailyIncome()
+  }
+
+  restoreBonusRulesUI() {
+    const isBonusEnabled =
+      store.state.inputs.bonusRulesToggle === 'true' ||
+      store.state.inputs.bonusRulesToggle === true ||
+      store.state.inputs.bonusRulesToggle === undefined // Legacy default is true
+
+    const body = document.getElementById('bonusRulesBody')
+    const chevron = document.getElementById('bonusRulesChevron')
+
+    if (body) body.classList.toggle('hidden', !isBonusEnabled)
+    if (chevron) chevron.classList.toggle('rotate-180', !isBonusEnabled)
   }
 
   updateTeamDailyIncome() {
@@ -859,6 +889,14 @@ class App {
     }
   }
 
+  toggleBonusRulesSection() {
+    const toggle = document.getElementById('bonusRulesToggle')
+    if (toggle) {
+      toggle.checked = !toggle.checked
+      toggle.dispatchEvent(new Event('change'))
+    }
+  }
+
   updateFutureToggleVisual(on) {
     const knob = document.getElementById('futureToggleKnob')
     const visual = document.getElementById('futureToggleVisual')
@@ -962,6 +1000,27 @@ class App {
         icon: 'fa-calendar-check'
       })
     }
+    const bonusAdjustments = (data.adjustments || []).filter(adj => {
+      const amount = adj.amount || 0
+      const desc = adj.description || ''
+      return (
+        amount > 0 &&
+        adj.wallet !== 'personal' &&
+        (adj.type === 'bonusRules' || desc.startsWith('Bônus'))
+      )
+    })
+    bonusAdjustments.forEach(adj => {
+      const valCents =
+        adj.valCents !== undefined
+          ? adj.valCents
+          : Formatter.toCents(adj.amount || 0)
+      items.push({
+        label: adj.description || 'Bônus',
+        val: valCents,
+        type: 'bonusRules',
+        icon: 'fa-gift'
+      })
+    })
     if (data.inReturn > 0) {
       items.push({
         label: 'Retorno de Contrato',
@@ -1019,6 +1078,7 @@ class App {
         if (item.type === 'team') iconColor = 'text-cyan-400'
         if (item.type === 'task') iconColor = 'text-emerald-400'
         if (item.type === 'recurring') iconColor = 'text-sky-400'
+        if (item.type === 'bonusRules') iconColor = 'text-amber-400'
         if (item.type === 'return') iconColor = 'text-purple-400'
         if (item.type === 'withdraw-planned') iconColor = 'text-yellow-400'
         if (item.type === 'withdraw-realized') iconColor = 'text-blue-400'
@@ -1309,6 +1369,8 @@ class App {
         return 'color: #3b82f6;'
       case 'promotion':
         return 'color: #f472b6;' // pink-400
+      case 'bonusRules':
+        return 'color: #fbbf24;' // amber-400
       default:
         return ''
     }
@@ -1790,29 +1852,78 @@ class App {
     const capIni = parseFloat(inputs.capitalInicial)
     const days = parseInt(inputs.diasCiclo)
     const rate = parseFloat(inputs.taxaDiaria)
-    const reps = parseInt(inputs.repeticoesCiclo)
-    const wallet = document.getElementById('commitWallet').value
+    const wallet = inputs.simSourceWallet || 'revenue'
+
+    const isBonusRulesEnabled =
+      inputs.bonusRulesToggle === true ||
+      inputs.bonusRulesToggle === 'true' ||
+      inputs.bonusRulesToggle === undefined
+    const isBonusReinvest =
+      inputs.bonusReinvestToggle === true ||
+      inputs.bonusReinvestToggle === 'true' ||
+      inputs.bonusReinvestToggle === undefined
+
+    const bT1 = isBonusRulesEnabled
+      ? (parseFloat(inputs.bonusTier1) || 0) / 100
+      : 0
+    const mT1 = parseFloat(inputs.minTier1) || 0
+    const lT1 = parseFloat(inputs.limitTier1) || 0
+    const bT2 = isBonusRulesEnabled
+      ? (parseFloat(inputs.bonusTier2) || 0) / 100
+      : 0
+
+    const isTier3Enabled =
+      isBonusRulesEnabled &&
+      (inputs.bonusTier3Toggle === 'true' || inputs.bonusTier3Toggle === true)
+    const mT2 = parseFloat(inputs.minTier2) || 0
+    const lT2 = parseFloat(inputs.limitTier2) || 0
+    const bT3 = isBonusRulesEnabled
+      ? (parseFloat(inputs.bonusTier3) || 0) / 100
+      : 0
 
     let portfolio = [...store.state.portfolio]
+    let manualAdjustments = [...(store.state.manualAdjustments || [])]
     let currentVal = capIni
-    let currentDateStr = Formatter.getTodayDate()
+    let currentDateStr =
+      inputs.futureToggle === 'true'
+        ? inputs.simStartDate || Formatter.getTodayDate()
+        : Formatter.getTodayDate()
 
-    for (let i = 0; i < reps; i++) {
-      portfolio.push({
-        id: Date.now() + i,
-        name: `${baseName} (${i + 1}/${reps})`,
-        val: parseFloat(currentVal.toFixed(2)),
+    let bonusPerc = 0
+    if (currentVal >= mT1 && currentVal <= lT1) bonusPerc = bT1
+    else if (isTier3Enabled && currentVal >= mT2 && currentVal <= lT2)
+      bonusPerc = bT2
+    else if (isTier3Enabled && currentVal > lT2) bonusPerc = bT3
+    else if (!isTier3Enabled && currentVal > lT1) bonusPerc = bT2
+
+    const bonusAmount = parseFloat((currentVal * bonusPerc).toFixed(2))
+
+    let investedAmount = currentVal
+    if (isBonusReinvest) {
+      investedAmount += bonusAmount
+    } else if (bonusAmount > 0) {
+      // Se não reinvestir, joga direto na carteira de receita na Data de Início da simulação
+      manualAdjustments.push({
+        id: Date.now() + 100000,
         date: currentDateStr,
-        days: days,
-        rate: rate,
-        wallet: wallet
+        amount: bonusAmount.toFixed(2),
+        wallet: 'revenue',
+        type: 'bonusRules',
+        description: `Bônus (${baseName})`
       })
-      const profit = currentVal * (rate / 100) * days
-      currentVal += profit
-      currentDateStr = Formatter.addDays(currentDateStr, days)
     }
 
-    store.setState({ portfolio })
+    portfolio.push({
+      id: Date.now(),
+      name: baseName,
+      val: parseFloat(investedAmount.toFixed(2)),
+      date: currentDateStr,
+      days: days,
+      rate: rate,
+      wallet: wallet
+    })
+
+    store.setState({ portfolio, manualAdjustments })
     this.closeModal('commitModal')
     document.getElementById('commitBaseName').value = ''
 

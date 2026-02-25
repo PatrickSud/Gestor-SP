@@ -57,7 +57,6 @@ export const Calculator = {
       simStartDate,
       diasCiclo,
       taxaDiaria,
-      repeticoesCiclo,
       withdrawStrategy,
       withdrawTarget,
       skippedWithdrawals
@@ -93,20 +92,26 @@ export const Calculator = {
     // Simulation Params
     const cycleDays = parseInt(diasCiclo) || 1
     const dailyRate = (parseFloat(taxaDiaria) || 0) / 100
-    const totalReps =
-      futureToggle === 'true' ? parseInt(repeticoesCiclo) || 1 : 0
+    const totalReps = futureToggle === 'true' ? 1 : 0
 
     // Bonus Config
-    const bT1 = (parseFloat(inputs.bonusTier1) || 0) / 100
+    const isBonusRulesEnabled =
+      inputs.bonusRulesToggle === true || inputs.bonusRulesToggle === 'true' ||
+      inputs.bonusRulesToggle === undefined // default true for old data
+    const isBonusReinvest =
+      inputs.bonusReinvestToggle === true || inputs.bonusReinvestToggle === 'true' ||
+      inputs.bonusReinvestToggle === undefined // default true for old data
+
+    const bT1 = isBonusRulesEnabled ? (parseFloat(inputs.bonusTier1) || 0) / 100 : 0
     const mT1 = Formatter.toCents(inputs.minTier1)
     const lT1 = Formatter.toCents(inputs.limitTier1)
-    const bT2 = (parseFloat(inputs.bonusTier2) || 0) / 100
+    const bT2 = isBonusRulesEnabled ? (parseFloat(inputs.bonusTier2) || 0) / 100 : 0
 
     const isTier3Enabled =
-      inputs.bonusTier3Toggle === 'true' || inputs.bonusTier3Toggle === true
+      isBonusRulesEnabled && (inputs.bonusTier3Toggle === 'true' || inputs.bonusTier3Toggle === true)
     const mT2 = Formatter.toCents(inputs.minTier2)
     const lT2 = Formatter.toCents(inputs.limitTier2)
-    const bT3 = (parseFloat(inputs.bonusTier3) || 0) / 100
+    const bT3 = isBonusRulesEnabled ? (parseFloat(inputs.bonusTier3) || 0) / 100 : 0
 
     // Portfolio Mapping
     const portReleases = {}
@@ -191,6 +196,7 @@ export const Calculator = {
     let dailyData = {}
     let graphData = []
     let simCapitalPure = 0
+    let simBonusTotal = 0
 
     // Ensure simulation covers history up to Today + viewDays
     const daysSinceStart = Math.max(
@@ -235,6 +241,7 @@ export const Calculator = {
       let stepTaskIncome = 0
       let stepRecurringIncome = 0
       let stepSimReinvest = 0
+      let stepBonusRulesIncome = 0
 
       // Handle investments deductions from wallet
       let stepPortfolioDeduction = 0
@@ -361,14 +368,29 @@ export const Calculator = {
           else if (!isTier3Enabled && simCapitalPure > lT1) bonusPercPure = bT2
 
           const prevInv = currentInv
-          const activeCapCur = Math.floor(prevInv * (1 + bonusPercCur))
-          const profitCur = Math.floor(activeCapCur * dailyRate * cycleDays)
-          currentInv = activeCapCur + profitCur
-          stepSimReinvest = currentInv - prevInv
 
-          const activeCapPure = Math.floor(simCapitalPure * (1 + bonusPercPure))
-          const profitPure = Math.floor(activeCapPure * dailyRate * cycleDays)
-          simCapitalPure = activeCapPure + profitPure
+          if (isBonusReinvest) {
+            // Bônus reinvestido: aplica sobre o capital total (comportamento original)
+            const activeCapCur = Math.floor(prevInv * (1 + bonusPercCur))
+            const profitCur = Math.floor(activeCapCur * dailyRate * cycleDays)
+            currentInv = activeCapCur + profitCur
+            stepSimReinvest = currentInv - prevInv
+
+            const activeCapPure = Math.floor(simCapitalPure * (1 + bonusPercPure))
+            const bonusValuePure = activeCapPure - simCapitalPure
+            simBonusTotal += bonusValuePure
+            
+            const profitPure = Math.floor(activeCapPure * dailyRate * cycleDays)
+            simCapitalPure = activeCapPure + profitPure
+          } else {
+            // Bônus NÃO reinvestido: rendimento calculado apenas sobre capital base (sem bônus)
+            const profitCur = Math.floor(prevInv * dailyRate * cycleDays)
+            currentInv = prevInv + profitCur
+            stepSimReinvest = profitCur
+
+            const profitPure = Math.floor(simCapitalPure * dailyRate * cycleDays)
+            simCapitalPure = simCapitalPure + profitPure
+          }
 
           isCycleEnd = true
           cycleEnds.push(currentDayStr)
@@ -427,6 +449,14 @@ export const Calculator = {
             ...a,
             valCents
           })
+
+          if (
+            a.wallet !== 'personal' &&
+            valCents > 0 &&
+            (a.type === 'bonusRules' || a.type === 'bonus')
+          ) {
+            stepBonusRulesIncome += valCents
+          }
         })
 
       if (
@@ -458,6 +488,40 @@ export const Calculator = {
 
         currentInv += initialSimCapital
         simCapitalPure += initialSimCapital
+
+        if (isBonusRulesEnabled && !isBonusReinvest) {
+          let bonusPercCur = 0
+          if (currentInv >= mT1 && currentInv <= lT1) bonusPercCur = bT1
+          else if (isTier3Enabled && currentInv >= mT2 && currentInv <= lT2)
+            bonusPercCur = bT2
+          else if (isTier3Enabled && currentInv > lT2) bonusPercCur = bT3
+          else if (!isTier3Enabled && currentInv > lT1) bonusPercCur = bT2
+
+          let bonusPercPure = 0
+          if (simCapitalPure >= mT1 && simCapitalPure <= lT1)
+            bonusPercPure = bT1
+          else if (
+            isTier3Enabled &&
+            simCapitalPure >= mT2 &&
+            simCapitalPure <= lT2
+          )
+            bonusPercPure = bT2
+          else if (isTier3Enabled && simCapitalPure > lT2) bonusPercPure = bT3
+          else if (!isTier3Enabled && simCapitalPure > lT1) bonusPercPure = bT2
+
+          const bonusValueCur = Math.floor(initialSimCapital * bonusPercCur)
+          if (bonusValueCur > 0) {
+            currentRevenueWallet += bonusValueCur
+            stepIncome += bonusValueCur
+            totalIncomeCents += bonusValueCur
+            stepBonusRulesIncome += bonusValueCur
+          }
+
+          const bonusValuePure = Math.floor(initialSimCapital * bonusPercPure)
+          if (bonusValuePure > 0) {
+            simBonusTotal += bonusValuePure
+          }
+        }
       }
 
       let totalPool = currentInv + currentPersonalWallet + currentRevenueWallet
@@ -632,6 +696,7 @@ export const Calculator = {
         inIncomeRecurring: stepRecurringIncome,
         inIncomeTeam: stepTeamBonus,
         inIncomePromotion: stepPromotionIncome,
+        inIncomeBonusRules: stepBonusRulesIncome,
         inReturn: stepReturns,
         inReturnPrincipal: stepReturnPrincipal,
         inReturnProfit: stepReturnProfit,
@@ -662,6 +727,7 @@ export const Calculator = {
             incomeRecurring: stepRecurringIncome,
             incomeTeam: stepTeamBonus,
             incomePromotion: stepPromotionIncome,
+            incomeBonusRules: stepBonusRulesIncome,
             returns: stepReturns,
             withdrawNet: stepWithdraw,
             withdrawStatus: isRealized
@@ -775,6 +841,7 @@ export const Calculator = {
         simInitial: initialSimCapital,
         simFinal: simCapitalPure,
         simProfit: simCapitalPure - initialSimCapital,
+        simBonus: simBonusTotal,
         simCycles: totalReps,
         simCycleDays: cycleDays,
         simTotalDays: totalReps * cycleDays

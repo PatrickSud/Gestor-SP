@@ -426,47 +426,6 @@ export const Renderer = {
   },
 
   renderSimulationSummary(results, inputs, cycleEnds = []) {
-    // Renderizar lista de retornos (Fim de Ciclo) - Sempre visível mesmo sem simulação completa
-    const listEl = document.getElementById('simSummaryDaysTags')
-    if (listEl) {
-      listEl.innerHTML = ''
-      const ends = Array.isArray(cycleEnds) ? cycleEnds : []
-      if (ends.length > 0) {
-        const tags = ends
-          .map(d => {
-            const [y, m, day] = d.split('-')
-            return `<span class="px-2 py-0.5 text-[10px] rounded bg-violet-900/50 text-violet-200 font-bold border border-violet-700/50 shadow-sm">${day}/${m}</span>`
-          })
-          .join('')
-        listEl.innerHTML = tags
-      } else {
-        // Fallback: se calculator.js não retornou ciclos (ex: Capital 0 ou fora do range), cálcula pela data inicial e dias
-        const start =
-          inputs.simStartDate ||
-          (document.getElementById('simStartDate')
-            ? document.getElementById('simStartDate').value
-            : null)
-        const diasStr =
-          inputs.diasCiclo ||
-          (document.getElementById('diasCiclo')
-            ? document.getElementById('diasCiclo').value
-            : '0')
-        const dias = parseInt(diasStr, 10)
-
-        if (start && !isNaN(dias) && dias > 0) {
-          try {
-            const endDateStr = Formatter.addDays(start, dias)
-            const [y, m, day] = endDateStr.split('-')
-            listEl.innerHTML = `<span class="px-2 py-0.5 text-[10px] rounded bg-violet-900/50 text-violet-200 font-bold border border-violet-700/50 shadow-sm">${day}/${m}</span>`
-          } catch (e) {
-            listEl.innerHTML = `<span class="text-[9px] text-slate-500 italic font-bold tracking-wider">N/A</span>`
-          }
-        } else {
-          listEl.innerHTML = `<span class="text-[9px] text-slate-500 italic font-bold tracking-wider">N/A</span>`
-        }
-      }
-    }
-
     const card = document.getElementById('simSummaryCard')
     if (!card) return
     const futureOn = inputs.futureToggle === 'true'
@@ -482,21 +441,15 @@ export const Renderer = {
     card.classList.remove('hidden')
 
     const initialEl = document.getElementById('simSummaryInitial')
-    const bonusEl = document.getElementById('simSummaryBonus')
     const finalEl = document.getElementById('simSummaryFinal')
     const profitEl = document.getElementById('simSummaryProfit')
     const metaEl = document.getElementById('simSummaryMeta')
 
     const simInitial = results.simInitial
-    const simBonus = results.simBonus || 0
     const simFinal = results.simFinal
     const simProfit = results.simProfit
 
     if (initialEl) initialEl.innerText = Formatter.currency(simInitial)
-    if (bonusEl) {
-      const bPrefix = simBonus > 0 ? '+' : ''
-      bonusEl.innerText = `${bPrefix}${Formatter.currency(simBonus)}`
-    }
     if (finalEl) finalEl.innerText = Formatter.currency(simFinal)
     if (profitEl) {
       const prefix = simProfit >= 0 ? '+' : ''
@@ -505,8 +458,27 @@ export const Renderer = {
 
     if (metaEl) {
       const dias = inputs.diasCiclo || '0'
+      const reps = inputs.repeticoesCiclo || '0'
       const taxa = inputs.taxaDiaria || '0'
-      metaEl.innerText = `${dias}d • ${taxa}% ao dia`
+      metaEl.innerText = `${dias}d • ${reps}x ciclos • ${taxa}% ao dia`
+    }
+
+    // Renderizar lista de retornos (Fim de Ciclo)
+    const listEl = document.getElementById('simSummaryCycleEnds')
+    if (listEl) {
+      const ends = Array.isArray(cycleEnds) ? cycleEnds : []
+      if (ends.length > 0) {
+        const tags = ends
+          .map(d => {
+            const [y, m, day] = d.split('-')
+            return `<span class="px-2 py-0.5 text-[10px] rounded bg-violet-900/50 text-violet-200 font-bold border border-violet-700/50 shadow-sm">${day}/${m}</span>`
+          })
+          .join('')
+
+        listEl.innerHTML = tags
+      } else {
+        listEl.innerHTML = `<span class="text-[9px] text-slate-500 italic font-bold tracking-wider">N/A</span>`
+      }
     }
   },
 
@@ -934,7 +906,7 @@ export const Renderer = {
           const valCents = Formatter.toCents(adj.amount || '0')
           const isPositive = adj.amount > 0
           // Definir cores/ícones
-          const type = isPositive ? 'income' : 'manual'
+          const type = 'manual'
           const tag = isPositive ? 'CRÉDITO' : 'DÉBITO'
           const dotColor = isPositive ? '#10b981' : '#f59e0b' // Verde ou Laranja
 
@@ -1046,9 +1018,7 @@ export const Renderer = {
         (adjPersonal > 0 ? adjPersonal : 0)
       const dayCreditoReceita =
         (taskIncome || 0) +
-        (teamIncome || 0) +
         (recurringIncome || 0) +
-        (promotionIncome || 0) +
         (d.inReturnProfit || 0) +
         (index === 0 ? initialRevenue : 0) +
         (adjRevenue > 0 ? adjRevenue : 0)
