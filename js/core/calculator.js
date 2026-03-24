@@ -266,7 +266,7 @@ export const Calculator = {
       const isSunday = Formatter.getDayOfWeek(currentDayStr) === 0
       let stepTeamBonus = 0
 
-      if (isTeamActive && !isSunday) {
+      if (isTeamActive && !isSunday && currentDayStr >= todayStr) {
         Object.keys(teamCounts).forEach(level => {
           const counts = teamCounts[level]
           const rates = Calculator.TEAM_RATES[level]
@@ -291,7 +291,7 @@ export const Calculator = {
       }
 
       // 2. Monthly Fixed Incomes (multiple entries by day-of-month)
-      if (d > 0 && incomesList.length > 0) {
+      if (d > 0 && incomesList.length > 0 && currentDayStr >= todayStr) {
         const dayOfMonth = parseInt(currentDayStr.split('-')[2])
         incomesList.forEach(item => {
           const valCents = Formatter.toCents(item.amount || 0)
@@ -307,7 +307,7 @@ export const Calculator = {
       let stepPromotionIncome = 0
       const isPromotionActive =
         inputs.promotionToggle === 'true' || inputs.promotionToggle === true
-      if (d > 0 && isPromotionActive) {
+      if (d > 0 && isPromotionActive && currentDayStr >= todayStr) {
         const dayOfMonth = parseInt(currentDayStr.split('-')[2])
         const promoDay = parseInt(inputs.promotionDay || 1)
         if (dayOfMonth === promoDay) {
@@ -548,6 +548,7 @@ export const Calculator = {
       } else if (
         isWithdrawalDay &&
         d > 0 &&
+        currentDayStr >= todayStr &&
         withdrawStrategy !== 'none' &&
         !(inputs.skippedWithdrawals || []).includes(currentDayStr)
       ) {
