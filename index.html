@@ -277,6 +277,7 @@
                                 class="custom-input w-full rounded-lg p-2 pl-8 text-xs border-slate-700">
                             <span class="absolute left-3 top-2 text-xs text-slate-500">R$</span>
                         </div>
+                        <button onclick="if(confirm('Isso apagará o histórico de mudanças de nível e estratégias, definindo o cenário atual como o inicial. Continuar?')){ delete window.store.state.inputs.historyTrackers; window.store.saveToStorage(); location.reload(); }" class="mt-2 text-[9px] text-red-400 hover:text-red-300 underline">Corrigir Histórico de Níveis</button>
                     </div>
 
                     <div class="border border-slate-700 rounded-lg p-3 bg-slate-900/30">
@@ -661,7 +662,7 @@
                     <i class="fas fa-chevron-left mr-2"></i> Fechar Menu
                 </button>
                 <footer class="text-center text-[10px] text-slate-600 py-4 mt-2">
-                    <p>&copy; 2025 Gestor SP - v2.2.28</p>
+                    <p>&copy; 2025 Gestor SP - v2.2.29</p>
                 </footer>
             </div>
         </div>
@@ -1229,7 +1230,7 @@
             <div class="flex items-center gap-2">
                 <span>Desenvolvido por <strong class="text-slate-400">Patrick Godoy</strong></span>
                 <span class="hidden md:inline text-slate-700">•</span>
-                <span class="font-mono text-slate-600">v2.2.28</span>
+                <span class="font-mono text-slate-600">v2.2.29</span>
             </div>
 
             <a href="mailto:patricksud96@gmail.com?subject=Gestor%20SP%20-%20Bug%2FSugestão"

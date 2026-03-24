@@ -124,6 +124,45 @@ class Store {
   }
 
   updateInput(id, value) {
+    const trackedKeys = [
+      'taskDailyValue',
+      'teamBonusToggle',
+      'teamCounts',
+      'promotionToggle',
+      'promotionLevel',
+      'monthlyIncomeToggle',
+      'fixedIncomes',
+      'withdrawStrategy',
+      'withdrawTarget'
+    ];
+
+    if (trackedKeys.includes(id)) {
+      if (!this.state.inputs.historyTrackers) {
+        this.state.inputs.historyTrackers = {};
+      }
+      if (!this.state.inputs.historyTrackers[id]) {
+        this.state.inputs.historyTrackers[id] = [];
+        if (this.state.inputs[id] !== undefined) {
+          const startDate = this.state.inputs.dataInicio || Formatter.getTodayDate();
+          this.state.inputs.historyTrackers[id].push({
+            date: startDate,
+            value: JSON.parse(JSON.stringify(this.state.inputs[id]))
+          });
+        }
+      }
+
+      const today = Formatter.getTodayDate();
+      const tracker = this.state.inputs.historyTrackers[id];
+      const index = tracker.findIndex(h => h.date === today);
+
+      if (index > -1) {
+        tracker[index].value = JSON.parse(JSON.stringify(value));
+      } else {
+        tracker.push({ date: today, value: JSON.parse(JSON.stringify(value)) });
+      }
+      tracker.sort((a, b) => a.date.localeCompare(b.date));
+    }
+
     this.state.inputs[id] = value
     this.saveToStorage()
     this.notify()

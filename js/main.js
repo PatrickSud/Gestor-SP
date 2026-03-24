@@ -22,6 +22,7 @@ class App {
   init() {
     // Global access for onclick handlers in HTML (temporary until fully migrated)
     window.app = this
+    window.store = store
 
     try {
       // Initialize UI State from Store

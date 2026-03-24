@@ -80,14 +80,23 @@ export const Calculator = {
 
     const todayStr = Formatter.getTodayDate()
 
+    const getTrackedValue = (key, currentDayStr) => {
+      const trackers = inputs.historyTrackers?.[key];
+      if (!trackers || trackers.length === 0) return inputs[key];
+      let val = trackers[0].value; 
+      for (let i = trackers.length - 1; i >= 0; i--) {
+        if (currentDayStr >= trackers[i].date) {
+          return trackers[i].value;
+        }
+      }
+      return val;
+    };
+
     // Convert to cents
     const personalStart = Formatter.toCents(personalWalletStart || '0')
     const revenueStart = Formatter.toCents(revenueWalletStart || '0')
-    const taskValCents = Formatter.toCents(taskDailyValue)
-    const incomesList = monthlyIncomeToggle ? fixedIncomes || [] : []
     const initialSimCapital =
       futureToggle === 'true' ? Formatter.toCents(capitalInicial) : 0
-    const withdrawTargetCents = Formatter.toCents(withdrawTarget)
 
     // Simulation Params
     const cycleDays = parseInt(diasCiclo) || 1
@@ -260,24 +269,24 @@ export const Calculator = {
         })
 
       // 0. Team Income (Mon-Sat, if toggle is active)
-      const teamCounts = inputs.teamCounts || {}
-      const isTeamActive =
-        inputs.teamBonusToggle === 'true' || inputs.teamBonusToggle === true
-      const isSunday = Formatter.getDayOfWeek(currentDayStr) === 0
-      let stepTeamBonus = 0
+      const curTeamCounts = getTrackedValue('teamCounts', currentDayStr) || {};
+      const curTeamBonusToggle = getTrackedValue('teamBonusToggle', currentDayStr);
+      const isTeamActive = curTeamBonusToggle === 'true' || curTeamBonusToggle === true;
+      const isSunday = Formatter.getDayOfWeek(currentDayStr) === 0;
+      let stepTeamBonus = 0;
 
-      if (isTeamActive && !isSunday && currentDayStr >= todayStr) {
-        Object.keys(teamCounts).forEach(level => {
-          const counts = teamCounts[level]
-          const rates = Calculator.TEAM_RATES[level]
+      if (isTeamActive && !isSunday) {
+        Object.keys(curTeamCounts).forEach(level => {
+          const counts = curTeamCounts[level];
+          const rates = Calculator.TEAM_RATES[level];
           if (rates) {
             const levelIncome =
               (counts.A || 0) * (rates.A || 0) +
               (counts.B || 0) * (rates.B || 0) +
-              (counts.C || 0) * (rates.C || 0)
-            stepTeamBonus += Formatter.toCents(levelIncome.toFixed(2))
+              (counts.C || 0) * (rates.C || 0);
+            stepTeamBonus += Formatter.toCents(levelIncome.toFixed(2));
           }
-        })
+        });
       }
 
       if (d > 0) {
@@ -286,36 +295,43 @@ export const Calculator = {
 
       // 1. Task Income (Mon-Sat)
       if (d > 0 && Formatter.getDayOfWeek(currentDayStr) !== 0) {
-        stepIncome += taskValCents
-        stepTaskIncome += taskValCents
+        const curTaskDailyValue = getTrackedValue('taskDailyValue', currentDayStr);
+        const curTaskValCents = Formatter.toCents(curTaskDailyValue || '0');
+        stepIncome += curTaskValCents;
+        stepTaskIncome += curTaskValCents;
       }
 
       // 2. Monthly Fixed Incomes (multiple entries by day-of-month)
-      if (d > 0 && incomesList.length > 0 && currentDayStr >= todayStr) {
-        const dayOfMonth = parseInt(currentDayStr.split('-')[2])
-        incomesList.forEach(item => {
-          const valCents = Formatter.toCents(item.amount || 0)
-          const incomeDay = parseInt(item.day || 0)
+      const curMonthlyIncomeToggle = getTrackedValue('monthlyIncomeToggle', currentDayStr);
+      const isMonthlyActive = curMonthlyIncomeToggle === 'true' || curMonthlyIncomeToggle === true;
+      const curIncomesList = isMonthlyActive ? (getTrackedValue('fixedIncomes', currentDayStr) || []) : [];
+
+      if (d > 0 && curIncomesList.length > 0) {
+        const dayOfMonth = parseInt(currentDayStr.split('-')[2]);
+        curIncomesList.forEach(item => {
+          const valCents = Formatter.toCents(item.amount || 0);
+          const incomeDay = parseInt(item.day || 0);
           if (valCents > 0 && incomeDay === dayOfMonth) {
-            stepIncome += valCents
-            stepRecurringIncome += valCents
+            stepIncome += valCents;
+            stepRecurringIncome += valCents;
           }
-        })
+        });
       }
 
       // 3. Promotion Salary
-      let stepPromotionIncome = 0
-      const isPromotionActive =
-        inputs.promotionToggle === 'true' || inputs.promotionToggle === true
-      if (d > 0 && isPromotionActive && currentDayStr >= todayStr) {
-        const dayOfMonth = parseInt(currentDayStr.split('-')[2])
-        const promoDay = parseInt(inputs.promotionDay || 1)
+      let stepPromotionIncome = 0;
+      const curPromotionToggle = getTrackedValue('promotionToggle', currentDayStr);
+      const isPromotionActive = curPromotionToggle === 'true' || curPromotionToggle === true;
+      if (d > 0 && isPromotionActive) {
+        const dayOfMonth = parseInt(currentDayStr.split('-')[2]);
+        const promoDay = parseInt(inputs.promotionDay || 1);
         if (dayOfMonth === promoDay) {
-          const promoData = Calculator.PROMOTION_SALARIES[inputs.promotionLevel]
+          const curPromotionLevel = getTrackedValue('promotionLevel', currentDayStr);
+          const promoData = Calculator.PROMOTION_SALARIES[curPromotionLevel];
           if (promoData) {
-            const promoValCents = Formatter.toCents(promoData.value)
-            stepIncome += promoValCents
-            stepPromotionIncome = promoValCents
+            const promoValCents = Formatter.toCents(promoData.value);
+            stepIncome += promoValCents;
+            stepPromotionIncome = promoValCents;
           }
         }
       }
@@ -548,10 +564,11 @@ export const Calculator = {
       } else if (
         isWithdrawalDay &&
         d > 0 &&
-        currentDayStr >= todayStr &&
-        withdrawStrategy !== 'none' &&
+        getTrackedValue('withdrawStrategy', currentDayStr) !== 'none' &&
         !(inputs.skippedWithdrawals || []).includes(currentDayStr)
       ) {
+        const curWithdrawStrategy = getTrackedValue('withdrawStrategy', currentDayStr);
+        const curWithdrawTargetCents = Formatter.toCents(getTrackedValue('withdrawTarget', currentDayStr) || '0');
         const revTier =
           this.WITHDRAWAL_TIERS.filter(t => t <= currentRevenueWallet).pop() ||
           0
@@ -576,25 +593,25 @@ export const Calculator = {
           bestNet = revNet
         }
 
-        if (withdrawStrategy === 'fixed') {
-          if (currentRevenueWallet >= withdrawTargetCents) {
+        if (curWithdrawStrategy === 'fixed') {
+          if (currentRevenueWallet >= curWithdrawTargetCents) {
             isPlanned = true
             targetWallet = 'revenue'
-            if (revTier > withdrawTargetCents) {
+            if (revTier > curWithdrawTargetCents) {
               amountToWithdrawCents = revTier
               withdrawalNote = 'Meta superada (Receita)'
             } else {
-              amountToWithdrawCents = withdrawTargetCents
+              amountToWithdrawCents = curWithdrawTargetCents
               withdrawalNote = 'Meta atingida (Receita)'
             }
-          } else if (currentPersonalWallet >= withdrawTargetCents) {
+          } else if (currentPersonalWallet >= curWithdrawTargetCents) {
             isPlanned = true
             targetWallet = 'personal'
-            if (persTier > withdrawTargetCents) {
+            if (persTier > curWithdrawTargetCents) {
               amountToWithdrawCents = persTier
               withdrawalNote = 'Meta superada (Pessoal)'
             } else {
-              amountToWithdrawCents = withdrawTargetCents
+              amountToWithdrawCents = curWithdrawTargetCents
               withdrawalNote = 'Meta atingida (Pessoal)'
             }
           } else {
@@ -605,11 +622,11 @@ export const Calculator = {
             amountToDisplayCents = bestTier // Usado apenas para o dailyData.tier
           }
         } else if (
-          withdrawStrategy === 'max' ||
-          withdrawStrategy === 'weekly'
+          curWithdrawStrategy === 'max' ||
+          curWithdrawStrategy === 'weekly'
         ) {
           let shouldCheckWeekly = true
-          if (withdrawStrategy === 'weekly') {
+          if (curWithdrawStrategy === 'weekly') {
             const dayOfMonth = parseInt(currentDayStr.split('-')[2])
             const weekNum = Math.ceil(dayOfMonth / 7)
             shouldCheckWeekly = selectedWeeks.includes(weekNum)
